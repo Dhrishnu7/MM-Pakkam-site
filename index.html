@@ -95,10 +95,10 @@
         /* ── Cards Grid ── */
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.8rem;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.6rem;
             width: 100%;
-            max-width: 1080px;
+            max-width: 1280px;
         }
 
         /* ── Card ── */
@@ -158,6 +158,10 @@
         .card-sales::before { background: linear-gradient(90deg, #10b981, #34d399); }
         .card-sales:hover { box-shadow: 0 20px 40px rgba(16,185,129,0.2); }
 
+        .card-report { --c: #f43f5e; }
+        .card-report::before { background: linear-gradient(90deg, #f43f5e, #fb7185); }
+        .card-report:hover { box-shadow: 0 20px 40px rgba(244,63,94,0.2); }
+
         /* ── Icon ── */
         .icon-wrapper {
             width: 68px; height: 68px;
@@ -202,6 +206,7 @@
         .dashboard > a:nth-child(2) { animation-delay: 0.16s; }
         .dashboard > a:nth-child(3) { animation-delay: 0.24s; }
         .dashboard > a:nth-child(4) { animation-delay: 0.32s; }
+        .dashboard > a:nth-child(5) { animation-delay: 0.40s; }
 
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(20px); }
@@ -218,10 +223,10 @@
         }
 
         /* ── Responsive ── */
-        @media (max-width: 900px) {
-            .dashboard { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 1100px) {
+            .dashboard { grid-template-columns: repeat(3, 1fr); }
         }
-        @media (max-width: 500px) {
+        @media (max-width: 700px) {
             .dashboard { grid-template-columns: 1fr 1fr; gap: 1rem; }
             .logo-text { font-size: 1rem; }
             .dashboard-header h2 { font-size: 1.6rem; }
@@ -290,6 +295,17 @@
                 </div>
                 <h3>SALES</h3>
                 <p>Process billing, generate receipts and checkout customers.</p>
+            </a>
+
+            <!-- REPORT -->
+            <a class="section-card card-report" href="report.html">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <h3>REPORT</h3>
+                <p>View sales summaries, stock levels and daily analytics.</p>
             </a>
 
         </div>
