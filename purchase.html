@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Purchase | Mudhalvar Marundhagam Pakkam</title>
+    <title>Purchase | Mudhalvar Marundhagam Pakkam</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -44,46 +44,32 @@
             align-items: center;
             gap: 12px;
             text-decoration: none;
-            cursor: pointer;
         }
-
         .logo-icon {
             width: 42px; height: 42px;
             border-radius: 10px;
             background: linear-gradient(135deg, #0ea5e9, #10b981);
             display: flex; align-items: center; justify-content: center;
-            color: white;
-            font-weight: 800;
-            font-size: 1.1rem;
+            color: white; font-weight: 800; font-size: 1.1rem;
             box-shadow: 0 4px 12px rgba(14,165,233,0.3);
             flex-shrink: 0;
         }
-
         .logo-text {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #0f172a;
+            font-size: 1.2rem; font-weight: 700; color: #0f172a;
         }
 
         .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            display: inline-flex; align-items: center; gap: 6px;
             padding: 0.5rem 1.2rem;
             background: white;
             border: 1.5px solid rgba(245,158,11,0.3);
             border-radius: 50px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #d97706;
-            cursor: pointer;
-            transition: all 0.25s ease;
+            font-size: 0.85rem; font-weight: 600; color: #d97706;
             text-decoration: none;
+            transition: all 0.25s ease;
         }
         .back-btn:hover {
-            background: #f59e0b;
-            color: white;
-            border-color: #f59e0b;
+            background: #f59e0b; color: white; border-color: #f59e0b;
             box-shadow: 0 4px 16px rgba(245,158,11,0.35);
             transform: translateY(-1px);
         }
@@ -94,141 +80,101 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 3rem 1.5rem 4rem;
+            padding: 2.5rem 1.5rem 4rem;
         }
 
         /* ── Page Header ── */
         .page-header {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 2rem;
             animation: fadeUp 0.5s ease forwards;
             opacity: 0;
         }
-
         .breadcrumb {
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin-bottom: 0.7rem;
+            font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.6rem;
         }
-        .breadcrumb a {
-            color: #d97706;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
+        .breadcrumb a { color: #d97706; text-decoration: none; font-weight: 500; }
         .page-header h1 {
-            font-size: 1.9rem;
-            font-weight: 800;
-            color: #0f172a;
-            letter-spacing: -0.02em;
+            font-size: 1.9rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;
         }
-
-        .page-header p {
-            color: #64748b;
-            margin-top: 0.4rem;
-            font-size: 0.95rem;
-        }
+        .page-header p { color: #64748b; margin-top: 0.4rem; font-size: 0.95rem; }
 
         /* ── Form Card ── */
         .form-card {
-            background: rgba(255,255,255,0.82);
+            background: rgba(255,255,255,0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.9);
             border-radius: 24px;
             padding: 2.5rem;
             width: 100%;
-            max-width: 560px;
+            max-width: 700px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.08);
             animation: fadeUp 0.6s ease 0.1s forwards;
             opacity: 0;
         }
 
-        /* ── Section Divider ── */
-        .form-section-title {
-            font-size: 0.72rem;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: #d97706;
-            margin-bottom: 1.1rem;
-            margin-top: 1.8rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1.5px solid #fde68a;
+        /* ── Grid Layout ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem 1.4rem;
         }
-        .form-section-title:first-child { margin-top: 0; }
+        .full-width { grid-column: 1 / -1; }
 
         /* ── Form Groups ── */
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 1.3rem;
-        }
-        .form-group:last-of-type { margin-bottom: 0; }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            gap: 0.45rem;
         }
 
         .form-group label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #334155;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #92400e;
         }
-        .form-group label .req { color: #ef4444; margin-left: 2px; }
 
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
+        .form-group input {
             font-family: 'Inter', sans-serif;
             font-size: 0.95rem;
             color: #0f172a;
             background: #fafaf8;
             border: 1.5px solid #e2e8f0;
             border-radius: 12px;
-            padding: 0.85rem 1rem;
+            padding: 0.8rem 1rem;
             outline: none;
             width: 100%;
-            transition: all 0.25s ease;
-            appearance: none;
-            -webkit-appearance: none;
+            transition: all 0.22s ease;
         }
+        .form-group input::placeholder { color: #cbd5e1; }
 
-        .form-group select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            padding-right: 2.5rem;
-        }
-
-        .form-group input::placeholder,
-        .form-group textarea::placeholder { color: #cbd5e1; }
-
-        .form-group input:hover,
-        .form-group textarea:hover,
-        .form-group select:hover {
+        .form-group input:hover {
             border-color: #fcd34d;
             background: white;
         }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
+        .form-group input:focus {
             border-color: #f59e0b;
             background: white;
             box-shadow: 0 0 0 4px rgba(245,158,11,0.12);
         }
-
-        /* Total field highlight */
-        #totalAmount {
+        .form-group input[readonly] {
             font-weight: 700;
             color: #92400e;
             background: #fef3c7;
             border-color: #fcd34d;
+            cursor: default;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            grid-column: 1 / -1;
+            height: 1.5px;
+            background: linear-gradient(90deg, #fde68a, transparent);
+            margin: 0.4rem 0;
+            border-radius: 2px;
         }
 
         /* ── Buttons ── */
@@ -237,27 +183,18 @@
             gap: 0.8rem;
             margin-top: 2rem;
         }
-
         .btn {
             flex: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 0.85rem 1.5rem;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 0.9rem 1.5rem;
             border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 700;
+            font-size: 0.95rem; font-weight: 700;
             font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            border: none;
+            cursor: pointer; border: none;
             transition: all 0.25s ease;
         }
-
         .btn-cancel {
-            background: #f1f5f9;
-            color: #64748b;
-            border: 1.5px solid #e2e8f0;
+            background: #f1f5f9; color: #64748b; border: 1.5px solid #e2e8f0;
         }
         .btn-cancel:hover { background: #e2e8f0; color: #334155; }
 
@@ -275,32 +212,23 @@
         /* ── Toast ── */
         .toast {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
+            bottom: 2rem; right: 2rem;
             background: white;
             border: 1.5px solid #fde68a;
             border-radius: 16px;
             padding: 1rem 1.4rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #92400e;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 0.9rem; font-weight: 600; color: #92400e;
             box-shadow: 0 10px 30px rgba(245,158,11,0.18);
-            transform: translateY(100px);
-            opacity: 0;
+            transform: translateY(100px); opacity: 0;
             transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
             z-index: 999;
         }
         .toast.show { transform: translateY(0); opacity: 1; }
-
         .toast-icon {
-            width: 32px; height: 32px;
-            border-radius: 50%;
+            width: 32px; height: 32px; border-radius: 50%;
             background: #fef3c7;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
 
         @keyframes fadeUp {
@@ -309,11 +237,12 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        @media (max-width: 560px) {
+        @media (max-width: 580px) {
             header { padding: 0.8rem 1rem; }
             .logo-text { font-size: 0.95rem; }
             .form-card { padding: 1.8rem 1.2rem; }
-            .form-row { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: 1; }
         }
     </style>
 </head>
@@ -332,89 +261,75 @@
     <div class="page-content">
 
         <div class="page-header">
-            <div class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Add Purchase</div>
-            <h1>Add New Purchase</h1>
-            <p>Record incoming stock and supplier invoice details</p>
+            <div class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Purchase</div>
+            <h1>Add Purchase</h1>
+            <p>Fill in the purchase details below</p>
         </div>
 
         <div class="form-card">
             <form id="purchaseForm" onsubmit="handleSubmit(event)" novalidate>
+                <div class="form-grid">
 
-                <!-- Medicine Details -->
-                <div class="form-section-title">Medicine Details</div>
-
-                <div class="form-group">
-                    <label>Medicine Name <span class="req">*</span></label>
-                    <input type="text" id="medicineName" placeholder="e.g. Paracetamol 500mg" required>
-                </div>
-
-                <div class="form-row">
+                    <!-- Row 1: Bill No, Firm -->
                     <div class="form-group">
-                        <label>Batch Number <span class="req">*</span></label>
-                        <input type="text" id="batchNo" placeholder="e.g. BT2024001" required>
+                        <label>Bill No</label>
+                        <input type="text" id="billNo" placeholder="e.g. BL-001">
                     </div>
                     <div class="form-group">
-                        <label>Expiry Date <span class="req">*</span></label>
-                        <input type="month" id="expiryDate" required>
+                        <label>Firm</label>
+                        <input type="text" id="firm" placeholder="e.g. Sun Pharma">
                     </div>
-                </div>
 
-                <div class="form-row">
+                    <!-- Date full width -->
+                    <div class="form-group full-width">
+                        <label>Date</label>
+                        <input type="date" id="purchaseDate">
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Product Name full width -->
+                    <div class="form-group full-width">
+                        <label>Product Name</label>
+                        <input type="text" id="productName" placeholder="e.g. Paracetamol 500mg">
+                    </div>
+
+                    <!-- Batch No, Expire Date -->
                     <div class="form-group">
-                        <label>Quantity <span class="req">*</span></label>
-                        <input type="number" id="quantity" placeholder="e.g. 100" min="1" required>
+                        <label>Batch No</label>
+                        <input type="text" id="batchNo" placeholder="e.g. BT20240001">
                     </div>
                     <div class="form-group">
-                        <label>Unit</label>
-                        <select id="unit">
-                            <option value="tablets">Tablets</option>
-                            <option value="capsules">Capsules</option>
-                            <option value="strips">Strips</option>
-                            <option value="bottles">Bottles</option>
-                            <option value="vials">Vials</option>
-                            <option value="sachets">Sachets</option>
-                            <option value="tubes">Tubes</option>
-                            <option value="injections">Injections</option>
-                        </select>
+                        <label>Expire Date</label>
+                        <input type="month" id="expireDate">
                     </div>
-                </div>
 
-                <!-- Pricing -->
-                <div class="form-section-title">Pricing</div>
-
-                <div class="form-row">
+                    <!-- Quantity, MRP -->
                     <div class="form-group">
-                        <label>Purchase Price (₹) <span class="req">*</span></label>
-                        <input type="number" id="purchasePrice" placeholder="0.00" min="0" step="0.01" required>
+                        <label>Quantity</label>
+                        <input type="number" id="quantity" placeholder="0" min="0">
                     </div>
                     <div class="form-group">
                         <label>MRP (₹)</label>
                         <input type="number" id="mrp" placeholder="0.00" min="0" step="0.01">
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label>Total Amount (₹)</label>
-                    <input type="text" id="totalAmount" placeholder="Auto-calculated" readonly tabindex="-1">
-                </div>
-
-                <!-- Supplier Info -->
-                <div class="form-section-title">Supplier Info</div>
-
-                <div class="form-group">
-                    <label>Supplier / Company Name <span class="req">*</span></label>
-                    <input type="text" id="supplierName" placeholder="e.g. Sun Pharma Distributors" required>
-                </div>
-
-                <div class="form-row">
+                    <!-- Rate, GST -->
                     <div class="form-group">
-                        <label>Invoice Number</label>
-                        <input type="text" id="invoiceNo" placeholder="e.g. INV-2024-001">
+                        <label>Rate (₹)</label>
+                        <input type="number" id="rate" placeholder="0.00" min="0" step="0.01">
                     </div>
                     <div class="form-group">
-                        <label>Purchase Date</label>
-                        <input type="date" id="purchaseDate">
+                        <label>GST (%)</label>
+                        <input type="number" id="gst" placeholder="e.g. 12" min="0" max="100" step="0.01">
                     </div>
+
+                    <!-- Total full width -->
+                    <div class="form-group full-width">
+                        <label>Total (₹)</label>
+                        <input type="text" id="total" placeholder="Auto-calculated" readonly>
+                    </div>
+
                 </div>
 
                 <div class="form-actions">
@@ -426,7 +341,6 @@
                         Save Purchase
                     </button>
                 </div>
-
             </form>
         </div>
     </div>
@@ -440,45 +354,30 @@
         </div>
         <div>
             <div style="font-weight:800;">Purchase Saved!</div>
-            <div style="font-size:0.78rem; color:#fbbf24; margin-top:2px;">Stock record added successfully.</div>
+            <div style="font-size:0.78rem; color:#fbbf24; margin-top:2px;">Record added successfully.</div>
         </div>
     </div>
 
     <script>
-        // ── Auto-calculate total ──
-        function calcTotal() {
-            const qty   = parseFloat(document.getElementById('quantity').value)      || 0;
-            const price = parseFloat(document.getElementById('purchasePrice').value) || 0;
-            const total = qty * price;
-            document.getElementById('totalAmount').value = total > 0 ? '₹ ' + total.toFixed(2) : '';
-        }
-        document.getElementById('quantity').addEventListener('input', calcTotal);
-        document.getElementById('purchasePrice').addEventListener('input', calcTotal);
-
         // ── Default today's date ──
         document.getElementById('purchaseDate').valueAsDate = new Date();
 
-        // ── Form Submit ──
+        // ── Auto-calculate Total: (Qty × Rate) + GST% ──
+        function calcTotal() {
+            const qty  = parseFloat(document.getElementById('quantity').value) || 0;
+            const rate = parseFloat(document.getElementById('rate').value)     || 0;
+            const gst  = parseFloat(document.getElementById('gst').value)      || 0;
+            const base = qty * rate;
+            const total = base + (base * gst / 100);
+            document.getElementById('total').value = total > 0 ? '₹ ' + total.toFixed(2) : '';
+        }
+        ['quantity', 'rate', 'gst'].forEach(id =>
+            document.getElementById(id).addEventListener('input', calcTotal)
+        );
+
+        // ── Submit ──
         function handleSubmit(e) {
             e.preventDefault();
-
-            const required = ['medicineName', 'batchNo', 'expiryDate', 'quantity', 'purchasePrice', 'supplierName'];
-            let valid = true;
-
-            required.forEach(id => {
-                const el = document.getElementById(id);
-                if (!el.value.trim()) {
-                    el.style.borderColor = '#ef4444';
-                    el.style.boxShadow   = '0 0 0 4px rgba(239,68,68,0.1)';
-                    valid = false;
-                    el.addEventListener('input', () => {
-                        el.style.borderColor = '';
-                        el.style.boxShadow   = '';
-                    }, { once: true });
-                }
-            });
-
-            if (!valid) return;
 
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
