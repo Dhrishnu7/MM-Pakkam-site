@@ -315,26 +315,7 @@
                     <input type="text" id="doctorName" placeholder="e.g. Dr. Arun Kumar" required>
                 </div>
 
-                <div class="form-group">
-                    <label>Specialization <span class="req">*</span></label>
-                    <select id="specialization" required>
-                        <option value="" disabled selected>Select specialization</option>
-                        <option>General Physician</option>
-                        <option>Cardiologist</option>
-                        <option>Dermatologist</option>
-                        <option>Diabetologist</option>
-                        <option>ENT Specialist</option>
-                        <option>Gastroenterologist</option>
-                        <option>Gynaecologist</option>
-                        <option>Neurologist</option>
-                        <option>Oncologist</option>
-                        <option>Orthopaedic</option>
-                        <option>Paediatrician</option>
-                        <option>Psychiatrist</option>
-                        <option>Urologist</option>
-                        <option>Other</option>
-                    </select>
-                </div>
+
 
                 <div class="form-group">
                     <label>Phone Number <span class="req">*</span></label>
@@ -382,7 +363,7 @@
         function handleSubmit(e) {
             e.preventDefault();
 
-            const required = ['doctorName', 'specialization', 'phone'];
+            const required = ['doctorName', 'phone'];
             let valid = true;
 
             required.forEach(id => {
