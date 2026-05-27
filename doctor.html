@@ -385,6 +385,18 @@
             btn.disabled = true;
             btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
 
+            const doctorName = document.getElementById('doctorName').value.trim();
+            const phone      = document.getElementById('phone').value.trim();
+            const clinic     = document.getElementById('clinic').value.trim();
+            const address    = document.getElementById('address').value.trim();
+
+            // ── Save to localStorage ──
+            const doctors = JSON.parse(localStorage.getItem('mm_doctors') || '[]');
+            if (!doctors.find(d => d.name === doctorName && d.phone === phone)) {
+                doctors.push({ name: doctorName, phone, clinic, address });
+                localStorage.setItem('mm_doctors', JSON.stringify(doctors));
+            }
+
             setTimeout(() => {
                 document.getElementById('toast').classList.add('show');
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;

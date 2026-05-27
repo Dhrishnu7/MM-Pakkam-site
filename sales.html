@@ -135,6 +135,13 @@
             border-color: #10b981; background: white;
             box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
         }
+        /* datalist dropdown caret */
+        input[list] {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
         .form-group input[readonly] {
             font-weight: 700; color: #065f46;
             background: #d1fae5; border-color: #6ee7b7;
@@ -238,13 +245,15 @@
                     </div>
                     <div class="form-group">
                         <label>Customer Name</label>
-                        <input type="text" id="customerName" placeholder="e.g. Ramesh Kumar">
+                        <input type="text" id="customerName" list="customerList" placeholder="Select or type name" autocomplete="off">
+                        <datalist id="customerList"></datalist>
                     </div>
 
                     <!-- Doctor Name, Date -->
                     <div class="form-group">
                         <label>Doctor Name</label>
-                        <input type="text" id="doctorName" placeholder="e.g. Dr. Arun Kumar">
+                        <input type="text" id="doctorName" list="doctorList" placeholder="Select or type name" autocomplete="off">
+                        <datalist id="doctorList"></datalist>
                     </div>
                     <div class="form-group">
                         <label>Date</label>
@@ -326,6 +335,24 @@
     <script>
         // ── Default today's date ──
         document.getElementById('saleDate').valueAsDate = new Date();
+
+        // ── Load saved Customers & Doctors from localStorage ──
+        function loadDropdowns() {
+            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+            const doctors   = JSON.parse(localStorage.getItem('mm_doctors')   || '[]');
+
+            const cList = document.getElementById('customerList');
+            const dList = document.getElementById('doctorList');
+
+            cList.innerHTML = customers.map(c =>
+                `<option value="${c.name}">${c.name}${c.phone ? ' — ' + c.phone : ''}</option>`
+            ).join('');
+
+            dList.innerHTML = doctors.map(d =>
+                `<option value="${d.name}">${d.name}${d.clinic ? ' — ' + d.clinic : ''}</option>`
+            ).join('');
+        }
+        loadDropdowns();
 
         // ── Auto-calculate Total: (Qty × Rate) + GST% ──
         function calcTotal() {
