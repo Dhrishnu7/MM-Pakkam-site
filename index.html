@@ -6,411 +6,98 @@
     <title>Mudhalvar Marundhagam Pakkam</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --blue:    #2563eb;
-            --blue-lt: #dbeafe;
-            --teal:    #0d9488;
-            --purple:  #7c3aed;
-            --amber:   #d97706;
-            --green:   #059669;
-            --dark:    #0f172a;
-            --slate:   #334155;
-            --muted:   #64748b;
-            --border:  rgba(255,255,255,0.15);
-            --card:    rgba(255,255,255,0.08);
-            --radius:  20px;
-            --ease:    cubic-bezier(.4,0,.2,1);
-        }
-
-        html { scroll-behavior: smooth; }
-
         body {
             font-family: 'Inter', sans-serif;
-            background: #06111f;
-            color: #e2e8f0;
-            min-height: 100vh;
-            overflow-x: hidden;
+            margin: 0;
+            background-color: #f4f7f6;
+            color: #333;
         }
-
-        /* ── Animated background ─────────────────────────── */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 60% 50% at 20% 10%, rgba(37,99,235,.35) 0%, transparent 70%),
-                radial-gradient(ellipse 50% 40% at 80% 90%, rgba(13,148,136,.30) 0%, transparent 70%),
-                radial-gradient(ellipse 40% 40% at 60% 40%, rgba(124,58,237,.18) 0%, transparent 70%);
-            z-index: 0;
-            animation: bgPulse 8s ease-in-out infinite alternate;
-        }
-        @keyframes bgPulse {
-            from { opacity: .8; }
-            to   { opacity: 1;  }
-        }
-
-        body > * { position: relative; z-index: 1; }
-
-        /* ── Navbar ──────────────────────────────────────── */
-        nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.2rem 3rem;
-            background: rgba(6,17,31,.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 200;
-        }
-
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .logo-badge {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--blue), var(--teal));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 1.1rem;
+        header {
+            background-color: #0284c7;
             color: white;
-            box-shadow: 0 0 20px rgba(37,99,235,.5);
-            flex-shrink: 0;
-        }
-
-        .logo-text {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #f1f5f9;
-            letter-spacing: -0.01em;
-        }
-
-        .nav-pill {
-            background: rgba(37,99,235,.15);
-            border: 1px solid rgba(37,99,235,.4);
-            padding: 0.4rem 1.1rem;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #93c5fd;
-        }
-
-        /* ── Hero ────────────────────────────────────────── */
-        .hero {
+            padding: 1.5rem;
             text-align: center;
-            padding: 6rem 2rem 5rem;
-            max-width: 900px;
-            margin: 0 auto;
-            animation: fadeUp .8s var(--ease) forwards;
-            opacity: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .hero .tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(37,99,235,.12);
-            border: 1px solid rgba(37,99,235,.35);
-            padding: .35rem 1rem;
-            border-radius: 50px;
-            font-size: .8rem;
-            color: #93c5fd;
-            font-weight: 600;
-            margin-bottom: 2rem;
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
         }
-        .hero .tag span { width:8px; height:8px; background:#2563eb; border-radius:50%; display:inline-block; animation: blink 1.5s infinite; }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-        .hero h1 {
-            font-size: clamp(2.4rem, 5vw, 4rem);
-            font-weight: 800;
-            line-height: 1.1;
-            letter-spacing: -0.03em;
-            margin-bottom: 1.5rem;
-            color: white;
-        }
-        .hero h1 .gradient {
-            background: linear-gradient(90deg, #60a5fa, #34d399);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .hero p {
-            font-size: 1.2rem;
-            color: #94a3b8;
-            max-width: 620px;
-            margin: 0 auto 3rem;
-            line-height: 1.7;
-        }
-
-        .hero-stats {
+        .dashboard {
             display: flex;
             justify-content: center;
-            gap: 3rem;
+            gap: 2rem;
+            padding: 4rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
             flex-wrap: wrap;
         }
-        .hero-stats .stat .num {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: white;
-        }
-        .hero-stats .stat .lbl {
-            font-size: .85rem;
-            color: #64748b;
-            margin-top: .2rem;
-        }
-
-        /* ── Divider ─────────────────────────────────────── */
-        .section-label {
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            width: 220px;
             text-align: center;
-            margin: 0 auto 2.5rem;
-        }
-        .section-label h2 {
-            font-size: 1.9rem;
-            font-weight: 800;
-            color: white;
-            letter-spacing: -.02em;
-        }
-        .section-label p {
-            color: #64748b;
-            margin-top: .5rem;
-            font-size: 1rem;
-        }
-
-        /* ── Cards grid ──────────────────────────────────── */
-        .cards-section {
-            padding: 3rem 3rem 6rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 2rem;
-        }
-
-        .card {
-            background: rgba(255,255,255,.05);
-            border: 1px solid rgba(255,255,255,.08);
-            border-radius: var(--radius);
-            padding: 2.5rem 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
-            transition: transform .35s var(--ease),
-                        box-shadow .35s var(--ease),
-                        background .35s var(--ease),
-                        border-color .35s var(--ease);
-            animation: fadeUp .7s var(--ease) forwards;
-            opacity: 0;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            text-decoration: none;
+            display: block;
+            color: inherit;
         }
-        .card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--accent-a) 0%, var(--accent-b) 100%);
-            opacity: 0;
-            transition: opacity .35s;
-            z-index: 0;
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: #0284c7;
         }
-        .card:hover::after { opacity: .07; }
-        .card > * { position: relative; z-index: 1; }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 30px 60px -10px rgba(0,0,0,.4),
-                        0 0 0 1px var(--accent-a, rgba(255,255,255,.15));
-            border-color: var(--accent-a);
-            background: rgba(255,255,255,.08);
+        .section-card h2 {
+            margin: 0;
+            color: #0284c7;
+            font-size: 1.3rem;
         }
-
-        .card:nth-child(1) { --accent-a:#2563eb; --accent-b:#60a5fa; animation-delay:.1s; }
-        .card:nth-child(2) { --accent-a:#7c3aed; --accent-b:#a78bfa; animation-delay:.2s; }
-        .card:nth-child(3) { --accent-a:#d97706; --accent-b:#fbbf24; animation-delay:.3s; }
-        .card:nth-child(4) { --accent-a:#059669; --accent-b:#34d399; animation-delay:.4s; }
-
-        .card-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            background: rgba(255,255,255,.07);
-            border: 1px solid rgba(255,255,255,.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            transition: background .35s, box-shadow .35s, transform .35s;
-        }
-        .card:hover .card-icon {
-            background: var(--accent-a);
-            box-shadow: 0 10px 30px -5px var(--accent-a);
-            transform: scale(1.1) rotate(-5deg);
-        }
-        .card-icon svg {
-            width: 28px;
-            height: 28px;
-            stroke: var(--accent-a);
-            stroke-width: 1.8;
-            transition: stroke .35s;
-        }
-        .card:hover .card-icon svg { stroke: white; }
-
-        .card h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: .6rem;
-        }
-        .card p {
-            font-size: .93rem;
-            color: #64748b;
-            line-height: 1.6;
-            flex: 1;
-        }
-        .card-arrow {
-            margin-top: 1.8rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: .85rem;
-            font-weight: 600;
-            color: var(--accent-a);
-            transition: gap .25s;
-        }
-        .card:hover .card-arrow { gap: 10px; }
-
-        /* ── Footer ──────────────────────────────────────── */
-        footer {
-            border-top: 1px solid var(--border);
-            text-align: center;
-            padding: 2rem;
-            color: #334155;
-            font-size: .85rem;
-            background: rgba(6,17,31,.7);
-            backdrop-filter: blur(10px);
-        }
-
-        /* ── Animations ──────────────────────────────────── */
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(28px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ── Responsive ──────────────────────────────────── */
-        @media (max-width: 640px) {
-            nav { padding: 1rem 1.5rem; }
-            .logo-text { font-size: .95rem; }
-            .hero { padding: 4rem 1.5rem 3rem; }
-            .cards-section { padding: 2rem 1.5rem 5rem; }
-            .hero-stats { gap: 1.8rem; }
+        .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
 
-    <!-- ── Navbar ── -->
-    <nav>
-        <div class="nav-logo">
-            <div class="logo-badge">M</div>
-            <span class="logo-text">Mudhalvar Marundhagam Pakkam</span>
-        </div>
-        <div class="nav-pill">&#x2022; Live</div>
-    </nav>
+    <header>
+        <h1>Mudhalvar Marundhagam Pakkam</h1>
+    </header>
 
-    <!-- ── Hero ── -->
-    <section class="hero">
-        <div class="tag">
-            <span></span>
-            Medical Pharmacy Management System
-        </div>
-        <h1>Your Pharmacy, <br><span class="gradient">Fully in Control.</span></h1>
-        <p>A smart, all-in-one platform to manage customers, doctors, purchases and sales — built for modern Indian pharmacies.</p>
-        <div class="hero-stats">
-            <div class="stat"><div class="num">Fast</div><div class="lbl">Instant Billing</div></div>
-            <div class="stat"><div class="num">Easy</div><div class="lbl">Simple UI</div></div>
-            <div class="stat"><div class="num">Safe</div><div class="lbl">Secure Records</div></div>
-        </div>
-    </section>
+    <div class="dashboard">
 
-    <!-- ── Cards ── -->
-    <section class="cards-section">
-        <div class="section-label">
-            <h2>Quick Actions</h2>
-            <p>Choose what you want to manage today</p>
-        </div>
+        <!-- ADD CUSTOMER -->
+        <a class="section-card" href="customer.html">
+            <div class="icon">&#128100;</div>
+            <h2>ADD CUSTOMER</h2>
+        </a>
 
-        <div class="cards-grid">
+        <!-- ADD DOCTOR -->
+        <a class="section-card" href="doctor.html">
+            <div class="icon">&#129658;</div>
+            <h2>ADD DOCTOR</h2>
+        </a>
 
-            <!-- Add Customer -->
-            <div class="card" id="card-customer" onclick="window.location.href='customer.html'" style="cursor:pointer;">
-                <div class="card-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
-                </div>
-                <h3>Add Customer</h3>
-                <p>Register a new patient or walk-in customer. Store contact info, history and prescriptions securely.</p>
-                <div class="card-arrow">Open &rarr;</div>
-            </div>
+        <!-- PURCHASE -->
+        <a class="section-card" href="purchase.html">
+            <div class="icon">&#128230;</div>
+            <h2>PURCHASE</h2>
+        </a>
 
-            <!-- Add Doctor -->
-            <div class="card" id="card-doctor">
-                <div class="card-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </div>
-                <h3>Add Doctor</h3>
-                <p>Register a prescribing doctor and their clinic details. Link prescriptions and track referrals easily.</p>
-                <div class="card-arrow">Open &rarr;</div>
-            </div>
+        <!-- SALES -->
+        <a class="section-card" href="sales.html">
+            <div class="icon">&#128722;</div>
+            <h2>SALES</h2>
+        </a>
 
-            <!-- Purchase -->
-            <div class="card" id="card-purchase">
-                <div class="card-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
-                </div>
-                <h3>Purchase</h3>
-                <p>Record new stock, bulk supplier invoices and incoming inventory. Keep track of expiry dates automatically.</p>
-                <div class="card-arrow">Open &rarr;</div>
-            </div>
-
-            <!-- Sales -->
-            <div class="card" id="card-sales">
-                <div class="card-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                    </svg>
-                </div>
-                <h3>Sales</h3>
-                <p>Process billing fast, print receipts and handle prescriptions. Everything needed at the point of sale.</p>
-                <div class="card-arrow">Open &rarr;</div>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- ── Footer ── -->
-    <footer>
-        &copy; 2026 Mudhalvar Marundhagam Pakkam &mdash; All rights reserved.
-    </footer>
+    </div>
 
 </body>
 </html>
