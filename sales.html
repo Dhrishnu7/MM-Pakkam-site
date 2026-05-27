@@ -147,6 +147,16 @@
             background: #d1fae5; border-color: #6ee7b7;
             cursor: default;
         }
+        /* Bill No special auto-badge style */
+        #billNo {
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: #065f46;
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            border-color: #6ee7b7;
+            letter-spacing: 0.04em;
+            cursor: default;
+        }
 
         /* ── Divider ── */
         .divider {
@@ -241,7 +251,7 @@
                     <!-- Bill No, Customer Name -->
                     <div class="form-group">
                         <label>Bill No</label>
-                        <input type="text" id="billNo" placeholder="e.g. SL-001">
+                        <input type="text" id="billNo" readonly tabindex="-1">
                     </div>
                     <div class="form-group">
                         <label>Customer Name</label>
@@ -333,6 +343,14 @@
     </div>
 
     <script>
+        // ── Auto-generate Bill No ──
+        function generateBillNo() {
+            const counter = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
+            const padded  = String(counter).padStart(3, '0');
+            document.getElementById('billNo').value = 'MM-' + padded;
+        }
+        generateBillNo();
+
         // ── Default today's date ──
         document.getElementById('saleDate').valueAsDate = new Date();
 
@@ -376,6 +394,10 @@
             btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
 
             setTimeout(() => {
+                // ── Increment Bill No counter ──
+                const current = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
+                localStorage.setItem('mm_bill_counter', String(current));
+
                 document.getElementById('toast').classList.add('show');
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
 
@@ -385,6 +407,7 @@
                     btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Sale`;
                     document.getElementById('salesForm').reset();
                     document.getElementById('saleDate').valueAsDate = new Date();
+                    generateBillNo(); // load next number
                 }, 3000);
             }, 900);
         }
