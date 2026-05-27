@@ -6,98 +6,316 @@
     <title>Mudhalvar Marundhagam Pakkam</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --secondary: #10b981;
+            --purple: #8b5cf6;
+            --amber: #f59e0b;
+            --bg-color: #f0fdfa;
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
             font-family: 'Inter', sans-serif;
-            margin: 0;
-            background-color: #f4f7f6;
-            color: #333;
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(at 0% 0%, hsla(199,89%,90%,1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(160,84%,90%,1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
+
+        /* Navbar */
         header {
-            background-color: #0284c7;
-            color: white;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 1.25rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
         }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+        }
+
         h1 {
             margin: 0;
-            font-size: 2rem;
+            font-size: 1.5rem;
             font-weight: 700;
+            background: linear-gradient(135deg, var(--text-main), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .dashboard {
+
+        /* Dashboard */
+        .dashboard-wrapper {
+            flex: 1;
             display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            gap: 2rem;
             padding: 4rem 2rem;
-            max-width: 1100px;
-            margin: 0 auto;
-            flex-wrap: wrap;
         }
-        .section-card {
-            background: white;
-            border-radius: 12px;
-            padding: 3rem 2rem;
-            width: 220px;
+
+        .dashboard-header {
             text-align: center;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 3.5rem;
+        }
+
+        .dashboard-header h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        /* Glass Cards */
+        .section-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
-            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
             text-decoration: none;
-            display: block;
             color: inherit;
+            animation: fadeUp 0.6s ease forwards;
+            opacity: 0;
         }
+
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
         .section-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            border-color: #0284c7;
+            transform: translateY(-10px) scale(1.02);
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 20px 40px -10px rgba(14, 165, 233, 0.18);
         }
-        .section-card h2 {
-            margin: 0;
-            color: #0284c7;
-            font-size: 1.3rem;
+
+        .section-card:hover::before { opacity: 1; }
+
+        /* Individual card accent colors */
+        .card-customer::before { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
+        .card-customer:hover { box-shadow: 0 20px 40px -10px rgba(14, 165, 233, 0.22); }
+
+        .card-doctor::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .card-doctor:hover { box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.22); }
+
+        .card-purchase::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .card-purchase:hover { box-shadow: 0 20px 40px -10px rgba(245, 158, 11, 0.22); }
+
+        .card-sales::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        .card-sales:hover { box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.22); }
+
+        /* Icon wrapper */
+        .icon-wrapper {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.4rem;
+            transition: all 0.35s ease;
         }
-        .icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+
+        .icon-wrapper svg {
+            width: 34px;
+            height: 34px;
+            stroke-width: 1.7;
+            transition: stroke 0.35s;
+        }
+
+        /* Icon colors per card */
+        .card-customer .icon-wrapper { background: rgba(14,165,233,0.12); color: #0ea5e9; }
+        .card-customer .icon-wrapper svg { stroke: #0ea5e9; }
+        .card-customer:hover .icon-wrapper { background: #0ea5e9; transform: rotate(-5deg) scale(1.1); }
+        .card-customer:hover .icon-wrapper svg { stroke: white; }
+
+        .card-doctor .icon-wrapper { background: rgba(139,92,246,0.12); }
+        .card-doctor .icon-wrapper svg { stroke: #8b5cf6; }
+        .card-doctor:hover .icon-wrapper { background: #8b5cf6; transform: rotate(-5deg) scale(1.1); }
+        .card-doctor:hover .icon-wrapper svg { stroke: white; }
+
+        .card-purchase .icon-wrapper { background: rgba(245,158,11,0.12); }
+        .card-purchase .icon-wrapper svg { stroke: #f59e0b; }
+        .card-purchase:hover .icon-wrapper { background: #f59e0b; transform: rotate(-5deg) scale(1.1); }
+        .card-purchase:hover .icon-wrapper svg { stroke: white; }
+
+        .card-sales .icon-wrapper { background: rgba(16,185,129,0.12); }
+        .card-sales .icon-wrapper svg { stroke: #10b981; }
+        .card-sales:hover .icon-wrapper { background: #10b981; transform: rotate(-5deg) scale(1.1); }
+        .card-sales:hover .icon-wrapper svg { stroke: white; }
+
+        .section-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Staggered animation */
+        .dashboard > a:nth-child(1) { animation-delay: 0.1s; }
+        .dashboard > a:nth-child(2) { animation-delay: 0.2s; }
+        .dashboard > a:nth-child(3) { animation-delay: 0.3s; }
+        .dashboard > a:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(0,0,0,0.06);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            h1 { font-size: 1.1rem; }
+            .dashboard { grid-template-columns: 1fr 1fr; gap: 1rem; }
+            .dashboard-wrapper { padding: 2.5rem 1rem; }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Mudhalvar Marundhagam Pakkam</h1>
+        <div class="logo">
+            <div class="logo-icon">M</div>
+            <h1>Mudhalvar Marundhagam Pakkam</h1>
+        </div>
     </header>
 
-    <div class="dashboard">
+    <div class="dashboard-wrapper">
+        <div class="dashboard-header">
+            <h2>Welcome to your Dashboard</h2>
+            <p>Select an action below to get started</p>
+        </div>
 
-        <!-- ADD CUSTOMER -->
-        <a class="section-card" href="customer.html">
-            <div class="icon">&#128100;</div>
-            <h2>ADD CUSTOMER</h2>
-        </a>
+        <div class="dashboard">
 
-        <!-- ADD DOCTOR -->
-        <a class="section-card" href="doctor.html">
-            <div class="icon">&#129658;</div>
-            <h2>ADD DOCTOR</h2>
-        </a>
+            <!-- ADD CUSTOMER -->
+            <a class="section-card card-customer" href="customer.html">
+                <div class="icon-wrapper">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                </div>
+                <h3>ADD CUSTOMER</h3>
+                <p>Register a new patient or customer into the system.</p>
+            </a>
 
-        <!-- PURCHASE -->
-        <a class="section-card" href="purchase.html">
-            <div class="icon">&#128230;</div>
-            <h2>PURCHASE</h2>
-        </a>
+            <!-- ADD DOCTOR -->
+            <a class="section-card card-doctor" href="doctor.html">
+                <div class="icon-wrapper">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <h3>ADD DOCTOR</h3>
+                <p>Register a new prescribing doctor and clinic details.</p>
+            </a>
 
-        <!-- SALES -->
-        <a class="section-card" href="sales.html">
-            <div class="icon">&#128722;</div>
-            <h2>SALES</h2>
-        </a>
+            <!-- PURCHASE -->
+            <a class="section-card card-purchase" href="purchase.html">
+                <div class="icon-wrapper">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
+                <h3>PURCHASE</h3>
+                <p>Record incoming stock, supplier invoices and inventory.</p>
+            </a>
 
+            <!-- SALES -->
+            <a class="section-card card-sales" href="sales.html">
+                <div class="icon-wrapper">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <h3>SALES</h3>
+                <p>Process billing, generate receipts and checkout customers.</p>
+            </a>
+
+        </div>
     </div>
+
+    <footer>
+        &copy; 2026 Mudhalvar Marundhagam Pakkam. All rights reserved.
+    </footer>
 
 </body>
 </html>
