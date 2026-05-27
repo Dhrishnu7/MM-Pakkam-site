@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Doctor | Mudhalvar Marundhagam Pakkam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background-color: #f0fdfa;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(199,89%,90%,1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(160,84%,90%,1) 0px, transparent 50%);
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            color: #0f172a;
+        }
+
+        /* ── Navbar ── */
+        header {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #0ea5e9, #10b981);
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(14,165,233,0.3);
+            flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.5rem 1.2rem;
+            background: white;
+            border: 1.5px solid rgba(139,92,246,0.25);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #8b5cf6;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+        .back-btn:hover {
+            background: #8b5cf6;
+            color: white;
+            border-color: #8b5cf6;
+            box-shadow: 0 4px 16px rgba(139,92,246,0.3);
+            transform: translateY(-1px);
+        }
+
+        /* ── Page Content ── */
+        .page-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1.5rem 4rem;
+        }
+
+        /* ── Page Header ── */
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            animation: fadeUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .breadcrumb {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 0.7rem;
+        }
+        .breadcrumb a {
+            color: #8b5cf6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .page-header h1 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .page-header p {
+            color: #64748b;
+            margin-top: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        /* ── Form Card ── */
+        .form-card {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: 24px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            animation: fadeUp 0.6s ease 0.1s forwards;
+            opacity: 0;
+        }
+
+        /* ── Form Groups ── */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.4rem;
+        }
+        .form-group:last-of-type { margin-bottom: 0; }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #334155;
+        }
+        .form-group label .req { color: #ef4444; margin-left: 2px; }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: #0f172a;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.85rem 1rem;
+            outline: none;
+            width: 100%;
+            transition: all 0.25s ease;
+        }
+
+        .form-group select option { background: white; }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder { color: #cbd5e1; }
+
+        .form-group input:hover,
+        .form-group textarea:hover,
+        .form-group select:hover {
+            border-color: #ddd6fe;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: #8b5cf6;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(139,92,246,0.12);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.6;
+        }
+
+        /* ── Buttons ── */
+        .form-actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s ease;
+        }
+
+        .btn-cancel {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1.5px solid #e2e8f0;
+        }
+        .btn-cancel:hover { background: #e2e8f0; color: #334155; }
+
+        .btn-save {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 16px rgba(139,92,246,0.3);
+        }
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(139,92,246,0.4);
+        }
+        .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: white;
+            border: 1.5px solid #ddd6fe;
+            border-radius: 16px;
+            padding: 1rem 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4c1d95;
+            box-shadow: 0 10px 30px rgba(139,92,246,0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+            z-index: 999;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .toast-icon {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: #ede9fe;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 500px) {
+            header { padding: 0.8rem 1rem; }
+            .logo-text { font-size: 0.95rem; }
+            .form-card { padding: 1.8rem 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <header>
+        <a class="logo" href="index.html">
+            <div class="logo-icon">M</div>
+            <span class="logo-text">Mudhalvar Marundhagam Pakkam</span>
+        </a>
+        <a class="back-btn" href="index.html">&#8592; Back</a>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content">
+
+        <div class="page-header">
+            <div class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Add Doctor</div>
+            <h1>Add New Doctor</h1>
+            <p>Enter the doctor's details below</p>
+        </div>
+
+        <div class="form-card">
+            <form id="doctorForm" onsubmit="handleSubmit(event)" novalidate>
+
+                <div class="form-group">
+                    <label>Doctor Name <span class="req">*</span></label>
+                    <input type="text" id="doctorName" placeholder="e.g. Dr. Arun Kumar" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Specialization <span class="req">*</span></label>
+                    <select id="specialization" required>
+                        <option value="" disabled selected>Select specialization</option>
+                        <option>General Physician</option>
+                        <option>Cardiologist</option>
+                        <option>Dermatologist</option>
+                        <option>Diabetologist</option>
+                        <option>ENT Specialist</option>
+                        <option>Gastroenterologist</option>
+                        <option>Gynaecologist</option>
+                        <option>Neurologist</option>
+                        <option>Oncologist</option>
+                        <option>Orthopaedic</option>
+                        <option>Paediatrician</option>
+                        <option>Psychiatrist</option>
+                        <option>Urologist</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Phone Number <span class="req">*</span></label>
+                    <input type="tel" id="phone" placeholder="e.g. 9876543210" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Clinic / Hospital Name</label>
+                    <input type="text" id="clinic" placeholder="e.g. Apollo Clinic">
+                </div>
+
+                <div class="form-group">
+                    <label>Address / Place</label>
+                    <textarea id="address" placeholder="Enter clinic address or area..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" onclick="window.location.href='index.html'">Cancel</button>
+                    <button type="submit" class="btn btn-save" id="saveBtn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Save Doctor
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <div class="toast-icon">
+            <svg width="16" height="16" fill="none" stroke="#7c3aed" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+        <div>
+            <div style="font-weight:800;">Doctor Saved!</div>
+            <div style="font-size:0.78rem; color:#a78bfa; margin-top:2px;">Record added successfully.</div>
+        </div>
+    </div>
+
+    <script>
+        function handleSubmit(e) {
+            e.preventDefault();
+
+            const required = ['doctorName', 'specialization', 'phone'];
+            let valid = true;
+
+            required.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el.value.trim()) {
+                    el.style.borderColor = '#ef4444';
+                    el.style.boxShadow   = '0 0 0 4px rgba(239,68,68,0.1)';
+                    valid = false;
+                    el.addEventListener('input', () => {
+                        el.style.borderColor = '';
+                        el.style.boxShadow   = '';
+                    }, { once: true });
+                }
+            });
+
+            if (!valid) return;
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
+
+            setTimeout(() => {
+                document.getElementById('toast').classList.add('show');
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
+
+                setTimeout(() => {
+                    document.getElementById('toast').classList.remove('show');
+                    btn.disabled = false;
+                    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Doctor`;
+                    document.getElementById('doctorForm').reset();
+                }, 3000);
+            }, 900);
+        }
+    </script>
+
+</body>
+</html>
