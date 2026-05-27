@@ -6,466 +6,298 @@
     <title>Mudhalvar Marundhagam Pakkam</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            background: #f8faff;
-            overflow-x: hidden;
-        }
-
-        /* ── Beautiful background ── */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,0.12) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 40% at 0% 80%, rgba(14,165,233,0.10) 0%, transparent 55%),
-                radial-gradient(ellipse 50% 40% at 100% 20%, rgba(16,185,129,0.09) 0%, transparent 55%);
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        body > * { position: relative; z-index: 1; }
-
-        /* ── Decorative blobs ── */
-        .blob {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.45;
-            pointer-events: none;
-            z-index: 0;
-            animation: blobFloat 8s ease-in-out infinite alternate;
-        }
-        .blob-1 { width: 420px; height: 420px; background: #c7d2fe; top: -120px; right: -80px; animation-delay: 0s; }
-        .blob-2 { width: 340px; height: 340px; background: #a7f3d0; bottom: -80px; left: -60px; animation-delay: 3s; }
-        .blob-3 { width: 260px; height: 260px; background: #fde68a; top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: 5s; }
-
-        @keyframes blobFloat {
-            from { transform: scale(1) translate(0,0); }
-            to   { transform: scale(1.08) translate(15px, -15px); }
+            background-color: #f0fdfa;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(199,89%,90%,1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(160,84%,90%,1) 0px, transparent 50%);
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            color: #0f172a;
         }
 
         /* ── Navbar ── */
-        nav {
+        header {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(255,255,255,0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(99,102,241,0.1);
-            box-shadow: 0 1px 30px rgba(99,102,241,0.07);
-            padding: 0 3rem;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
 
-        .nav-brand {
+        .logo {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
-        .nav-logo {
-            width: 44px; height: 44px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #6366f1, #0ea5e9);
+        .logo-icon {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #0ea5e9, #10b981);
             display: flex; align-items: center; justify-content: center;
             color: white;
-            font-weight: 900;
-            font-size: 1.2rem;
-            box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(14,165,233,0.3);
             flex-shrink: 0;
         }
 
-        .nav-title {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: #1e1b4b;
-            letter-spacing: -0.02em;
-        }
-
-        .nav-badge {
-            padding: 0.3rem 1rem;
-            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(14,165,233,0.1));
-            border: 1px solid rgba(99,102,241,0.2);
-            border-radius: 50px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #6366f1;
-        }
-
-        /* ── Hero ── */
-        .hero {
-            text-align: center;
-            padding: 5rem 2rem 3.5rem;
-            max-width: 750px;
-            margin: 0 auto;
-            animation: fadeUp 0.7s ease forwards;
-            opacity: 0;
-        }
-
-        .hero-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: white;
-            border: 1px solid rgba(99,102,241,0.2);
-            border-radius: 50px;
-            padding: 0.4rem 1.1rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #6366f1;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 12px rgba(99,102,241,0.1);
-        }
-
-        .hero-tag .dot {
-            width: 8px; height: 8px;
-            background: #6366f1;
-            border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
-            50% { box-shadow: 0 0 0 6px rgba(99,102,241,0); }
-        }
-
-        .hero h1 {
-            font-size: clamp(2.2rem, 4.5vw, 3.5rem);
-            font-weight: 900;
-            color: #1e1b4b;
-            letter-spacing: -0.03em;
-            line-height: 1.1;
-            margin-bottom: 1.2rem;
-        }
-
-        .hero h1 .highlight {
-            background: linear-gradient(135deg, #6366f1 0%, #0ea5e9 50%, #10b981 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 1.1rem;
-            color: #6b7280;
-            max-width: 520px;
-            margin: 0 auto 2.5rem;
-            line-height: 1.75;
-        }
-
-        /* Stats row */
-        .stats-row {
-            display: flex;
-            justify-content: center;
-            gap: 0;
-            background: white;
-            border: 1px solid rgba(99,102,241,0.12);
-            border-radius: 20px;
-            box-shadow: 0 4px 24px rgba(99,102,241,0.08);
-            overflow: hidden;
-            max-width: 480px;
-            margin: 0 auto;
-        }
-
-        .stat-item {
-            flex: 1;
-            padding: 1.2rem 1rem;
-            text-align: center;
-            border-right: 1px solid rgba(99,102,241,0.1);
-        }
-        .stat-item:last-child { border-right: none; }
-
-        .stat-item .num {
+        .logo-text {
             font-size: 1.3rem;
-            font-weight: 800;
-            color: #1e1b4b;
-        }
-        .stat-item .lbl {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            margin-top: 2px;
-            font-weight: 500;
+            font-weight: 700;
+            color: #0f172a;
         }
 
-        /* ── Section label ── */
-        .section-label {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-        .section-label h2 {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #1e1b4b;
-            letter-spacing: -0.02em;
-        }
-        .section-label p {
-            color: #9ca3af;
-            font-size: 0.95rem;
-            margin-top: 0.4rem;
-        }
-
-        /* ── Cards section ── */
-        .cards-section {
-            padding: 3rem 3rem 6rem;
-            max-width: 1150px;
-            margin: 0 auto;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.8rem;
-        }
-
-        /* ── Individual card ── */
-        .card {
-            background: white;
-            border-radius: 24px;
-            padding: 2.5rem 2rem;
+        /* ── Dashboard Wrapper ── */
+        .dashboard-wrapper {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: flex-start;
-            border: 1.5px solid rgba(0,0,0,0.06);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+            align-items: center;
+            justify-content: center;
+            padding: 3.5rem 2rem 4rem;
+        }
+
+        /* ── Dashboard Header ── */
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-header h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .dashboard-header p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        /* ── Cards Grid ── */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.8rem;
+            width: 100%;
+            max-width: 1080px;
+        }
+
+        /* ── Card ── */
+        .section-card {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 2.5rem 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.07);
             cursor: pointer;
             text-decoration: none;
             color: inherit;
-            transition: all 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
             position: relative;
             overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             animation: fadeUp 0.6s ease forwards;
             opacity: 0;
         }
 
-        /* Decorative circle in corner */
-        .card::after {
-            content: '';
-            position: absolute;
-            top: -40px; right: -40px;
-            width: 130px; height: 130px;
-            border-radius: 50%;
-            opacity: 0.07;
-            transition: opacity 0.35s, transform 0.35s;
-            transform: scale(1);
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.10);
-        }
-
-        .card:hover::after {
-            opacity: 0.14;
-            transform: scale(1.2);
-        }
-
-        /* Card accent top bar */
-        .card::before {
+        /* Top accent bar */
+        .section-card::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 3px;
-            border-radius: 24px 24px 0 0;
+            height: 4px;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s;
+            border-radius: 20px 20px 0 0;
         }
-        .card:hover::before { opacity: 1; }
+
+        .section-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255,255,255,0.95);
+        }
+        .section-card:hover::before { opacity: 1; }
 
         /* Per-card colors */
-        .card-customer { --c: #6366f1; }
-        .card-customer::before { background: linear-gradient(90deg, #6366f1, #818cf8); }
-        .card-customer::after  { background: #6366f1; }
+        .card-customer { --c: #0ea5e9; }
+        .card-customer::before { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
+        .card-customer:hover { box-shadow: 0 20px 40px rgba(14,165,233,0.2); }
 
         .card-doctor { --c: #8b5cf6; }
         .card-doctor::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
-        .card-doctor::after  { background: #8b5cf6; }
+        .card-doctor:hover { box-shadow: 0 20px 40px rgba(139,92,246,0.2); }
 
         .card-purchase { --c: #f59e0b; }
         .card-purchase::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-        .card-purchase::after  { background: #f59e0b; }
+        .card-purchase:hover { box-shadow: 0 20px 40px rgba(245,158,11,0.2); }
 
         .card-sales { --c: #10b981; }
         .card-sales::before { background: linear-gradient(90deg, #10b981, #34d399); }
-        .card-sales::after  { background: #10b981; }
+        .card-sales:hover { box-shadow: 0 20px 40px rgba(16,185,129,0.2); }
 
-        /* Stagger */
-        .cards-grid > a:nth-child(1) { animation-delay: 0.1s; }
-        .cards-grid > a:nth-child(2) { animation-delay: 0.2s; }
-        .cards-grid > a:nth-child(3) { animation-delay: 0.3s; }
-        .cards-grid > a:nth-child(4) { animation-delay: 0.4s; }
-
-        /* Icon */
-        .card-icon {
-            width: 58px; height: 58px;
-            border-radius: 16px;
+        /* ── Icon ── */
+        .icon-wrapper {
+            width: 68px; height: 68px;
+            border-radius: 18px;
             display: flex; align-items: center; justify-content: center;
-            margin-bottom: 1.6rem;
+            margin-bottom: 1.3rem;
+            transition: all 0.35s ease;
             background: color-mix(in srgb, var(--c) 12%, white);
-            border: 1px solid color-mix(in srgb, var(--c) 20%, white);
-            transition: background 0.35s, transform 0.35s, box-shadow 0.35s;
         }
 
-        .card-icon svg {
-            width: 28px; height: 28px;
+        .icon-wrapper svg {
+            width: 32px; height: 32px;
             stroke: var(--c);
-            stroke-width: 1.8;
+            stroke-width: 1.7;
+            fill: none;
             transition: stroke 0.3s;
         }
 
-        .card:hover .card-icon {
+        .section-card:hover .icon-wrapper {
             background: var(--c);
-            box-shadow: 0 8px 24px color-mix(in srgb, var(--c) 40%, transparent);
-            transform: rotate(-8deg) scale(1.12);
+            box-shadow: 0 10px 28px color-mix(in srgb, var(--c) 40%, transparent);
+            transform: rotate(-6deg) scale(1.1);
         }
-        .card:hover .card-icon svg { stroke: white; }
+        .section-card:hover .icon-wrapper svg { stroke: white; }
 
-        .card h3 {
-            font-size: 1.15rem;
+        .section-card h3 {
+            font-size: 1.05rem;
             font-weight: 800;
-            color: #111827;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.01em;
+            color: #0f172a;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.01em;
         }
 
-        .card p {
+        .section-card p {
             font-size: 0.88rem;
-            color: #9ca3af;
-            line-height: 1.65;
-            flex: 1;
+            color: #64748b;
+            line-height: 1.6;
         }
 
-        .card-cta {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-top: 1.8rem;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--c);
-            transition: gap 0.25s;
-        }
-        .card:hover .card-cta { gap: 10px; }
+        /* Stagger */
+        .dashboard > a:nth-child(1) { animation-delay: 0.08s; }
+        .dashboard > a:nth-child(2) { animation-delay: 0.16s; }
+        .dashboard > a:nth-child(3) { animation-delay: 0.24s; }
+        .dashboard > a:nth-child(4) { animation-delay: 0.32s; }
 
-        /* ── Footer ── */
-        footer {
-            border-top: 1px solid rgba(0,0,0,0.06);
-            text-align: center;
-            padding: 1.5rem 2rem;
-            color: #d1d5db;
-            font-size: 0.82rem;
-            background: white;
-        }
-
-        /* ── Animation ── */
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(24px); }
+            from { opacity: 0; transform: translateY(20px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 1.2rem;
+            font-size: 0.82rem;
+            color: #94a3b8;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
         /* ── Responsive ── */
-        @media (max-width: 640px) {
-            nav { padding: 0 1.2rem; }
-            .nav-title { font-size: 0.9rem; }
-            .hero { padding: 3rem 1.2rem 2.5rem; }
-            .cards-section { padding: 2rem 1.2rem 4rem; }
-            .cards-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
-            .card { padding: 1.6rem 1.2rem; }
-            .stats-row { max-width: 100%; }
+        @media (max-width: 900px) {
+            .dashboard { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 500px) {
+            .dashboard { grid-template-columns: 1fr 1fr; gap: 1rem; }
+            .logo-text { font-size: 1rem; }
+            .dashboard-header h2 { font-size: 1.6rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Decorative blobs -->
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
-
     <!-- Navbar -->
-    <nav>
-        <div class="nav-brand">
-            <div class="nav-logo">M</div>
-            <span class="nav-title">Mudhalvar Marundhagam Pakkam</span>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">M</div>
+            <span class="logo-text">Mudhalvar Marundhagam Pakkam</span>
         </div>
-        <div class="nav-badge">&#x2022; Pharmacy System</div>
-    </nav>
+    </header>
 
+    <!-- Dashboard -->
+    <div class="dashboard-wrapper">
 
-
-    <!-- Cards -->
-    <section class="cards-section">
-        <div class="section-label">
-            <h2>Quick Actions</h2>
-            <p>Choose what you want to manage today</p>
+        <div class="dashboard-header">
+            <h2>Welcome to your Dashboard</h2>
+            <p>Select an action below to get started</p>
         </div>
 
-        <div class="cards-grid">
+        <div class="dashboard">
 
             <!-- ADD CUSTOMER -->
-            <a class="card card-customer" href="customer.html">
-                <div class="card-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a class="section-card card-customer" href="customer.html">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                     </svg>
                 </div>
                 <h3>ADD CUSTOMER</h3>
-                <p>Register a new patient or walk-in customer. Store contact info and prescriptions securely.</p>
-                <div class="card-cta">Open &nbsp;&#8594;</div>
+                <p>Register a new patient or customer into the system.</p>
             </a>
 
             <!-- ADD DOCTOR -->
-            <a class="card card-doctor" href="doctor.html">
-                <div class="card-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a class="section-card card-doctor" href="doctor.html">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                 </div>
                 <h3>ADD DOCTOR</h3>
-                <p>Register a prescribing doctor and their clinic details. Link referrals and prescriptions easily.</p>
-                <div class="card-cta">Open &nbsp;&#8594;</div>
+                <p>Register a new prescribing doctor and clinic details.</p>
             </a>
 
             <!-- PURCHASE -->
-            <a class="card card-purchase" href="purchase.html">
-                <div class="card-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a class="section-card card-purchase" href="purchase.html">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                     </svg>
                 </div>
                 <h3>PURCHASE</h3>
-                <p>Record incoming stock, bulk supplier invoices and inventory. Track expiry dates automatically.</p>
-                <div class="card-cta">Open &nbsp;&#8594;</div>
+                <p>Record incoming stock, supplier invoices and inventory.</p>
             </a>
 
             <!-- SALES -->
-            <a class="card card-sales" href="sales.html">
-                <div class="card-icon">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a class="section-card card-sales" href="sales.html">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                 </div>
                 <h3>SALES</h3>
-                <p>Process billing fast, print receipts and handle prescriptions at the point of sale.</p>
-                <div class="card-cta">Open &nbsp;&#8594;</div>
+                <p>Process billing, generate receipts and checkout customers.</p>
             </a>
 
         </div>
-    </section>
+    </div>
 
     <!-- Footer -->
     <footer>
-        &copy; 2026 Mudhalvar Marundhagam Pakkam &mdash; All rights reserved.
+        &copy; 2026 Mudhalvar Marundhagam Pakkam. All rights reserved.
     </footer>
 
 </body>
