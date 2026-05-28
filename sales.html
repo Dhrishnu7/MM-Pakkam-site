@@ -677,10 +677,10 @@
             return names.map(n => `<option value="${n}">`).join('');
         }
 
-        /* ── Refresh datalists in all existing rows (after import) ── */
-        function refreshAllRowDataLists() {
-            const opts = getMedicineOptions();
-            document.querySelectorAll('[id^="medList_"]').forEach(dl => { dl.innerHTML = opts; });
+        /* ── Refresh the single global datalist (handles 15,000+ items easily) ── */
+        function refreshGlobalMedicineList() {
+            const dl = document.getElementById('globalMedicineList');
+            if (dl) dl.innerHTML = getMedicineOptions();
         }
 
         /* ── Flash autofilled cells ── */
@@ -776,8 +776,6 @@
             rowCount++;
             const id = Date.now(); // unique id per row
             const tbody = document.getElementById('medicineRows');
-            const medOptions = getMedicineOptions();
-            const listId = 'medList_' + id;
 
             const tr = document.createElement('tr');
             tr.id = 'row_' + id;
@@ -786,10 +784,9 @@
                 <td><span class="row-num">${rowCount}</span></td>
                 <td>
                     <input class="t-input" id="product_${id}" type="text"
-                        list="${listId}" placeholder="Medicine name"
+                        list="globalMedicineList" placeholder="Medicine name"
                         autocomplete="off" style="min-width:150px;"
                         oninput="autoFillRow(${id})">
-                    <datalist id="${listId}">${medOptions}</datalist>
                 </td>
                 <td><input class="t-input" id="batch_${id}" type="text" placeholder="Batch No" style="min-width:90px;"></td>
                 <td><input class="t-input" id="exp_${id}"   type="month" style="min-width:120px;"></td>
@@ -921,7 +918,7 @@
         function clearImportedMedicines() {
             if (confirm("Are you sure you want to clear all imported medicines? (Purchase history will remain).")) {
                 localStorage.removeItem(ML_KEY);
-                refreshAllRowDataLists();
+                refreshGlobalMedicineList();
                 document.getElementById('toastTitle').textContent=`Cleared!`;
                 document.getElementById('toastSub').textContent=`Imported medicines removed.`;
                 document.getElementById('toast').classList.add('show');
@@ -1025,7 +1022,7 @@
             const seen=new Set(existing.map(n=>n.toLowerCase()));
             const fresh=_iNames.filter(n=>!seen.has(n.toLowerCase()));
             setMedList([...existing,...fresh]);
-            refreshAllRowDataLists(); // refresh all existing row datalists
+            refreshGlobalMedicineList(); // refresh the single datalist
             closeImportModal();
             document.getElementById('toastTitle').textContent=`${fresh.length} medicine(s) imported!`;
             document.getElementById('toastSub').textContent=`${getMedList().length} total in medicine list.`;
@@ -1033,6 +1030,10 @@
             setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
         }
     </script>
+
+    <!-- ── Single Global Datalist for 15,000+ items ── -->
+    <datalist id="globalMedicineList"></datalist>
+    <script>refreshGlobalMedicineList();</script>
 
     <!-- ── Import Medicine List Modal ── -->
     <div class="modal-overlay" id="importModal">
