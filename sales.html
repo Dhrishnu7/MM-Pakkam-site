@@ -628,6 +628,7 @@
     <script>
         const MAX_ROWS = 15;
         let rowCount = 0;
+        let globalRowCounter = 0;
 
         /* ── Auto Bill No ── */
         function generateBillNo() {
@@ -674,7 +675,7 @@
                 const t = (name || '').trim();
                 if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); names.push(t); }
             });
-            return names.map(n => `<option value="${n}">`).join('');
+            return names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
         }
 
         /* ── Refresh the single global datalist (handles 15,000+ items easily) ── */
@@ -737,9 +738,14 @@
         /* ── Update row count badge and add btn ── */
         function updateUI() {
             const badge = document.getElementById('rowCountBadge');
-            badge.textContent = rowCount + ' / ' + MAX_ROWS;
+            if(badge) badge.textContent = rowCount + ' / ' + MAX_ROWS;
             const addBtn = document.getElementById('addRowBtn');
-            addBtn.disabled = rowCount >= MAX_ROWS;
+            if(addBtn) addBtn.disabled = rowCount >= MAX_ROWS;
+            
+            // disable remove button if only 1 row
+            const removeBtns = document.querySelectorAll('.remove-row-btn');
+            removeBtns.forEach(btn => btn.disabled = (rowCount <= 1));
+            
             updateGrandTotal();
         }
 
@@ -790,7 +796,8 @@
         function addRow() {
             if (rowCount >= MAX_ROWS) return;
             rowCount++;
-            const id = Date.now(); // unique id per row
+            globalRowCounter++;
+            const id = globalRowCounter;
             const tbody = document.getElementById('medicineRows');
 
             const tr = document.createElement('tr');
@@ -818,18 +825,12 @@
                 <td><input class="t-input" id="total_${id}" type="text" readonly placeholder="—" style="min-width:80px;"></td>
                 <td>
                     <button type="button" class="remove-row-btn" onclick="removeRow(${id})" title="Remove row"
-                        ${rowCount === 1 ? 'disabled' : ''}>
+                        ${rowCount <= 1 ? 'disabled' : ''}>
                         &times;
                     </button>
                 </td>
             `;
             tbody.appendChild(tr);
-
-            // Enable remove on first row if now more than 1
-            if (rowCount > 1) {
-                const firstRemoveBtn = tbody.querySelector('tr:first-child .remove-row-btn');
-                if (firstRemoveBtn) firstRemoveBtn.disabled = false;
-            }
 
             updateUI();
             // Focus product name of new row
@@ -855,7 +856,7 @@
                 const gst      = parseFloat(document.getElementById('gst_'      + rid)?.value) || 0;
                 const discount = parseFloat(document.getElementById('discount_' + rid)?.value) || 0;
                 const total    = parseFloat(document.getElementById('total_'    + rid)?.value) || 0;
-                if (product || qty > 0) {
+                if (product && qty > 0) {
                     medicines.push({ product, batch, exp, qty, mrp, rate, gst, discount, total });
                 }
             });
@@ -1121,14 +1122,17 @@
                     <div class="text-right total-row">
                         Grand Total: ${bill.grandTotal}
                     </div>
-                    <script>
-                        setTimeout(() => { window.print(); }, 400);
-                    </script>
                 </body>
                 </html>
             `;
             printWindow.document.write(html);
             printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+            }, 500);
+            
             closeSuccessModal();
         }
     </script>
