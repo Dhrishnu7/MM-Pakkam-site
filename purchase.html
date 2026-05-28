@@ -256,6 +256,15 @@
             cursor:pointer; transition:all 0.2s ease;
         }
         .import-btn-sm:hover { background:#f59e0b; color:white; border-color:#f59e0b; }
+        .clear-btn-sm {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:3px 11px; border-radius:20px;
+            border:1.5px solid rgba(239,68,68,0.4);
+            background:#fef2f2; color:#ef4444;
+            font-family:'Inter',sans-serif; font-size:0.7rem; font-weight:700;
+            cursor:pointer; transition:all 0.2s ease;
+        }
+        .clear-btn-sm:hover { background:#ef4444; color:white; border-color:#ef4444; }
 
         /* ── Import Modal ── */
         .modal-overlay {
@@ -386,9 +395,14 @@
                     <div class="form-group full-width">
                         <div class="field-label-row">
                             <label>Product Name</label>
-                            <button type="button" class="import-btn-sm" onclick="openImportModal()">
-                                📁 Import Medicine List
-                            </button>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button type="button" class="clear-btn-sm" onclick="clearImportedMedicines()">
+                                    🗑️ Clear Imported
+                                </button>
+                                <button type="button" class="import-btn-sm" onclick="openImportModal()">
+                                    📁 Import Medicine List
+                                </button>
+                            </div>
                         </div>
                         <input type="text" id="productName" list="productNameList"
                                placeholder="Type or select medicine…" autocomplete="off">
@@ -522,6 +536,18 @@
         const ML_KEY = 'mm_medicine_list';
         const getMedList = () => JSON.parse(localStorage.getItem(ML_KEY) || '[]');
         const setMedList = list => localStorage.setItem(ML_KEY, JSON.stringify(list));
+
+        function clearImportedMedicines() {
+            if (confirm("Are you sure you want to clear all imported medicines? (Purchase history will remain).")) {
+                localStorage.removeItem(ML_KEY);
+                refreshProductDatalist();
+                const t=document.getElementById('toast');
+                const ti=document.getElementById('toastTitle'); const ts=document.getElementById('toastSub');
+                if(ti) ti.textContent=`Cleared!`;
+                if(ts) ts.textContent=`Imported medicines removed.`;
+                t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+            }
+        }
 
         function getAllMedNames() {
             const seen = new Set(), out = [];

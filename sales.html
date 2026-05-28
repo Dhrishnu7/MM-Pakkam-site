@@ -399,6 +399,15 @@
             cursor:pointer; transition:all 0.2s ease; margin-left:auto;
         }
         .import-btn-sm:hover { background:#10b981; color:white; border-color:#10b981; }
+        .clear-btn-sm {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:3px 11px; border-radius:20px;
+            border:1.5px solid rgba(239,68,68,0.4);
+            background:#fef2f2; color:#ef4444;
+            font-family:'Inter',sans-serif; font-size:0.7rem; font-weight:700;
+            cursor:pointer; transition:all 0.2s ease;
+        }
+        .clear-btn-sm:hover { background:#ef4444; color:white; border-color:#ef4444; }
 
         /* ── Import Modal ── */
         .modal-overlay {
@@ -535,9 +544,14 @@
                     <h2>Medicine Details</h2>
                     <span class="pill">UP TO 15 ITEMS</span>
                     <span class="row-count-badge" id="rowCountBadge">1 / 15</span>
-                    <button type="button" class="import-btn-sm" onclick="openImportModal()">
-                        📁 Import Medicine List
-                    </button>
+                    <div style="display:flex; gap:0.5rem; margin-left:auto;">
+                        <button type="button" class="clear-btn-sm" onclick="clearImportedMedicines()">
+                            🗑️ Clear Imported
+                        </button>
+                        <button type="button" class="import-btn-sm" onclick="openImportModal()" style="margin-left:0;">
+                            📁 Import Medicine List
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-wrap">
@@ -903,6 +917,17 @@
         const ML_KEY = 'mm_medicine_list';
         const getMedList = () => JSON.parse(localStorage.getItem(ML_KEY) || '[]');
         const setMedList = list => localStorage.setItem(ML_KEY, JSON.stringify(list));
+
+        function clearImportedMedicines() {
+            if (confirm("Are you sure you want to clear all imported medicines? (Purchase history will remain).")) {
+                localStorage.removeItem(ML_KEY);
+                refreshAllRowDataLists();
+                document.getElementById('toastTitle').textContent=`Cleared!`;
+                document.getElementById('toastSub').textContent=`Imported medicines removed.`;
+                document.getElementById('toast').classList.add('show');
+                setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
+            }
+        }
 
         /* ── Import Modal State ── */
         let _iRows=[], _iHdrs=[], _iCol=-1, _iNames=[], _iFileCount=0;
