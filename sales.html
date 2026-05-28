@@ -693,8 +693,24 @@
 
         /* ── Autofill a row from purchase data ── */
         function autoFillRow(id) {
-            const productVal = (document.getElementById('product_' + id)?.value || '').trim();
+            const productInput = document.getElementById('product_' + id);
+            if (!productInput) return;
+            const productVal = productInput.value.trim();
             if (!productVal) return;
+
+            // Check if this medicine is already in another row
+            let isDuplicate = false;
+            document.querySelectorAll('[id^="product_"]').forEach(el => {
+                if (el.id !== 'product_' + id && el.value.trim().toLowerCase() === productVal.toLowerCase()) {
+                    isDuplicate = true;
+                }
+            });
+
+            if (isDuplicate) {
+                alert('This medicine is already added to the bill.');
+                productInput.value = '';
+                return;
+            }
 
             const map = buildMedicineMap();
             const match = map[productVal.toLowerCase()];
@@ -786,7 +802,7 @@
                     <input class="t-input" id="product_${id}" type="text"
                         list="globalMedicineList" placeholder="Medicine name"
                         autocomplete="off" style="min-width:150px;"
-                        oninput="autoFillRow(${id})">
+                        onchange="autoFillRow(${id})">
                 </td>
                 <td><input class="t-input" id="batch_${id}" type="text" placeholder="Batch No" style="min-width:90px;"></td>
                 <td><input class="t-input" id="exp_${id}"   type="month" style="min-width:120px;"></td>
