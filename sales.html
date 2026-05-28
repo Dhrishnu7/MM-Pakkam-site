@@ -684,6 +684,23 @@
             if (dl) dl.innerHTML = getMedicineOptions();
         }
 
+        /* ── Refresh Customer & Doctor Datalists ── */
+        function refreshNamesLists() {
+            const sales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+            const custSet = new Set(), docSet = new Set();
+            const custNames = [], docNames = [];
+            sales.forEach(s => {
+                const c = (s.customerName || '').trim();
+                const d = (s.doctorName || '').trim();
+                if (c && !custSet.has(c.toLowerCase())) { custSet.add(c.toLowerCase()); custNames.push(c); }
+                if (d && !docSet.has(d.toLowerCase())) { docSet.add(d.toLowerCase()); docNames.push(d); }
+            });
+            const cList = document.getElementById('customerList');
+            const dList = document.getElementById('doctorList');
+            if(cList) cList.innerHTML = custNames.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
+            if(dList) dList.innerHTML = docNames.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
+        }
+
         /* ── Flash autofilled cells ── */
         function flashCell(el) {
             el.classList.remove('autofilled');
@@ -1139,7 +1156,10 @@
 
     <!-- ── Single Global Datalist for 15,000+ items ── -->
     <datalist id="globalMedicineList"></datalist>
-    <script>refreshGlobalMedicineList();</script>
+    <script>
+        refreshGlobalMedicineList();
+        refreshNamesLists();
+    </script>
 
     <!-- ── Success Modal ── -->
     <div class="modal-overlay" id="successModal">

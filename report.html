@@ -244,6 +244,14 @@
         @media (max-width: 420px) {
             .summary-grid { grid-template-columns: 1fr 1fr; }
         }
+
+        .btn-clear-data {
+            background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3;
+            padding: 0.6rem 1rem; border-radius: 10px; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn-clear-data:hover { background: #ffe4e6; }
     </style>
 </head>
 <body>
@@ -268,22 +276,30 @@
 
         <!-- Filter Card -->
         <div class="filter-card">
-            <div class="filter-row">
+            <div class="filters" style="display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap;">
                 <div class="filter-group">
                     <label>From Date</label>
-                    <input type="date" id="fromDate">
+                    <input type="date" id="fromDate" onchange="generateReport()">
                 </div>
                 <div class="filter-group">
                     <label>To Date</label>
-                    <input type="date" id="toDate">
+                    <input type="date" id="toDate" onchange="generateReport()">
                 </div>
                 <div class="filter-group">
-                    <label>Report Type</label>
-                    <select id="reportType">
-                        <option value="all">All</option>
-                        <option value="sales">Sales</option>
-                        <option value="purchase">Purchase</option>
+                    <label>Type</label>
+                    <select id="reportType" onchange="generateReport()">
+                        <option value="all">All Transactions</option>
+                        <option value="sales">Sales Only</option>
+                        <option value="purchase">Purchases Only</option>
                     </select>
+                </div>
+                <div class="filter-group" style="align-items: flex-end;">
+                    <button class="btn-clear-data" onclick="clearAllData()" title="Clear all sales and purchases data">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Clear Data
+                    </button>
                 </div>
                 <button class="btn-filter" onclick="generateReport()">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -492,6 +508,15 @@
             const parts = d.split('-');
             if(parts.length!==3) return d;
             return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+
+        function clearAllData() {
+            if (confirm("Are you sure you want to completely clear all Sales, Purchases, Customer Names, and Doctor Names? This cannot be undone.")) {
+                localStorage.removeItem('mm_sales');
+                localStorage.removeItem('mm_purchases');
+                // We keep mm_medicine_list so they don't have to re-import the catalog
+                loadData();
+            }
         }
 
         // ── Init ──
