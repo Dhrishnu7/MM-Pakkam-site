@@ -384,6 +384,24 @@
             btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
 
             setTimeout(() => {
+                // ── Save purchase record to localStorage ──
+                const record = {
+                    billNo:      document.getElementById('billNo').value.trim(),
+                    firm:        document.getElementById('firm').value.trim(),
+                    date:        document.getElementById('purchaseDate').value,
+                    productName: document.getElementById('productName').value.trim(),
+                    batchNo:     document.getElementById('batchNo').value.trim(),
+                    expireDate:  document.getElementById('expireDate').value,
+                    quantity:    document.getElementById('quantity').value,
+                    mrp:         document.getElementById('mrp').value,
+                    rate:        document.getElementById('rate').value,
+                    gst:         document.getElementById('gst').value,
+                    savedAt:     new Date().toISOString()
+                };
+                const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+                purchases.push(record);
+                localStorage.setItem('mm_purchases', JSON.stringify(purchases));
+
                 document.getElementById('toast').classList.add('show');
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
 
