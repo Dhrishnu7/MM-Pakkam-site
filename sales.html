@@ -38,10 +38,7 @@
             top: 0;
             z-index: 100;
         }
-
-        .logo {
-            display: flex; align-items: center; gap: 12px; text-decoration: none;
-        }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
         .logo-icon {
             width: 42px; height: 42px; border-radius: 10px;
             background: linear-gradient(135deg, #0ea5e9, #10b981);
@@ -50,7 +47,6 @@
             box-shadow: 0 4px 12px rgba(14,165,233,0.3); flex-shrink: 0;
         }
         .logo-text { font-size: 1.2rem; font-weight: 700; color: #0f172a; }
-
         .back-btn {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 0.5rem 1.2rem;
@@ -82,41 +78,43 @@
         .page-header h1 { font-size: 1.9rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
         .page-header p { color: #64748b; margin-top: 0.4rem; font-size: 0.95rem; }
 
-        /* ── Form Card ── */
+        /* ── Main Card ── */
         .form-card {
-            background: rgba(255,255,255,0.85);
+            background: rgba(255,255,255,0.88);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.9);
             border-radius: 24px;
             padding: 2.5rem;
-            width: 100%; max-width: 700px;
+            width: 100%; max-width: 1100px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.08);
             animation: fadeUp 0.6s ease 0.1s forwards; opacity: 0;
         }
 
-        /* ── Grid ── */
-        .form-grid {
+        /* ── Top meta grid ── */
+        .meta-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.2rem 1.4rem;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 1.1rem 1.4rem;
+            margin-bottom: 2rem;
         }
-        .full-width { grid-column: 1 / -1; }
+        @media (max-width: 860px) { .meta-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 500px) { .meta-grid { grid-template-columns: 1fr; } }
 
         /* ── Form Groups ── */
-        .form-group { display: flex; flex-direction: column; gap: 0.45rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
         .form-group label {
-            font-size: 0.78rem; font-weight: 800;
-            letter-spacing: 0.06em; text-transform: uppercase;
+            font-size: 0.72rem; font-weight: 800;
+            letter-spacing: 0.07em; text-transform: uppercase;
             color: #065f46;
         }
         .form-group input, .form-group select {
             font-family: 'Inter', sans-serif;
-            font-size: 0.95rem; color: #0f172a;
+            font-size: 0.92rem; color: #0f172a;
             background: #f8fffe;
             border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            padding: 0.7rem 0.9rem;
             outline: none; width: 100%;
             transition: all 0.22s ease;
             appearance: none; -webkit-appearance: none;
@@ -124,33 +122,23 @@
         .form-group select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 1rem center;
-            padding-right: 2.5rem;
+            background-position: right 0.9rem center;
+            padding-right: 2.2rem;
+        }
+        input[list] {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            padding-right: 2.2rem;
         }
         .form-group input::placeholder { color: #cbd5e1; }
-        .form-group input:hover, .form-group select:hover {
-            border-color: #6ee7b7; background: white;
-        }
+        .form-group input:hover, .form-group select:hover { border-color: #6ee7b7; background: white; }
         .form-group input:focus, .form-group select:focus {
             border-color: #10b981; background: white;
             box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
         }
-        /* datalist dropdown caret */
-        input[list] {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            padding-right: 2.5rem;
-        }
-        .form-group input[readonly] {
-            font-weight: 700; color: #065f46;
-            background: #d1fae5; border-color: #6ee7b7;
-            cursor: default;
-        }
-        /* Bill No special auto-badge style */
         #billNo {
-            font-weight: 800;
-            font-size: 1.05rem;
+            font-weight: 800; font-size: 1rem;
             color: #065f46;
             background: linear-gradient(135deg, #d1fae5, #a7f3d0);
             border-color: #6ee7b7;
@@ -158,12 +146,170 @@
             cursor: default;
         }
 
-        /* ── Divider ── */
+        /* ── Section Label ── */
+        .section-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .section-label h2 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #065f46;
+            letter-spacing: -0.01em;
+        }
+        .section-label .pill {
+            background: #d1fae5;
+            color: #059669;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Medicine Table ── */
+        .table-wrap {
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1.5px solid #d1fae5;
+            box-shadow: 0 2px 12px rgba(16,185,129,0.07);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 860px;
+        }
+        thead th {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            padding: 0.75rem 0.8rem;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #065f46;
+            white-space: nowrap;
+            border-bottom: 1.5px solid #a7f3d0;
+        }
+        thead th:first-child { border-radius: 12px 0 0 0; width: 36px; text-align: center; }
+        thead th:last-child  { border-radius: 0 12px 0 0; width: 44px; text-align: center; }
+
+        tbody tr {
+            transition: background 0.18s ease;
+        }
+        tbody tr:nth-child(even) { background: rgba(209,250,229,0.15); }
+        tbody tr:hover { background: rgba(209,250,229,0.35); }
+
+        tbody td {
+            padding: 0.45rem 0.55rem;
+            border-bottom: 1px solid #f0fdf4;
+            vertical-align: middle;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody td:first-child { text-align: center; font-size: 0.75rem; font-weight: 700; color: #94a3b8; }
+        tbody td:last-child  { text-align: center; }
+
+        /* Table inputs */
+        .t-input {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: #0f172a;
+            background: transparent;
+            border: 1.5px solid transparent;
+            border-radius: 8px;
+            padding: 0.45rem 0.55rem;
+            width: 100%;
+            outline: none;
+            transition: all 0.18s ease;
+        }
+        .t-input:hover { border-color: #a7f3d0; background: white; }
+        .t-input:focus { border-color: #10b981; background: white; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); }
+        .t-input::placeholder { color: #d1d5db; font-size: 0.8rem; }
+        .t-input[readonly] {
+            font-weight: 700;
+            color: #059669;
+            background: #f0fdf4;
+            border-color: transparent;
+            cursor: default;
+        }
+        .t-input[readonly]:hover { border-color: transparent; background: #f0fdf4; }
+
+        /* Remove row btn */
+        .remove-row-btn {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: #fee2e2;
+            color: #ef4444;
+            border: none; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.18s ease;
+            font-size: 0.9rem; font-weight: 700;
+            flex-shrink: 0;
+        }
+        .remove-row-btn:hover { background: #ef4444; color: white; transform: scale(1.15); }
+        .remove-row-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+        /* ── Table Footer ── */
+        .table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .add-row-btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 0.6rem 1.3rem;
+            background: white;
+            border: 1.5px dashed #6ee7b7;
+            border-radius: 50px;
+            font-size: 0.85rem; font-weight: 700; color: #059669;
+            cursor: pointer; transition: all 0.22s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .add-row-btn:hover {
+            background: #d1fae5; border-style: solid;
+            border-color: #10b981;
+            transform: translateY(-1px);
+        }
+        .add-row-btn:disabled {
+            opacity: 0.45; cursor: not-allowed; transform: none;
+        }
+
+        /* Grand Total Box */
+        .grand-total-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(135deg, #065f46, #059669);
+            color: white;
+            padding: 0.85rem 1.5rem;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(5,150,105,0.35);
+        }
+        .grand-total-box .gt-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+        .grand-total-box .gt-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        /* Divider */
         .divider {
-            grid-column: 1 / -1;
             height: 1.5px;
             background: linear-gradient(90deg, #6ee7b7, transparent);
-            margin: 0.4rem 0; border-radius: 2px;
+            margin: 1.8rem 0;
+            border-radius: 2px;
         }
 
         /* ── Buttons ── */
@@ -171,23 +317,18 @@
         .btn {
             flex: 1; display: inline-flex; align-items: center;
             justify-content: center; gap: 8px;
-            padding: 0.9rem 1.5rem; border-radius: 12px;
-            font-size: 0.95rem; font-weight: 700;
+            padding: 0.95rem 1.5rem; border-radius: 12px;
+            font-size: 0.97rem; font-weight: 700;
             font-family: 'Inter', sans-serif;
             cursor: pointer; border: none; transition: all 0.25s ease;
         }
-        .btn-cancel {
-            background: #f1f5f9; color: #64748b; border: 1.5px solid #e2e8f0;
-        }
+        .btn-cancel { background: #f1f5f9; color: #64748b; border: 1.5px solid #e2e8f0; }
         .btn-cancel:hover { background: #e2e8f0; color: #334155; }
         .btn-save {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white; box-shadow: 0 4px 16px rgba(16,185,129,0.35);
         }
-        .btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(16,185,129,0.45);
-        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(16,185,129,0.45); }
         .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
         /* ── Toast ── */
@@ -209,18 +350,33 @@
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
 
+        /* Row count badge */
+        .row-count-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 2px 10px;
+        }
+
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(20px); }
             to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes rowSlideIn {
+            from { opacity: 0; transform: translateX(-8px); }
+            to   { opacity: 1; transform: translateX(0); }
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 580px) {
             header { padding: 0.8rem 1rem; }
             .logo-text { font-size: 0.95rem; }
-            .form-card { padding: 1.8rem 1.2rem; }
-            .form-grid { grid-template-columns: 1fr; }
-            .full-width { grid-column: 1; }
+            .form-card { padding: 1.5rem 1rem; }
+            .grand-total-box .gt-value { font-size: 1.2rem; }
+            .form-actions { flex-direction: column; }
+            .btn { flex: unset; width: 100%; }
         }
     </style>
 </head>
@@ -240,97 +396,98 @@
 
         <div class="page-header">
             <div class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Sales</div>
-            <h1>Add Sale</h1>
-            <p>Fill in the billing details below</p>
+            <h1>New Sale Bill</h1>
+            <p>Add up to 15 medicines at once and save as one bill</p>
         </div>
 
         <div class="form-card">
             <form id="salesForm" onsubmit="handleSubmit(event)" novalidate>
-                <div class="form-grid">
 
-                    <!-- Bill No, Customer Name -->
+                <!-- ── Bill Meta Info ── -->
+                <div class="meta-grid">
                     <div class="form-group">
                         <label>Bill No</label>
                         <input type="text" id="billNo" readonly tabindex="-1">
                     </div>
                     <div class="form-group">
-                        <label>Customer Name</label>
-                        <input type="text" id="customerName" list="customerList" placeholder="Select or type name" autocomplete="off">
-                        <datalist id="customerList"></datalist>
-                    </div>
-
-                    <!-- Doctor Name, Date -->
-                    <div class="form-group">
-                        <label>Doctor Name</label>
-                        <input type="text" id="doctorName" list="doctorList" placeholder="Select or type name" autocomplete="off">
-                        <datalist id="doctorList"></datalist>
-                    </div>
-                    <div class="form-group">
                         <label>Date</label>
                         <input type="date" id="saleDate">
                     </div>
-
-                    <div class="divider"></div>
-
-                    <!-- Product Name full width -->
-                    <div class="form-group full-width">
-                        <label>Product Name</label>
-                        <input type="text" id="productName" placeholder="e.g. Paracetamol 500mg">
-                    </div>
-
-                    <!-- Batch No, Expire Date -->
                     <div class="form-group">
-                        <label>Batch No</label>
-                        <input type="text" id="batchNo" placeholder="e.g. BT20240001">
+                        <label>Customer Name</label>
+                        <input type="text" id="customerName" list="customerList" placeholder="Select or type…" autocomplete="off">
+                        <datalist id="customerList"></datalist>
                     </div>
                     <div class="form-group">
-                        <label>Expire Date</label>
-                        <input type="month" id="expireDate">
+                        <label>Doctor Name</label>
+                        <input type="text" id="doctorName" list="doctorList" placeholder="Select or type…" autocomplete="off">
+                        <datalist id="doctorList"></datalist>
                     </div>
-
-                    <!-- Quantity, MRP -->
-                    <div class="form-group">
-                        <label>Quantity</label>
-                        <input type="number" id="quantity" placeholder="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>MRP (₹)</label>
-                        <input type="number" id="mrp" placeholder="0.00" min="0" step="0.01">
-                    </div>
-
-                    <!-- Rate, GST -->
-                    <div class="form-group">
-                        <label>Rate (₹)</label>
-                        <input type="number" id="rate" placeholder="0.00" min="0" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label>GST (%)</label>
-                        <input type="number" id="gst" placeholder="e.g. 12" min="0" max="100" step="0.01">
-                    </div>
-
-                    <!-- Discount -->
-                    <div class="form-group full-width">
-                        <label>Discount (%)</label>
-                        <input type="number" id="discount" placeholder="e.g. 5" min="0" max="100" step="0.01">
-                    </div>
-
-                    <!-- Total full width -->
-                    <div class="form-group full-width">
-                        <label>Total (₹)</label>
-                        <input type="text" id="total" placeholder="Auto-calculated" readonly>
-                    </div>
-
                 </div>
 
+                <div class="divider"></div>
+
+                <!-- ── Medicine Table ── -->
+                <div class="section-label">
+                    <h2>Medicine Details</h2>
+                    <span class="pill">UP TO 15 ITEMS</span>
+                    <span class="row-count-badge" id="rowCountBadge">1 / 15</span>
+                </div>
+
+                <div class="table-wrap">
+                    <table id="medicineTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Product Name</th>
+                                <th>Batch No</th>
+                                <th>Exp. Date</th>
+                                <th>Qty</th>
+                                <th>MRP (₹)</th>
+                                <th>Rate (₹)</th>
+                                <th>GST %</th>
+                                <th>Disc %</th>
+                                <th>Total (₹)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="medicineRows">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer: Add Row + Grand Total -->
+                <div class="table-footer">
+                    <button type="button" class="add-row-btn" id="addRowBtn" onclick="addRow()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Add Medicine Row
+                    </button>
+
+                    <div class="grand-total-box">
+                        <div>
+                            <div class="gt-label">Grand Total</div>
+                            <div class="gt-value" id="grandTotal">₹ 0.00</div>
+                        </div>
+                        <svg width="28" height="28" fill="none" stroke="white" stroke-width="1.8" viewBox="0 0 24 24" opacity="0.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m0 0l-6 0m6 0l0 6M3 3h2l.4 2M7 13h10l4-8H5.4"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- ── Form Actions ── -->
                 <div class="form-actions">
                     <button type="button" class="btn btn-cancel" onclick="window.location.href='index.html'">Cancel</button>
                     <button type="submit" class="btn btn-save" id="saveBtn">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                         </svg>
-                        Save Sale
+                        Save Bill
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
@@ -343,82 +500,222 @@
             </svg>
         </div>
         <div>
-            <div style="font-weight:800;">Sale Saved!</div>
-            <div style="font-size:0.78rem; color:#34d399; margin-top:2px;">Billing record added successfully.</div>
+            <div style="font-weight:800;" id="toastTitle">Bill Saved!</div>
+            <div style="font-size:0.78rem; color:#34d399; margin-top:2px;" id="toastSub">Billing record added successfully.</div>
         </div>
     </div>
 
     <script>
-        // ── Auto-generate Bill No ──
+        const MAX_ROWS = 15;
+        let rowCount = 0;
+
+        /* ── Auto Bill No ── */
         function generateBillNo() {
             const counter = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
-            const padded  = String(counter).padStart(3, '0');
-            document.getElementById('billNo').value = 'MM-' + padded;
+            document.getElementById('billNo').value = 'MM-' + String(counter).padStart(3, '0');
         }
         generateBillNo();
 
-        // ── Default today's date ──
+        /* ── Default Date ── */
         document.getElementById('saleDate').valueAsDate = new Date();
 
-        // ── Load saved Customers & Doctors from localStorage ──
+        /* ── Load Customers & Doctors ── */
         function loadDropdowns() {
             const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
             const doctors   = JSON.parse(localStorage.getItem('mm_doctors')   || '[]');
 
-            const cList = document.getElementById('customerList');
-            const dList = document.getElementById('doctorList');
+            document.getElementById('customerList').innerHTML =
+                customers.map(c => `<option value="${c.name}">${c.name}${c.phone ? ' — ' + c.phone : ''}</option>`).join('');
 
-            cList.innerHTML = customers.map(c =>
-                `<option value="${c.name}">${c.name}${c.phone ? ' — ' + c.phone : ''}</option>`
-            ).join('');
-
-            dList.innerHTML = doctors.map(d =>
-                `<option value="${d.name}">${d.name}${d.clinic ? ' — ' + d.clinic : ''}</option>`
-            ).join('');
+            document.getElementById('doctorList').innerHTML =
+                doctors.map(d => `<option value="${d.name}">${d.name}${d.clinic ? ' — ' + d.clinic : ''}</option>`).join('');
         }
         loadDropdowns();
 
-        // ── Auto-calculate Total: (Qty × Rate) + GST% − Discount% ──
-        function calcTotal() {
-            const qty      = parseFloat(document.getElementById('quantity').value) || 0;
-            const rate     = parseFloat(document.getElementById('rate').value)     || 0;
-            const gst      = parseFloat(document.getElementById('gst').value)      || 0;
-            const discount = parseFloat(document.getElementById('discount').value) || 0;
+        /* ── Update row count badge and add btn ── */
+        function updateUI() {
+            const badge = document.getElementById('rowCountBadge');
+            badge.textContent = rowCount + ' / ' + MAX_ROWS;
+            const addBtn = document.getElementById('addRowBtn');
+            addBtn.disabled = rowCount >= MAX_ROWS;
+            updateGrandTotal();
+        }
+
+        /* ── Calc row total ── */
+        function calcRowTotal(rowId) {
+            const qty      = parseFloat(document.getElementById('qty_'      + rowId).value) || 0;
+            const rate     = parseFloat(document.getElementById('rate_'     + rowId).value) || 0;
+            const gst      = parseFloat(document.getElementById('gst_'      + rowId).value) || 0;
+            const discount = parseFloat(document.getElementById('discount_' + rowId).value) || 0;
             const base     = qty * rate;
             const afterGST = base + (base * gst / 100);
             const total    = afterGST - (afterGST * discount / 100);
-            document.getElementById('total').value = total > 0 ? '₹ ' + total.toFixed(2) : '';
+            const totalEl  = document.getElementById('total_' + rowId);
+            totalEl.value  = total > 0 ? total.toFixed(2) : '';
+            updateGrandTotal();
         }
-        ['quantity', 'rate', 'gst', 'discount'].forEach(id =>
-            document.getElementById(id).addEventListener('input', calcTotal)
-        );
 
-        // ── Submit ──
+        /* ── Grand Total ── */
+        function updateGrandTotal() {
+            let sum = 0;
+            document.querySelectorAll('[id^="total_"]').forEach(el => {
+                sum += parseFloat(el.value) || 0;
+            });
+            document.getElementById('grandTotal').textContent = '₹ ' + sum.toFixed(2);
+        }
+
+        /* ── Remove Row ── */
+        function removeRow(rowId) {
+            const row = document.getElementById('row_' + rowId);
+            if (row) {
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(10px)';
+                row.style.transition = 'all 0.2s ease';
+                setTimeout(() => {
+                    row.remove();
+                    rowCount--;
+                    // Renumber
+                    let i = 1;
+                    document.querySelectorAll('#medicineRows tr').forEach(r => {
+                        r.querySelector('.row-num').textContent = i++;
+                    });
+                    updateUI();
+                }, 200);
+            }
+        }
+
+        /* ── Add Row ── */
+        function addRow() {
+            if (rowCount >= MAX_ROWS) return;
+            rowCount++;
+            const id = Date.now(); // unique id per row
+            const tbody = document.getElementById('medicineRows');
+
+            const tr = document.createElement('tr');
+            tr.id = 'row_' + id;
+            tr.style.animation = 'rowSlideIn 0.25s ease forwards';
+            tr.innerHTML = `
+                <td><span class="row-num">${rowCount}</span></td>
+                <td><input class="t-input" id="product_${id}" type="text" placeholder="Medicine name" style="min-width:140px;"></td>
+                <td><input class="t-input" id="batch_${id}"   type="text" placeholder="Batch No" style="min-width:90px;"></td>
+                <td><input class="t-input" id="exp_${id}"     type="month" style="min-width:120px;"></td>
+                <td><input class="t-input" id="qty_${id}"     type="number" placeholder="0" min="0" style="min-width:60px;"
+                    oninput="calcRowTotal(${id})"></td>
+                <td><input class="t-input" id="mrp_${id}"     type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"></td>
+                <td><input class="t-input" id="rate_${id}"    type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"
+                    oninput="calcRowTotal(${id})"></td>
+                <td><input class="t-input" id="gst_${id}"     type="number" placeholder="0" min="0" max="100" step="0.01" style="min-width:56px;"
+                    oninput="calcRowTotal(${id})"></td>
+                <td><input class="t-input" id="discount_${id}" type="number" placeholder="0" min="0" max="100" step="0.01" style="min-width:56px;"
+                    oninput="calcRowTotal(${id})"></td>
+                <td><input class="t-input" id="total_${id}"   type="text" readonly placeholder="—" style="min-width:80px;"></td>
+                <td>
+                    <button type="button" class="remove-row-btn" onclick="removeRow(${id})" title="Remove row"
+                        ${rowCount === 1 ? 'disabled' : ''}>
+                        &times;
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            // Enable remove on first row if now more than 1
+            if (rowCount > 1) {
+                const firstRemoveBtn = tbody.querySelector('tr:first-child .remove-row-btn');
+                if (firstRemoveBtn) firstRemoveBtn.disabled = false;
+            }
+
+            updateUI();
+            // Focus product name of new row
+            setTimeout(() => document.getElementById('product_' + id)?.focus(), 50);
+        }
+
+        /* ── Collect all rows data ── */
+        function collectMedicines() {
+            const rows = document.querySelectorAll('#medicineRows tr');
+            const medicines = [];
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('.t-input');
+                // id pattern: product_ID
+                const productEl = row.querySelector('[id^="product_"]');
+                if (!productEl) return;
+                const rid = productEl.id.replace('product_', '');
+                const product  = (document.getElementById('product_'  + rid)?.value || '').trim();
+                const batch    = (document.getElementById('batch_'    + rid)?.value || '').trim();
+                const exp      = (document.getElementById('exp_'      + rid)?.value || '').trim();
+                const qty      = parseFloat(document.getElementById('qty_'      + rid)?.value) || 0;
+                const mrp      = parseFloat(document.getElementById('mrp_'      + rid)?.value) || 0;
+                const rate     = parseFloat(document.getElementById('rate_'     + rid)?.value) || 0;
+                const gst      = parseFloat(document.getElementById('gst_'      + rid)?.value) || 0;
+                const discount = parseFloat(document.getElementById('discount_' + rid)?.value) || 0;
+                const total    = parseFloat(document.getElementById('total_'    + rid)?.value) || 0;
+                if (product || qty > 0) {
+                    medicines.push({ product, batch, exp, qty, mrp, rate, gst, discount, total });
+                }
+            });
+            return medicines;
+        }
+
+        /* ── Submit ── */
         function handleSubmit(e) {
             e.preventDefault();
+
+            const medicines = collectMedicines();
+            if (medicines.length === 0) {
+                alert('Please add at least one medicine before saving.');
+                return;
+            }
 
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
             btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
 
             setTimeout(() => {
-                // ── Increment Bill No counter ──
-                const current = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
-                localStorage.setItem('mm_bill_counter', String(current));
+                // Increment counter & save
+                const counter = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
+                localStorage.setItem('mm_bill_counter', String(counter));
 
+                const grandTotal = document.getElementById('grandTotal').textContent;
+
+                const bill = {
+                    billNo:       document.getElementById('billNo').value,
+                    date:         document.getElementById('saleDate').value,
+                    customerName: document.getElementById('customerName').value.trim(),
+                    doctorName:   document.getElementById('doctorName').value.trim(),
+                    medicines:    medicines,
+                    grandTotal:   grandTotal,
+                    savedAt:      new Date().toISOString()
+                };
+
+                const sales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+                sales.push(bill);
+                localStorage.setItem('mm_sales', JSON.stringify(sales));
+
+                // Toast
+                document.getElementById('toastTitle').textContent = 'Bill Saved! 🎉';
+                document.getElementById('toastSub').textContent   = `${medicines.length} medicine(s) — ${grandTotal}`;
                 document.getElementById('toast').classList.add('show');
+
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
 
                 setTimeout(() => {
                     document.getElementById('toast').classList.remove('show');
                     btn.disabled = false;
-                    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Sale`;
-                    document.getElementById('salesForm').reset();
+                    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Bill`;
+
+                    // Reset form
+                    document.getElementById('customerName').value = '';
+                    document.getElementById('doctorName').value   = '';
+                    document.getElementById('medicineRows').innerHTML = '';
+                    rowCount = 0;
+                    addRow(); // start fresh with 1 row
                     document.getElementById('saleDate').valueAsDate = new Date();
-                    generateBillNo(); // load next number
+                    generateBillNo();
                 }, 3000);
-            }, 900);
+            }, 800);
         }
+
+        /* ── Init: start with 1 row ── */
+        addRow();
     </script>
 
 </body>
