@@ -366,24 +366,66 @@
         document.getElementById('toDate').valueAsDate   = today;
         document.getElementById('fromDate').valueAsDate = firstDay;
 
-        // ── Sample data (replace with real data / API later) ──
-        const sampleData = [
-            { billNo:'SL-001', date:'2026-05-25', type:'sales',   product:'Paracetamol 500mg', qty:10, rate:8,   gst:12, total:89.60  },
-            { billNo:'SL-002', date:'2026-05-26', type:'sales',   product:'Amoxicillin 250mg',  qty:5,  rate:25,  gst:12, total:140.00 },
-            { billNo:'BL-001', date:'2026-05-24', type:'purchase',product:'Paracetamol 500mg', qty:100, rate:5,  gst:12, total:560.00 },
-            { billNo:'SL-003', date:'2026-05-27', type:'sales',   product:'Cetirizine 10mg',   qty:8,  rate:6,   gst:12, total:53.76  },
-            { billNo:'BL-002', date:'2026-05-27', type:'purchase',product:'Amoxicillin 250mg',  qty:50, rate:18, gst:12, total:1008.00},
-        ];
-
+        // ── Load real data from localStorage ──
+        let allData = [];
+        let currentData = [];
         let activeTab = 'all';
-        let currentData = [...sampleData];
+
+        function loadData() {
+            // Load Purchases
+            const rawPurchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+            const mappedPurchases = rawPurchases.map(p => {
+                const qty = parseFloat(p.quantity) || 0;
+                const rate = parseFloat(p.rate) || 0;
+                const gst = parseFloat(p.gst) || 0;
+                const total = (qty * rate) * (1 + (gst / 100));
+                return {
+                    billNo: p.billNo || '-',
+                    date: p.date || '',
+                    type: 'purchase',
+                    product: p.productName || '-',
+                    qty: qty,
+                    rate: rate,
+                    gst: gst,
+                    total: total
+                };
+            });
+
+            // Load Sales
+            const rawSales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+            const mappedSales = [];
+            rawSales.forEach(bill => {
+                if(Array.isArray(bill.medicines)) {
+                    bill.medicines.forEach(m => {
+                        mappedSales.push({
+                            billNo: bill.billNo || '-',
+                            date: bill.date || '',
+                            type: 'sales',
+                            product: m.product || '-',
+                            qty: parseFloat(m.qty) || 0,
+                            rate: parseFloat(m.rate) || 0,
+                            gst: parseFloat(m.gst) || 0,
+                            total: parseFloat(m.total) || 0
+                        });
+                    });
+                }
+            });
+
+            allData = [...mappedSales, ...mappedPurchases].sort((a,b) => {
+                if(a.date > b.date) return -1;
+                if(a.date < b.date) return 1;
+                return 0;
+            });
+            
+            generateReport();
+        }
 
         function generateReport() {
             const from = document.getElementById('fromDate').value;
             const to   = document.getElementById('toDate').value;
             const type = document.getElementById('reportType').value;
 
-            currentData = sampleData.filter(r => {
+            currentData = allData.filter(r => {
                 const inDate = (!from || r.date >= from) && (!to || r.date <= to);
                 const inType = type === 'all' || r.type === type;
                 return inDate && inType;
@@ -446,12 +488,14 @@
         }
 
         function formatDate(d) {
-            const [y, m, day] = d.split('-');
-            return `${day}-${m}-${y}`;
+            if(!d) return '-';
+            const parts = d.split('-');
+            if(parts.length!==3) return d;
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
 
         // ── Init ──
-        generateReport();
+        loadData();
     </script>
 
 </body>
