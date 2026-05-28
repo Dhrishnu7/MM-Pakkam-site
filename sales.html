@@ -664,19 +664,6 @@
         /* ── Default Date ── */
         document.getElementById('saleDate').valueAsDate = new Date();
 
-        /* ── Load Customers & Doctors ── */
-        function loadDropdowns() {
-            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
-            const doctors   = JSON.parse(localStorage.getItem('mm_doctors')   || '[]');
-
-            document.getElementById('customerList').innerHTML =
-                customers.map(c => `<option value="${c.name}">${c.name}${c.phone ? ' — ' + c.phone : ''}</option>`).join('');
-
-            document.getElementById('doctorList').innerHTML =
-                doctors.map(d => `<option value="${d.name}">${d.name}${d.clinic ? ' — ' + d.clinic : ''}</option>`).join('');
-        }
-        loadDropdowns();
-
         /* ── Build medicine lookup map from purchases ── */
         function buildMedicineMap() {
             const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
@@ -710,15 +697,32 @@
 
         /* ── Refresh Customer & Doctor Datalists ── */
         function refreshNamesLists() {
-            const sales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
             const custSet = new Set(), docSet = new Set();
             const custNames = [], docNames = [];
+
+            // Add official customers
+            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+            customers.forEach(c => {
+                const n = (c.name || '').trim();
+                if (n && !custSet.has(n.toLowerCase())) { custSet.add(n.toLowerCase()); custNames.push(n); }
+            });
+
+            // Add official doctors
+            const doctors = JSON.parse(localStorage.getItem('mm_doctors') || '[]');
+            doctors.forEach(d => {
+                const n = (d.name || '').trim();
+                if (n && !docSet.has(n.toLowerCase())) { docSet.add(n.toLowerCase()); docNames.push(n); }
+            });
+
+            // Add from sales history
+            const sales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
             sales.forEach(s => {
                 const c = (s.customerName || '').trim();
                 const d = (s.doctorName || '').trim();
                 if (c && !custSet.has(c.toLowerCase())) { custSet.add(c.toLowerCase()); custNames.push(c); }
                 if (d && !docSet.has(d.toLowerCase())) { docSet.add(d.toLowerCase()); docNames.push(d); }
             });
+
             const cList = document.getElementById('customerList');
             const dList = document.getElementById('doctorList');
             if(cList) cList.innerHTML = custNames.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
@@ -958,6 +962,7 @@
                     addRow(); // start fresh with 1 row
                     document.getElementById('saleDate').valueAsDate = new Date();
                     generateBillNo();
+                    refreshNamesLists();
                 }, 500);
             }, 800);
         }
