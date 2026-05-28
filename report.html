@@ -496,6 +496,13 @@
 
         // ── Init ──
         loadData();
+
+        // ── Auto-refresh when saved in another tab ──
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'mm_sales' || e.key === 'mm_purchases') {
+                loadData();
+            }
+        });
     </script>
 
 </body>
