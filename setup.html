@@ -15,7 +15,7 @@
             min-height: 100vh;
             background: #0f172a;
             display: flex; align-items: center; justify-content: center;
-            overflow: hidden; position: relative;
+            overflow-y: auto; position: relative;
         }
         .bg-blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.16; pointer-events: none; }
         .blob-1 { width:550px;height:550px; background:radial-gradient(circle,#10b981,#059669); top:-180px; right:-100px; }
@@ -90,9 +90,11 @@
         .form-group input {
             font-family:'Inter',sans-serif; font-size:0.95rem; color:white;
             background:rgba(255,255,255,0.07); border:1.5px solid rgba(255,255,255,0.12);
-            border-radius:12px; padding:0.82rem 1rem 0.82rem 2.8rem;
+            border-radius:12px; padding:0.82rem 3rem 0.82rem 2.8rem;
             outline:none; width:100%; transition:all 0.25s ease;
         }
+        /* Username doesn't need right padding for eye toggle */
+        #ownerUsername { padding-right: 1rem; }
         .form-group input::placeholder { color:rgba(148,163,184,0.5); }
         .form-group input:hover { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.2); }
         .form-group input:focus {
@@ -108,11 +110,20 @@
         .pw-toggle:hover { color:rgba(148,163,184,1); }
 
         .error-msg {
-            display:none; align-items:center; gap:9px;
+            display: flex; align-items:center; gap:9px;
             background:rgba(239,68,68,0.1); border:1.5px solid rgba(239,68,68,0.3);
             border-radius:10px; padding:0.75rem 1rem; margin-bottom:1.3rem;
+            visibility: hidden; opacity: 0; transition: opacity 0.2s, visibility 0.2s;
         }
-        .error-msg.show { display:flex; }
+        .error-msg.show { visibility: visible; opacity: 1; }
+        .error-msg.shake { animation: shake 0.4s ease; }
+        @keyframes shake {
+            0%,100%{ transform:translateX(0) }
+            20%    { transform:translateX(-5px) }
+            40%    { transform:translateX(5px) }
+            60%    { transform:translateX(-3px) }
+            80%    { transform:translateX(3px) }
+        }
         .error-msg span { font-size:0.85rem; font-weight:600; color:#fca5a5; }
 
         .setup-btn {
@@ -214,10 +225,13 @@
                         </span>
                         <input type="password" id="ownerPassword" placeholder="Create a strong password"
                                autocomplete="new-password" required minlength="6" oninput="updateStrength()">
-                        <button type="button" class="pw-toggle" onclick="togglePw('ownerPassword','eye1')">
-                            <svg id="eye1" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <button type="button" class="pw-toggle" onclick="togglePw('ownerPassword','eyeOpen1','eyeClosed1')" aria-label="Toggle password">
+                            <svg id="eyeOpen1" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            <svg id="eyeClosed1" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
                             </svg>
                         </button>
                     </div>
@@ -241,10 +255,13 @@
                         </span>
                         <input type="password" id="ownerConfirm" placeholder="Re-enter your password"
                                autocomplete="new-password" required>
-                        <button type="button" class="pw-toggle" onclick="togglePw('ownerConfirm','eye2')">
-                            <svg id="eye2" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <button type="button" class="pw-toggle" onclick="togglePw('ownerConfirm','eyeOpen2','eyeClosed2')" aria-label="Toggle password">
+                            <svg id="eyeOpen2" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            <svg id="eyeClosed2" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
                             </svg>
                         </button>
                     </div>
@@ -264,16 +281,14 @@
         // If already set up, redirect to login
         if (mmHasUsers()) window.location.replace('login.html');
 
-        function togglePw(inputId, iconId) {
-            const inp  = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
-            if (inp.type === 'password') {
-                inp.type = 'text';
-                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`;
-            } else {
-                inp.type = 'password';
-                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
-            }
+        function togglePw(inputId, openId, closedId) {
+            const inp    = document.getElementById(inputId);
+            const open   = document.getElementById(openId);
+            const closed = document.getElementById(closedId);
+            const show = inp.type === 'password';
+            inp.type = show ? 'text' : 'password';
+            open.style.display   = show ? 'none' : '';
+            closed.style.display = show ? ''     : 'none';
         }
 
         function updateStrength() {
@@ -305,20 +320,17 @@
             const password = document.getElementById('ownerPassword').value;
             const confirm  = document.getElementById('ownerConfirm').value;
 
-            errDiv.classList.remove('show');
+            function showErr(msg) {
+                errDiv.classList.remove('shake');
+                errDiv.classList.add('show');
+                void errDiv.offsetWidth;
+                errDiv.classList.add('shake');
+                errText.textContent = msg;
+            }
 
-            if (username.length < 3) {
-                errText.textContent = 'Username must be at least 3 characters.';
-                return errDiv.classList.add('show');
-            }
-            if (password.length < 6) {
-                errText.textContent = 'Password must be at least 6 characters.';
-                return errDiv.classList.add('show');
-            }
-            if (password !== confirm) {
-                errText.textContent = 'Passwords do not match.';
-                return errDiv.classList.add('show');
-            }
+            if (username.length < 3) return showErr('Username must be at least 3 characters.');
+            if (password.length < 6) return showErr('Password must be at least 6 characters.');
+            if (password !== confirm) return showErr('Passwords do not match.');
 
             btn.disabled = true;
             btn.innerHTML = `<svg class="spinner" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Creating account…`;
