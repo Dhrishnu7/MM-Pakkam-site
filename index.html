@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="js/auth.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -33,7 +34,7 @@
             padding: 1rem 2rem;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -244,6 +245,11 @@
     </style>
 </head>
 <body>
+    <script>
+        // ── Auth Guard ──
+        mmRequireAuth();
+        document.addEventListener('DOMContentLoaded', () => mmInjectUserBar());
+    </script>
 
     <!-- Navbar -->
     <header>

@@ -294,8 +294,13 @@
             .form-card { padding: 1.8rem 1.2rem; }
         }
     </style>
+    <script src="js/auth.js"></script>
 </head>
 <body>
+    <script>
+        mmRequireAuth();
+        document.addEventListener('DOMContentLoaded', () => mmInjectUserBar());
+    </script>
 
     <!-- Navbar -->
     <header>

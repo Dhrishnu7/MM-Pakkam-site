@@ -598,8 +598,13 @@
         .qa-cancel-btn:hover { background: #f1f5f9; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="js/auth.js"></script>
 </head>
 <body>
+    <script>
+        mmRequireAuth();
+        document.addEventListener('DOMContentLoaded', () => mmInjectUserBar());
+    </script>
 
     <!-- Navbar -->
     <header>
