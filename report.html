@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -23,7 +23,7 @@
             color: #0f172a;
         }
 
-        /* ── Navbar ── */
+        /* â”€â”€ Navbar â”€â”€ */
         header {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(16px);
@@ -79,13 +79,13 @@
             box-shadow: 0 4px 16px rgba(244,63,94,0.35); transform: translateY(-1px);
         }
 
-        /* ── Page Content ── */
+        /* â”€â”€ Page Content â”€â”€ */
         .page-content {
             flex: 1; display: flex; flex-direction: column;
             align-items: center; padding: 2.5rem 1.5rem 4rem;
         }
 
-        /* ── Page Header ── */
+        /* â”€â”€ Page Header â”€â”€ */
         .page-header {
             text-align: center; margin-bottom: 2rem;
             animation: fadeUp 0.5s ease forwards; opacity: 0;
@@ -95,7 +95,7 @@
         .page-header h1 { font-size: 1.9rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
         .page-header p { color: #64748b; margin-top: 0.4rem; font-size: 0.95rem; }
 
-        /* ── Filter Card ── */
+        /* â”€â”€ Filter Card â”€â”€ */
         .filter-card {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -140,7 +140,7 @@
         }
         .btn-filter:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(244,63,94,0.4); }
 
-        /* ── Summary Cards ── */
+        /* â”€â”€ Summary Cards â”€â”€ */
         .summary-grid {
             display: grid; grid-template-columns: repeat(4, 1fr);
             gap: 1.2rem; width: 100%; max-width: 860px;
@@ -182,7 +182,7 @@
         .card-items   .summary-label { color: #7c3aed; }
         .card-items   .summary-value { color: #4c1d95; }
 
-        /* ── Report Table Card ── */
+        /* â”€â”€ Report Table Card â”€â”€ */
         .table-card {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -277,7 +277,7 @@
         }
         .btn-clear-data:hover { background: #ffe4e6; }
 
-        /* ── Expiry Checker ── */
+        /* â”€â”€ Expiry Checker â”€â”€ */
         .expiry-section {
             width: 100%; max-width: 860px;
             animation: fadeUp 0.5s ease 0.2s forwards; opacity: 0;
@@ -418,6 +418,8 @@
         .expiry-empty span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
     </style>
     <script src="js/auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
 </head>
 <body>
     <script>
@@ -483,18 +485,18 @@
         <div class="summary-grid">
             <div class="summary-card card-sales">
                 <div class="summary-label">Total Sales</div>
-                <div class="summary-value" id="totalSales">₹ 0</div>
+                <div class="summary-value" id="totalSales">â‚¹ 0</div>
                 <div class="summary-sub" id="salesCount">0 transactions</div>
             </div>
             <div class="summary-card card-purchase">
                 <div class="summary-label">Total Purchase</div>
-                <div class="summary-value" id="totalPurchase">₹ 0</div>
+                <div class="summary-value" id="totalPurchase">â‚¹ 0</div>
                 <div class="summary-sub" id="purchaseCount">0 transactions</div>
             </div>
             <div class="summary-card card-profit">
                 <div class="summary-label">Net Profit</div>
-                <div class="summary-value" id="netProfit">₹ 0</div>
-                <div class="summary-sub">Sales − Purchase</div>
+                <div class="summary-value" id="netProfit">â‚¹ 0</div>
+                <div class="summary-sub">Sales âˆ’ Purchase</div>
             </div>
             <div class="summary-card card-items">
                 <div class="summary-label">Total Items</div>
@@ -503,17 +505,17 @@
             </div>
         </div>
 
-        <!-- ══ Medicine Expiry Checker ══ -->
+        <!-- â•â• Medicine Expiry Checker â•â• -->
         <div class="expiry-section">
             <button class="expiry-toggle-btn" id="expiryToggleBtn" onclick="toggleExpiryPanel()">
                 <div class="expiry-toggle-left">
-                    <div class="expiry-toggle-icon">💊</div>
+                    <div class="expiry-toggle-icon">ðŸ’Š</div>
                     <div class="expiry-toggle-text">
                         <div class="expiry-toggle-title">Medicine Expiry Checker</div>
                         <div class="expiry-toggle-sub">Check which medicines are expired or about to expire</div>
                     </div>
                 </div>
-                <div class="expiry-chevron" id="expiryChevron">▼</div>
+                <div class="expiry-chevron" id="expiryChevron">â–¼</div>
             </button>
 
             <div class="expiry-panel" id="expiryPanel">
@@ -536,16 +538,16 @@
                                oninput="clearMonthPillSelection()">
                     </div>
                     <button class="btn-check-expiry" onclick="checkExpiry()">
-                        🔍 Check Now
+                        ðŸ” Check Now
                     </button>
                 </div>
 
                 <!-- Summary Pills -->
                 <div class="expiry-summary" id="expirySummary" style="display:none">
-                    <div class="expiry-pill pill-expired"   id="pillExpired">🔴 0 Already Expired</div>
-                    <div class="expiry-pill pill-thismonth" id="pillThisMonth">🟠 0 Expiring This Month</div>
-                    <div class="expiry-pill pill-soon"      id="pillSoon">🟡 0 Expiring Soon</div>
-                    <div class="expiry-pill pill-ok"        id="pillOk">✅ 0 All OK</div>
+                    <div class="expiry-pill pill-expired"   id="pillExpired">ðŸ”´ 0 Already Expired</div>
+                    <div class="expiry-pill pill-thismonth" id="pillThisMonth">ðŸŸ  0 Expiring This Month</div>
+                    <div class="expiry-pill pill-soon"      id="pillSoon">ðŸŸ¡ 0 Expiring Soon</div>
+                    <div class="expiry-pill pill-ok"        id="pillOk">âœ… 0 All OK</div>
                 </div>
 
                 <!-- Results Table -->
@@ -565,7 +567,7 @@
                         </tbody>
                     </table>
                     <div class="expiry-empty" id="expiryEmpty" style="display:none">
-                        <span>✅</span>
+                        <span>âœ…</span>
                         No medicines found expiring within the selected period!
                     </div>
                 </div>
@@ -592,9 +594,9 @@
                             <th>Type</th>
                             <th>Product</th>
                             <th>Qty</th>
-                            <th>Rate (₹)</th>
+                            <th>Rate (â‚¹)</th>
                             <th>GST %</th>
-                            <th>Total (₹)</th>
+                            <th>Total (â‚¹)</th>
                         </tr>
                     </thead>
                     <tbody id="reportBody">
@@ -614,13 +616,13 @@
     </div>
 
     <script>
-        // ── Set default dates (this month) ──
+        // â”€â”€ Set default dates (this month) â”€â”€
         const today = new Date();
         const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         document.getElementById('toDate').valueAsDate   = today;
         document.getElementById('fromDate').valueAsDate = firstDay;
 
-        // ── Load real data from localStorage ──
+        // â”€â”€ Load real data from localStorage â”€â”€
         let allData = [];
         let currentData = [];
         let activeTab = 'all';
@@ -718,7 +720,7 @@
                     <td>${r.rate.toFixed(2)}</td>
                     <td>${r.gst}%</td>
                     <td class="${r.type === 'sales' ? 'amount-positive' : 'amount-negative'}">
-                        ${r.type === 'sales' ? '+' : '-'}₹ ${r.total.toFixed(2)}
+                        ${r.type === 'sales' ? '+' : '-'}â‚¹ ${r.total.toFixed(2)}
                     </td>
                 </tr>`).join('');
         }
@@ -730,11 +732,11 @@
             const totalP   = purchase.reduce((s, r) => s + r.total, 0);
             const totalQty = data.reduce((s, r) => s + r.qty, 0);
 
-            document.getElementById('totalSales').textContent    = '₹ ' + totalS.toFixed(2);
+            document.getElementById('totalSales').textContent    = 'â‚¹ ' + totalS.toFixed(2);
             document.getElementById('salesCount').textContent    = sales.length + ' transactions';
-            document.getElementById('totalPurchase').textContent = '₹ ' + totalP.toFixed(2);
+            document.getElementById('totalPurchase').textContent = 'â‚¹ ' + totalP.toFixed(2);
             document.getElementById('purchaseCount').textContent = purchase.length + ' transactions';
-            document.getElementById('netProfit').textContent     = '₹ ' + (totalS - totalP).toFixed(2);
+            document.getElementById('netProfit').textContent     = 'â‚¹ ' + (totalS - totalP).toFixed(2);
             document.getElementById('totalItems').textContent    = totalQty;
 
             const profitEl = document.getElementById('netProfit');
@@ -757,9 +759,9 @@
             }
         }
 
-        // ══════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         // EXPIRY CHECKER
-        // ══════════════════════════════════════
+        // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
         let _expiryMonths = 0; // 0 = this month only
 
         function toggleExpiryPanel() {
@@ -826,10 +828,10 @@
 
             // Update summary pills
             document.getElementById('expirySummary').style.display = 'flex';
-            document.getElementById('pillExpired').innerHTML   = `🔴 ${expired.length} Already Expired`;
-            document.getElementById('pillThisMonth').innerHTML = `🟠 ${thisMonth.length} Expiring This Month`;
-            document.getElementById('pillSoon').innerHTML      = `🟡 ${soon.length} Expiring Soon`;
-            document.getElementById('pillOk').innerHTML        = `✅ ${ok.length} OK`;
+            document.getElementById('pillExpired').innerHTML   = `ðŸ”´ ${expired.length} Already Expired`;
+            document.getElementById('pillThisMonth').innerHTML = `ðŸŸ  ${thisMonth.length} Expiring This Month`;
+            document.getElementById('pillSoon').innerHTML      = `ðŸŸ¡ ${soon.length} Expiring Soon`;
+            document.getElementById('pillOk').innerHTML        = `âœ… ${ok.length} OK`;
 
             // Build table
             const combined = [...expired, ...thisMonth, ...soon];
@@ -848,11 +850,11 @@
             tbody.innerHTML = combined.map(r => {
                 let statusHtml;
                 if (r.diff < 0) {
-                    statusHtml = `<span class="expiry-status status-expired">🔴 Expired ${Math.abs(r.diff)} month(s) ago</span>`;
+                    statusHtml = `<span class="expiry-status status-expired">ðŸ”´ Expired ${Math.abs(r.diff)} month(s) ago</span>`;
                 } else if (r.diff === 0) {
-                    statusHtml = `<span class="expiry-status status-thismonth">🟠 Expiring This Month</span>`;
+                    statusHtml = `<span class="expiry-status status-thismonth">ðŸŸ  Expiring This Month</span>`;
                 } else {
-                    statusHtml = `<span class="expiry-status status-soon">🟡 Expires in ${r.diff} month(s)</span>`;
+                    statusHtml = `<span class="expiry-status status-soon">ðŸŸ¡ Expires in ${r.diff} month(s)</span>`;
                 }
                 return `
                     <tr>
@@ -873,10 +875,10 @@
             return `${months[parseInt(mo)-1] || mo} ${yr}`;
         }
 
-        // ── Init ──
+        // â”€â”€ Init â”€â”€
         loadData();
 
-        // ── Auto-refresh when saved in another tab ──
+        // â”€â”€ Auto-refresh when saved in another tab â”€â”€
         window.addEventListener('storage', function(e) {
             if (e.key === 'mm_sales' || e.key === 'mm_purchases') {
                 loadData();
@@ -886,3 +888,4 @@
 
 </body>
 </html>
+

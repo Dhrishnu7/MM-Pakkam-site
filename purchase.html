@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -23,7 +23,7 @@
             color: #0f172a;
         }
 
-        /* ── Navbar ── */
+        /* â”€â”€ Navbar â”€â”€ */
         header {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(16px);
@@ -89,7 +89,7 @@
             transform: translateY(-1px);
         }
 
-        /* ── Page Content ── */
+        /* â”€â”€ Page Content â”€â”€ */
         .page-content {
             flex: 1;
             display: flex;
@@ -98,7 +98,7 @@
             padding: 2.5rem 1.5rem 4rem;
         }
 
-        /* ── Page Header ── */
+        /* â”€â”€ Page Header â”€â”€ */
         .page-header {
             text-align: center;
             margin-bottom: 2rem;
@@ -114,7 +114,7 @@
         }
         .page-header p { color: #64748b; margin-top: 0.4rem; font-size: 0.95rem; }
 
-        /* ── Form Card ── */
+        /* â”€â”€ Form Card â”€â”€ */
         .form-card {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(20px);
@@ -129,7 +129,7 @@
             opacity: 0;
         }
 
-        /* ── Grid Layout ── */
+        /* â”€â”€ Grid Layout â”€â”€ */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -137,7 +137,7 @@
         }
         .full-width { grid-column: 1 / -1; }
 
-        /* ── Form Groups ── */
+        /* â”€â”€ Form Groups â”€â”€ */
         .form-group {
             display: flex;
             flex-direction: column;
@@ -183,7 +183,7 @@
             cursor: default;
         }
 
-        /* ── Divider ── */
+        /* â”€â”€ Divider â”€â”€ */
         .divider {
             grid-column: 1 / -1;
             height: 1.5px;
@@ -192,7 +192,7 @@
             border-radius: 2px;
         }
 
-        /* ── Buttons ── */
+        /* â”€â”€ Buttons â”€â”€ */
         .form-actions {
             display: flex;
             gap: 0.8rem;
@@ -224,7 +224,7 @@
         }
         .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-        /* ── Toast ── */
+        /* â”€â”€ Toast â”€â”€ */
         .toast {
             position: fixed;
             bottom: 2rem; right: 2rem;
@@ -260,7 +260,7 @@
             .full-width { grid-column: 1; }
         }
 
-        /* ── Field label row (label + import button) ── */
+        /* â”€â”€ Field label row (label + import button) â”€â”€ */
         .field-label-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:0; }
         .import-btn-sm {
             display:inline-flex; align-items:center; gap:5px;
@@ -281,7 +281,7 @@
         }
         .clear-btn-sm:hover { background:#ef4444; color:white; border-color:#ef4444; }
 
-        /* ── Import Modal ── */
+        /* â”€â”€ Import Modal â”€â”€ */
         .modal-overlay {
             position:fixed; inset:0;
             background:rgba(15,23,42,0.55);
@@ -364,6 +364,8 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="js/auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
 </head>
 <body>
     <script>
@@ -417,15 +419,15 @@
                             <label>Product Name</label>
                             <div style="display:flex; gap:0.5rem;">
                                 <button type="button" class="clear-btn-sm" onclick="clearImportedMedicines()">
-                                    🗑️ Clear Imported
+                                    ðŸ—‘ï¸ Clear Imported
                                 </button>
                                 <button type="button" class="import-btn-sm" onclick="openImportModal()">
-                                    📁 Import Medicine List
+                                    ðŸ“ Import Medicine List
                                 </button>
                             </div>
                         </div>
                         <input type="text" id="productName" list="productNameList"
-                               placeholder="Type or select medicine…" autocomplete="off">
+                               placeholder="Type or select medicineâ€¦" autocomplete="off">
                         <datalist id="productNameList"></datalist>
                     </div>
 
@@ -445,13 +447,13 @@
                         <input type="number" id="quantity" placeholder="0" min="0">
                     </div>
                     <div class="form-group">
-                        <label>MRP (₹)</label>
+                        <label>MRP (â‚¹)</label>
                         <input type="number" id="mrp" placeholder="0.00" min="0" step="0.01">
                     </div>
 
                     <!-- Rate, GST -->
                     <div class="form-group">
-                        <label>Rate (₹)</label>
+                        <label>Rate (â‚¹)</label>
                         <input type="number" id="rate" placeholder="0.00" min="0" step="0.01">
                     </div>
                     <div class="form-group">
@@ -461,7 +463,7 @@
 
                     <!-- Total full width -->
                     <div class="form-group full-width">
-                        <label>Total (₹)</label>
+                        <label>Total (â‚¹)</label>
                         <input type="text" id="total" placeholder="Auto-calculated" readonly>
                     </div>
 
@@ -494,23 +496,23 @@
     </div>
 
     <script>
-        // ── Default today's date ──
+        // â”€â”€ Default today's date â”€â”€
         document.getElementById('purchaseDate').valueAsDate = new Date();
 
-        // ── Auto-calculate Total: (Qty × Rate) + GST% ──
+        // â”€â”€ Auto-calculate Total: (Qty Ã— Rate) + GST% â”€â”€
         function calcTotal() {
             const qty  = parseFloat(document.getElementById('quantity').value) || 0;
             const rate = parseFloat(document.getElementById('rate').value)     || 0;
             const gst  = parseFloat(document.getElementById('gst').value)      || 0;
             const base = qty * rate;
             const total = base + (base * gst / 100);
-            document.getElementById('total').value = total > 0 ? '₹ ' + total.toFixed(2) : '';
+            document.getElementById('total').value = total > 0 ? 'â‚¹ ' + total.toFixed(2) : '';
         }
         ['quantity', 'rate', 'gst'].forEach(id =>
             document.getElementById(id).addEventListener('input', calcTotal)
         );
 
-        // ── Submit ──
+        // â”€â”€ Submit â”€â”€
         function handleSubmit(e) {
             e.preventDefault();
 
@@ -519,7 +521,7 @@
             btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
 
             setTimeout(() => {
-                // ── Save purchase record to localStorage ──
+                // â”€â”€ Save purchase record to localStorage â”€â”€
                 const record = {
                     billNo:      document.getElementById('billNo').value.trim(),
                     firm:        document.getElementById('firm').value.trim(),
@@ -550,9 +552,9 @@
             }, 900);
         }
 
-        /* ════════════════════════════════════════
-           Medicine List — localStorage helpers
-        ════════════════════════════════════════ */
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+           Medicine List â€” localStorage helpers
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         const ML_KEY = 'mm_medicine_list';
         const getMedList = () => JSON.parse(localStorage.getItem(ML_KEY) || '[]');
         const setMedList = list => localStorage.setItem(ML_KEY, JSON.stringify(list));
@@ -583,7 +585,7 @@
         }
         refreshProductDatalist(); // populate on page load
 
-        /* ── Import Modal State ── */
+        /* â”€â”€ Import Modal State â”€â”€ */
         let _iRows=[], _iHdrs=[], _iCol=-1, _iNames=[], _iFileCount=0;
 
         function openImportModal() {
@@ -644,7 +646,7 @@
             let autoIdx=-1;
             for(let i=0;i<maxC;i++){
                 const hdr=_iHdrs[i]?String(_iHdrs[i]):`Column ${i+1}`;
-                const smp=_iRows.slice(0,3).map(r=>r[i]?String(r[i]):'').filter(Boolean).join(' · ');
+                const smp=_iRows.slice(0,3).map(r=>r[i]?String(r[i]):'').filter(Boolean).join(' Â· ');
                 const btn=document.createElement('button');
                 btn.type='button'; btn.className='col-pill'; btn.dataset.ci=i;
                 btn.innerHTML=`<b>${hdr}</b>${smp?`<br><small style="opacity:.7">${smp}</small>`:''}` ;
@@ -668,8 +670,8 @@
             const pv=document.getElementById('importPreview');
             pv.style.display='block';
             pv.innerHTML=_iNames.slice(0,25).map(n=>`<div class="prev-item">${n}</div>`).join('')
-                +(_iNames.length>25?`<div class="prev-more">+${_iNames.length-25} more…</div>`:'');
-            document.getElementById('importCount').textContent=`✓ ${_iNames.length} unique medicine name(s) found`;
+                +(_iNames.length>25?`<div class="prev-more">+${_iNames.length-25} moreâ€¦</div>`:'');
+            document.getElementById('importCount').textContent=`âœ“ ${_iNames.length} unique medicine name(s) found`;
             document.getElementById('importConfirmBtn').disabled=_iNames.length===0;
         }
 
@@ -689,12 +691,12 @@
         }
     </script>
 
-    <!-- ── Import Medicine List Modal ── -->
+    <!-- â”€â”€ Import Medicine List Modal â”€â”€ -->
     <div class="modal-overlay" id="importModal">
         <div class="modal-card">
             <div class="modal-hd">
-                <h3>📋 Import Medicine List</h3>
-                <button class="modal-x" type="button" onclick="closeImportModal()">×</button>
+                <h3>ðŸ“‹ Import Medicine List</h3>
+                <button class="modal-x" type="button" onclick="closeImportModal()">Ã—</button>
             </div>
             <!-- Step 1: File Upload -->
             <div class="modal-bd" id="importStep1">
@@ -703,7 +705,7 @@
                      ondragleave="this.classList.remove('drag-over')"
                      ondrop="handleFileDrop(event)">
                     <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple onchange="handleFileInput(event)">
-                    <div class="dz-ico">📁</div>
+                    <div class="dz-ico">ðŸ“</div>
                     <div class="dz-txt">Drop files here or click to browse</div>
                     <div class="dz-sub">Supports .xlsx, .xls, .csv &mdash; multiple files allowed</div>
                 </div>
@@ -719,7 +721,7 @@
             <div class="modal-ft">
                 <button class="btn-mcancel" type="button" onclick="closeImportModal()">Cancel</button>
                 <button class="btn-do-import" id="importConfirmBtn" type="button" onclick="doImport()" disabled>
-                    ✓ Import Medicines
+                    âœ“ Import Medicines
                 </button>
             </div>
         </div>
@@ -727,3 +729,4 @@
 
 </body>
 </html>
+

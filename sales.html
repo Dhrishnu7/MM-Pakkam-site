@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -23,7 +23,7 @@
             color: #0f172a;
         }
 
-        /* ── Navbar ── */
+        /* â”€â”€ Navbar â”€â”€ */
         header {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(16px);
@@ -86,13 +86,13 @@
             transform: translateY(-1px);
         }
 
-        /* ── Page Content ── */
+        /* â”€â”€ Page Content â”€â”€ */
         .page-content {
             flex: 1; display: flex; flex-direction: column;
             align-items: center; padding: 2.5rem 1.5rem 4rem;
         }
 
-        /* ── Page Header ── */
+        /* â”€â”€ Page Header â”€â”€ */
         .page-header {
             text-align: center; margin-bottom: 2rem;
             animation: fadeUp 0.5s ease forwards; opacity: 0;
@@ -102,7 +102,7 @@
         .page-header h1 { font-size: 1.9rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
         .page-header p { color: #64748b; margin-top: 0.4rem; font-size: 0.95rem; }
 
-        /* ── Main Card ── */
+        /* â”€â”€ Main Card â”€â”€ */
         .form-card {
             background: rgba(255,255,255,0.88);
             backdrop-filter: blur(20px);
@@ -115,7 +115,7 @@
             animation: fadeUp 0.6s ease 0.1s forwards; opacity: 0;
         }
 
-        /* ── Top meta grid ── */
+        /* â”€â”€ Top meta grid â”€â”€ */
         .meta-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -125,7 +125,7 @@
         @media (max-width: 860px) { .meta-grid { grid-template-columns: 1fr 1fr; } }
         @media (max-width: 500px) { .meta-grid { grid-template-columns: 1fr; } }
 
-        /* ── Form Groups ── */
+        /* â”€â”€ Form Groups â”€â”€ */
         .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
         .form-group label {
             font-size: 0.72rem; font-weight: 800;
@@ -170,7 +170,7 @@
             cursor: default;
         }
 
-        /* ── Section Label ── */
+        /* â”€â”€ Section Label â”€â”€ */
         .section-label {
             display: flex;
             align-items: center;
@@ -193,7 +193,7 @@
             letter-spacing: 0.04em;
         }
 
-        /* ── Medicine Table ── */
+        /* â”€â”€ Medicine Table â”€â”€ */
         .table-wrap {
             overflow-x: auto;
             border-radius: 14px;
@@ -275,7 +275,7 @@
         .remove-row-btn:hover { background: #ef4444; color: white; transform: scale(1.15); }
         .remove-row-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
-        /* ── Table Footer ── */
+        /* â”€â”€ Table Footer â”€â”€ */
         .table-footer {
             display: flex;
             align-items: center;
@@ -336,7 +336,7 @@
             border-radius: 2px;
         }
 
-        /* ── Buttons ── */
+        /* â”€â”€ Buttons â”€â”€ */
         .form-actions { display: flex; gap: 0.8rem; margin-top: 2rem; }
         .btn {
             flex: 1; display: inline-flex; align-items: center;
@@ -355,7 +355,7 @@
         .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(16,185,129,0.45); }
         .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-        /* ── Toast ── */
+        /* â”€â”€ Toast â”€â”€ */
         .toast {
             position: fixed; bottom: 2rem; right: 2rem;
             background: white; border: 1.5px solid #a7f3d0;
@@ -413,7 +413,7 @@
             .btn { flex: unset; width: 100%; }
         }
 
-        /* ── Import button (green) ── */
+        /* â”€â”€ Import button (green) â”€â”€ */
         .import-btn-sm {
             display:inline-flex; align-items:center; gap:5px;
             padding:3px 11px; border-radius:20px;
@@ -433,7 +433,7 @@
         }
         .clear-btn-sm:hover { background:#ef4444; color:white; border-color:#ef4444; }
 
-        /* ── Import Modal ── */
+        /* â”€â”€ Import Modal â”€â”€ */
         .modal-overlay {
             position:fixed; inset:0;
             background:rgba(15,23,42,0.55);
@@ -514,7 +514,7 @@
         }
         .btn-mcancel:hover { background:#f1f5f9; }
 
-        /* ── Quick-Add Customer/Doctor ── */
+        /* â”€â”€ Quick-Add Customer/Doctor â”€â”€ */
         .field-label-row {
             display: flex; align-items: center; justify-content: space-between;
             margin-bottom: 0;
@@ -599,6 +599,8 @@
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="js/auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
 </head>
 <body>
     <script>
@@ -627,7 +629,7 @@
         <div class="form-card">
             <form id="salesForm" onsubmit="handleSubmit(event)" novalidate>
 
-                <!-- ── Bill Meta Info ── -->
+                <!-- â”€â”€ Bill Meta Info â”€â”€ -->
                 <div class="meta-grid">
                     <div class="form-group">
                         <label>Bill No</label>
@@ -644,7 +646,7 @@
                                 + New Customer
                             </button>
                         </div>
-                        <input type="text" id="customerName" list="customerList" placeholder="Select or type…" autocomplete="off">
+                        <input type="text" id="customerName" list="customerList" placeholder="Select or typeâ€¦" autocomplete="off">
                         <datalist id="customerList"></datalist>
                     </div>
                     <div class="form-group">
@@ -654,24 +656,24 @@
                                 + New Doctor
                             </button>
                         </div>
-                        <input type="text" id="doctorName" list="doctorList" placeholder="Select or type…" autocomplete="off">
+                        <input type="text" id="doctorName" list="doctorList" placeholder="Select or typeâ€¦" autocomplete="off">
                         <datalist id="doctorList"></datalist>
                     </div>
                 </div>
 
                 <div class="divider"></div>
 
-                <!-- ── Medicine Table ── -->
+                <!-- â”€â”€ Medicine Table â”€â”€ -->
                 <div class="section-label">
                     <h2>Medicine Details</h2>
                     <span class="pill">UP TO 15 ITEMS</span>
                     <span class="row-count-badge" id="rowCountBadge">1 / 15</span>
                     <div style="display:flex; gap:0.5rem; margin-left:auto;">
                         <button type="button" class="clear-btn-sm" onclick="clearImportedMedicines()">
-                            🗑️ Clear Imported
+                            ðŸ—‘ï¸ Clear Imported
                         </button>
                         <button type="button" class="import-btn-sm" onclick="openImportModal()" style="margin-left:0;">
-                            📁 Import Medicine List
+                            ðŸ“ Import Medicine List
                         </button>
                     </div>
                 </div>
@@ -685,11 +687,11 @@
                                 <th>Batch No</th>
                                 <th>Exp. Date</th>
                                 <th>Qty</th>
-                                <th>MRP (₹)</th>
-                                <th>Rate (₹)</th>
+                                <th>MRP (â‚¹)</th>
+                                <th>Rate (â‚¹)</th>
                                 <th>GST %</th>
                                 <th>Disc %</th>
-                                <th>Total (₹)</th>
+                                <th>Total (â‚¹)</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -711,7 +713,7 @@
                     <div class="grand-total-box">
                         <div>
                             <div class="gt-label">Grand Total</div>
-                            <div class="gt-value" id="grandTotal">₹ 0.00</div>
+                            <div class="gt-value" id="grandTotal">â‚¹ 0.00</div>
                         </div>
                         <svg width="28" height="28" fill="none" stroke="white" stroke-width="1.8" viewBox="0 0 24 24" opacity="0.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m0 0l-6 0m6 0l0 6M3 3h2l.4 2M7 13h10l4-8H5.4"/>
@@ -719,7 +721,7 @@
                     </div>
                 </div>
 
-                <!-- ── Form Actions ── -->
+                <!-- â”€â”€ Form Actions â”€â”€ -->
                 <div class="form-actions">
                     <button type="button" class="btn btn-cancel" onclick="window.location.href='index.html'">Cancel</button>
                     <button type="submit" class="btn btn-save" id="saveBtn">
@@ -752,17 +754,17 @@
         let rowCount = 0;
         let globalRowCounter = 0;
 
-        /* ── Auto Bill No ── */
+        /* â”€â”€ Auto Bill No â”€â”€ */
         function generateBillNo() {
             const counter = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
             document.getElementById('billNo').value = 'MM-' + String(counter).padStart(3, '0');
         }
         generateBillNo();
 
-        /* ── Default Date ── */
+        /* â”€â”€ Default Date â”€â”€ */
         document.getElementById('saleDate').valueAsDate = new Date();
 
-        /* ── Build medicine lookup map from purchases ── */
+        /* â”€â”€ Build medicine lookup map from purchases â”€â”€ */
         function buildMedicineMap() {
             const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
             const map = {};
@@ -775,7 +777,7 @@
             return map;
         }
 
-        /* ── Build datalist options from mm_medicine_list + purchases ── */
+        /* â”€â”€ Build datalist options from mm_medicine_list + purchases â”€â”€ */
         function getMedicineOptions() {
             const medList   = JSON.parse(localStorage.getItem('mm_medicine_list') || '[]');
             const purchases = JSON.parse(localStorage.getItem('mm_purchases')     || '[]');
@@ -787,13 +789,13 @@
             return names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
         }
 
-        /* ── Refresh the single global datalist (handles 15,000+ items easily) ── */
+        /* â”€â”€ Refresh the single global datalist (handles 15,000+ items easily) â”€â”€ */
         function refreshGlobalMedicineList() {
             const dl = document.getElementById('globalMedicineList');
             if (dl) dl.innerHTML = getMedicineOptions();
         }
 
-        /* ── Refresh Customer & Doctor Datalists ── */
+        /* â”€â”€ Refresh Customer & Doctor Datalists â”€â”€ */
         function refreshNamesLists() {
             const custSet = new Set(), docSet = new Set();
             const custNames = [], docNames = [];
@@ -827,7 +829,7 @@
             if(dList) dList.innerHTML = docNames.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
         }
 
-        /* ── Flash autofilled cells ── */
+        /* â”€â”€ Flash autofilled cells â”€â”€ */
         function flashCell(el) {
             el.classList.remove('autofilled');
             void el.offsetWidth; // reflow to restart animation
@@ -835,7 +837,7 @@
             setTimeout(() => el.classList.remove('autofilled'), 1100);
         }
 
-        /* ── Autofill a row from purchase data ── */
+        /* â”€â”€ Autofill a row from purchase data â”€â”€ */
         function autoFillRow(id) {
             const productInput = document.getElementById('product_' + id);
             if (!productInput) return;
@@ -878,7 +880,7 @@
             calcRowTotal(id);
         }
 
-        /* ── Update row count badge and add btn ── */
+        /* â”€â”€ Update row count badge and add btn â”€â”€ */
         function updateUI() {
             const badge = document.getElementById('rowCountBadge');
             if(badge) badge.textContent = rowCount + ' / ' + MAX_ROWS;
@@ -892,7 +894,7 @@
             updateGrandTotal();
         }
 
-        /* ── Calc row total ── */
+        /* â”€â”€ Calc row total â”€â”€ */
         function calcRowTotal(rowId) {
             const qty      = parseFloat(document.getElementById('qty_'      + rowId).value) || 0;
             const rate     = parseFloat(document.getElementById('rate_'     + rowId).value) || 0;
@@ -906,16 +908,16 @@
             updateGrandTotal();
         }
 
-        /* ── Grand Total ── */
+        /* â”€â”€ Grand Total â”€â”€ */
         function updateGrandTotal() {
             let sum = 0;
             document.querySelectorAll('[id^="total_"]').forEach(el => {
                 sum += parseFloat(el.value) || 0;
             });
-            document.getElementById('grandTotal').textContent = '₹ ' + sum.toFixed(2);
+            document.getElementById('grandTotal').textContent = 'â‚¹ ' + sum.toFixed(2);
         }
 
-        /* ── Remove Row ── */
+        /* â”€â”€ Remove Row â”€â”€ */
         function removeRow(rowId) {
             const row = document.getElementById('row_' + rowId);
             if (row) {
@@ -935,7 +937,7 @@
             }
         }
 
-        /* ── Add Row ── */
+        /* â”€â”€ Add Row â”€â”€ */
         function addRow() {
             if (rowCount >= MAX_ROWS) return;
             rowCount++;
@@ -965,7 +967,7 @@
                     oninput="calcRowTotal(${id})"></td>
                 <td><input class="t-input" id="discount_${id}" type="number" placeholder="0" min="0" max="100" step="0.01" style="min-width:56px;"
                     oninput="calcRowTotal(${id})"></td>
-                <td><input class="t-input" id="total_${id}" type="text" readonly placeholder="—" style="min-width:80px;"></td>
+                <td><input class="t-input" id="total_${id}" type="text" readonly placeholder="â€”" style="min-width:80px;"></td>
                 <td>
                     <button type="button" class="remove-row-btn" onclick="removeRow(${id})" title="Remove row"
                         ${rowCount <= 1 ? 'disabled' : ''}>
@@ -980,7 +982,7 @@
             setTimeout(() => document.getElementById('product_' + id)?.focus(), 50);
         }
 
-        /* ── Collect all rows data ── */
+        /* â”€â”€ Collect all rows data â”€â”€ */
         function collectMedicines() {
             const rows = document.querySelectorAll('#medicineRows tr');
             const medicines = [];
@@ -1006,7 +1008,7 @@
             return medicines;
         }
 
-        /* ── Submit ── */
+        /* â”€â”€ Submit â”€â”€ */
         function handleSubmit(e) {
             e.preventDefault();
 
@@ -1065,12 +1067,12 @@
             }, 800);
         }
 
-        /* ── Init: start with 1 row ── */
+        /* â”€â”€ Init: start with 1 row â”€â”€ */
         addRow();
 
-        /* ════════════════════════════════════════
-           Medicine List — localStorage helpers
-        ════════════════════════════════════════ */
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+           Medicine List â€” localStorage helpers
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         const ML_KEY = 'mm_medicine_list';
         const getMedList = () => JSON.parse(localStorage.getItem(ML_KEY) || '[]');
         const setMedList = list => localStorage.setItem(ML_KEY, JSON.stringify(list));
@@ -1086,7 +1088,7 @@
             }
         }
 
-        /* ── Import Modal State ── */
+        /* â”€â”€ Import Modal State â”€â”€ */
         let _iRows=[], _iHdrs=[], _iCol=-1, _iNames=[], _iFileCount=0;
 
         function openImportModal() {
@@ -1147,7 +1149,7 @@
             let autoIdx=-1;
             for(let i=0;i<maxC;i++){
                 const hdr=_iHdrs[i]?String(_iHdrs[i]):`Column ${i+1}`;
-                const smp=_iRows.slice(0,3).map(r=>r[i]?String(r[i]):'').filter(Boolean).join(' · ');
+                const smp=_iRows.slice(0,3).map(r=>r[i]?String(r[i]):'').filter(Boolean).join(' Â· ');
                 const btn=document.createElement('button');
                 btn.type='button'; btn.className='col-pill'; btn.dataset.ci=i;
                 btn.innerHTML=`<b>${hdr}</b>${smp?`<br><small style="opacity:.7">${smp}</small>`:''}` ;
@@ -1171,8 +1173,8 @@
             const pv=document.getElementById('importPreview');
             pv.style.display='block';
             pv.innerHTML=_iNames.slice(0,25).map(n=>`<div class="prev-item">${n}</div>`).join('')
-                +(_iNames.length>25?`<div class="prev-more">+${_iNames.length-25} more…</div>`:'');
-            document.getElementById('importCount').textContent=`✓ ${_iNames.length} unique medicine name(s) found`;
+                +(_iNames.length>25?`<div class="prev-more">+${_iNames.length-25} moreâ€¦</div>`:'');
+            document.getElementById('importCount').textContent=`âœ“ ${_iNames.length} unique medicine name(s) found`;
             document.getElementById('importConfirmBtn').disabled=_iNames.length===0;
         }
 
@@ -1190,15 +1192,15 @@
             setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
         }
 
-        /* ══════════════════════════════════════
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
            Quick-Add Customer / Doctor
-        ══════════════════════════════════════ */
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         let _qaType = 'customer'; // 'customer' or 'doctor'
 
         function openQuickAdd(type) {
             _qaType = type;
             document.getElementById('qaModalTitle').textContent =
-                type === 'customer' ? '➕ New Customer' : '➕ New Doctor';
+                type === 'customer' ? 'âž• New Customer' : 'âž• New Doctor';
             document.getElementById('qaName').value    = '';
             document.getElementById('qaPhone').value   = '';
             document.getElementById('qaAddress').value = '';
@@ -1266,7 +1268,7 @@
             if (e.key === 'Escape') closeQuickAdd();
         });
 
-        /* ── Success Modal & Print ── */
+        /* â”€â”€ Success Modal & Print â”€â”€ */
         function closeSuccessModal() {
             document.getElementById('successModal').classList.remove('open');
         }
@@ -1297,7 +1299,9 @@
                         .text-right { text-align: right; }
                         @media print { body { padding: 0; } .header { margin-top: 0; } }
                     </style>
-                </head>
+                    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+</head>
                 <body>
                     <div class="header">
                         <h1>Mudhalvar Marundhagam Pakkam</h1>
@@ -1332,9 +1336,9 @@
                                     <td>${m.batch || '-'}</td>
                                     <td>${m.exp || '-'}</td>
                                     <td>${m.qty}</td>
-                                    <td>₹${m.rate.toFixed(2)}</td>
+                                    <td>â‚¹${m.rate.toFixed(2)}</td>
                                     <td>${m.gst}%</td>
-                                    <td class="text-right">₹${m.total.toFixed(2)}</td>
+                                    <td class="text-right">â‚¹${m.total.toFixed(2)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1357,19 +1361,19 @@
         }
     </script>
 
-    <!-- ── Single Global Datalist for 15,000+ items ── -->
+    <!-- â”€â”€ Single Global Datalist for 15,000+ items â”€â”€ -->
     <datalist id="globalMedicineList"></datalist>
     <script>
         refreshGlobalMedicineList();
         refreshNamesLists();
     </script>
 
-    <!-- ── Quick-Add Customer / Doctor Modal ── -->
+    <!-- â”€â”€ Quick-Add Customer / Doctor Modal â”€â”€ -->
     <div class="qa-modal-overlay" id="qaModal">
         <div class="qa-modal-card">
             <div class="qa-modal-hd">
-                <h3 id="qaModalTitle">➕ New Customer</h3>
-                <button class="qa-modal-x" type="button" onclick="closeQuickAdd()">×</button>
+                <h3 id="qaModalTitle">âž• New Customer</h3>
+                <button class="qa-modal-x" type="button" onclick="closeQuickAdd()">Ã—</button>
             </div>
             <div class="qa-modal-bd">
                 <div class="qa-form-group">
@@ -1382,39 +1386,39 @@
                 </div>
                 <div class="qa-form-group">
                     <label>Address / Place</label>
-                    <textarea id="qaAddress" rows="2" placeholder="Enter address…"></textarea>
+                    <textarea id="qaAddress" rows="2" placeholder="Enter addressâ€¦"></textarea>
                 </div>
             </div>
             <div class="qa-modal-ft">
                 <button class="qa-cancel-btn" type="button" onclick="closeQuickAdd()">Cancel</button>
-                <button class="qa-save-btn" type="button" onclick="saveQuickAdd()">✓ Save &amp; Select</button>
+                <button class="qa-save-btn" type="button" onclick="saveQuickAdd()">âœ“ Save &amp; Select</button>
             </div>
         </div>
     </div>
 
-    <!-- ── Success Modal ── -->
+    <!-- â”€â”€ Success Modal â”€â”€ -->
     <div class="modal-overlay" id="successModal">
         <div class="modal-card" style="max-width: 400px; text-align: center;">
             <div class="modal-bd" style="padding: 2.5rem 2rem;">
-                <div style="font-size: 3.5rem; margin-bottom: 0.5rem; animation: fadeUp 0.5s ease;">🎉</div>
+                <div style="font-size: 3.5rem; margin-bottom: 0.5rem; animation: fadeUp 0.5s ease;">ðŸŽ‰</div>
                 <h3 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">Order Placed Successfully!</h3>
                 <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1.8rem; line-height: 1.5;" id="successModalSub"></p>
                 <div style="display: flex; gap: 0.8rem; justify-content: center;">
                     <button class="btn-mcancel" onclick="closeSuccessModal()" style="flex: 1;">Cancel</button>
                     <button class="btn-do-import" onclick="printInvoice()" style="flex: 1; background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 14px rgba(14,165,233,0.3);">
-                        🖨️ Print Invoice
+                        ðŸ–¨ï¸ Print Invoice
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ── Import Medicine List Modal ── -->
+    <!-- â”€â”€ Import Medicine List Modal â”€â”€ -->
     <div class="modal-overlay" id="importModal">
         <div class="modal-card">
             <div class="modal-hd">
-                <h3>📋 Import Medicine List</h3>
-                <button class="modal-x" type="button" onclick="closeImportModal()">×</button>
+                <h3>ðŸ“‹ Import Medicine List</h3>
+                <button class="modal-x" type="button" onclick="closeImportModal()">Ã—</button>
             </div>
             <!-- Step 1: File Upload -->
             <div class="modal-bd" id="importStep1">
@@ -1423,7 +1427,7 @@
                      ondragleave="this.classList.remove('drag-over')"
                      ondrop="handleFileDrop(event)">
                     <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple onchange="handleFileInput(event)">
-                    <div class="dz-ico">📁</div>
+                    <div class="dz-ico">ðŸ“</div>
                     <div class="dz-txt">Drop files here or click to browse</div>
                     <div class="dz-sub">Supports .xlsx, .xls, .csv &mdash; multiple files allowed</div>
                 </div>
@@ -1439,7 +1443,7 @@
             <div class="modal-ft">
                 <button class="btn-mcancel" type="button" onclick="closeImportModal()">Cancel</button>
                 <button class="btn-do-import" id="importConfirmBtn" type="button" onclick="doImport()" disabled>
-                    ✓ Import Medicines
+                    âœ“ Import Medicines
                 </button>
             </div>
         </div>
@@ -1447,3 +1451,4 @@
 
 </body>
 </html>
+
