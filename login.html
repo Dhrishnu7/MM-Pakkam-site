@@ -374,8 +374,30 @@
 
         /* Footer */
         .login-footer-txt {
-            margin-top: 1.5rem; text-align: center;
+            margin-top: 1.2rem; text-align: center;
             font-size: 0.72rem; color: rgba(71,85,105,0.8);
+        }
+
+        /* Create account row */
+        .create-account-row {
+            margin-top: 1.4rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .create-account-row span {
+            font-size: 0.85rem; color: rgba(100,116,139,0.8);
+        }
+        .create-account-link {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.85rem; font-weight: 700;
+            color: #38bdf8;
+            text-decoration: none;
+            border-bottom: 1.5px solid rgba(56,189,248,0.35);
+            padding-bottom: 1px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .create-account-link:hover {
+            color: #7dd3fc;
+            border-color: rgba(125,211,252,0.6);
         }
 
         /* Spinner */
@@ -569,6 +591,16 @@
                     </svg>
                 </span>
                 <p>Forgot your password? Contact the <strong>pharmacy owner</strong> to reset your account. Worker accounts are managed from the <strong>Users</strong> panel.</p>
+            </div>
+
+            <div class="create-account-row">
+                <span>No account yet?</span>
+                <a class="create-account-link" href="setup.html">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    Create new account
+                </a>
             </div>
 
             <p class="login-footer-txt">&copy; 2026 Mudhalvar Marundhagam Pakkam &mdash; Secured Access</p>
