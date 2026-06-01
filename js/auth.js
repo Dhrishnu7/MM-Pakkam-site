@@ -1,22 +1,80 @@
 /**
  * auth.js — MM Pakkam Authentication Module
- * Uses Web Crypto API (SHA-256) for password hashing.
+ * Uses a pure-JS SHA-256 implementation so it works on file://, http://, and https://.
  * No server required — credentials stored securely in localStorage.
  */
+
+/* ─────────────────────────────────────────
+   Pure-JS SHA-256  (works on file:// too)
+   Based on the public domain implementation by Angel Marin & Paul Johnston
+───────────────────────────────────────────*/
+function _sha256(str) {
+    function safe_add(x, y) {
+        var lsw = (x & 0xFFFF) + (y & 0xFFFF);
+        var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+        return (msw << 16) | (lsw & 0xFFFF);
+    }
+    function S(X, n) { return (X >>> n) | (X << (32 - n)); }
+    function R(X, n) { return (X >>> n); }
+    function Ch(x, y, z) { return ((x & y) ^ ((~x) & z)); }
+    function Maj(x, y, z) { return ((x & y) ^ (x & z) ^ (y & z)); }
+    function Sigma0(x) { return (S(x, 2) ^ S(x, 13) ^ S(x, 22)); }
+    function Sigma1(x) { return (S(x, 6) ^ S(x, 11) ^ S(x, 25)); }
+    function Gamma0(x) { return (S(x, 7) ^ S(x, 18) ^ R(x, 3)); }
+    function Gamma1(x) { return (S(x, 17) ^ S(x, 19) ^ R(x, 10)); }
+
+    var K = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    ];
+
+    // UTF-8 encode
+    var bytes = [];
+    for (var i = 0; i < str.length; i++) {
+        var c = str.charCodeAt(i);
+        if (c < 128) { bytes.push(c); }
+        else if (c < 2048) { bytes.push((c >> 6) | 192, (c & 63) | 128); }
+        else { bytes.push((c >> 12) | 224, ((c >> 6) & 63) | 128, (c & 63) | 128); }
+    }
+    var l = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    bytes.push(0,0,0,0, (l>>>24)&0xFF, (l>>>16)&0xFF, (l>>>8)&0xFF, l&0xFF);
+
+    var W = [], H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    for (var b = 0; b < bytes.length; b += 64) {
+        for (var j = 0; j < 16; j++)
+            W[j] = (bytes[b+j*4]<<24)|(bytes[b+j*4+1]<<16)|(bytes[b+j*4+2]<<8)|bytes[b+j*4+3];
+        for (var j = 16; j < 64; j++)
+            W[j] = safe_add(safe_add(Gamma1(W[j-2]), W[j-7]), safe_add(Gamma0(W[j-15]), W[j-16]));
+        var a=H[0],bh=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+        for (var j = 0; j < 64; j++) {
+            var T1 = safe_add(safe_add(safe_add(safe_add(h,Sigma1(e)),Ch(e,f,g)),K[j]),W[j]);
+            var T2 = safe_add(Sigma0(a),Maj(a,bh,c));
+            h=g; g=f; f=e; e=safe_add(d,T1); d=c; c=bh; bh=a; a=safe_add(T1,T2);
+        }
+        H[0]=safe_add(a,H[0]); H[1]=safe_add(bh,H[1]); H[2]=safe_add(c,H[2]); H[3]=safe_add(d,H[3]);
+        H[4]=safe_add(e,H[4]); H[5]=safe_add(f,H[5]); H[6]=safe_add(g,H[6]); H[7]=safe_add(h,H[7]);
+    }
+    return H.map(n => (n >>> 0).toString(16).padStart(8,'0')).join('');
+}
 
 const MM_USERS_KEY   = 'mm_auth_users';
 const MM_SESSION_KEY = 'mm_auth_session';
 const MM_REMEMBER_KEY = 'mm_auth_remember';
 
 /* ─────────────────────────────────────────
-   Password Hashing  (SHA-256 via Web Crypto)
+   Password Hashing  (pure-JS SHA-256)
 ───────────────────────────────────────────*/
 async function mmHashPassword(password) {
-    const encoded = new TextEncoder().encode(password);
-    const buffer  = await crypto.subtle.digest('SHA-256', encoded);
-    return Array.from(new Uint8Array(buffer))
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
+    // Pure-JS SHA-256 — works on file://, http://, and https://
+    return _sha256(password);
 }
 
 /* ─────────────────────────────────────────
