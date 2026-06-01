@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1008,8 +1008,8 @@
             return medicines;
         }
 
-        /* â”€â”€ Submit â”€â”€ */
-        function handleSubmit(e) {
+        /* ── Submit ── */
+        async function handleSubmit(e) {
             e.preventDefault();
 
             const medicines = collectMedicines();
@@ -1022,49 +1022,55 @@
             btn.disabled = true;
             btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
 
-            setTimeout(() => {
-                // Increment counter & save
-                const counter = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
-                localStorage.setItem('mm_bill_counter', String(counter));
+            // Increment counter & save
+            const counter = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
+            localStorage.setItem('mm_bill_counter', String(counter));
 
-                const grandTotal = document.getElementById('grandTotal').textContent;
+            const grandTotal = document.getElementById('grandTotal').textContent;
 
-                const bill = {
-                    billNo:       document.getElementById('billNo').value,
-                    date:         document.getElementById('saleDate').value,
-                    customerName: document.getElementById('customerName').value.trim(),
-                    doctorName:   document.getElementById('doctorName').value.trim(),
-                    medicines:    medicines,
-                    grandTotal:   grandTotal,
-                    savedAt:      new Date().toISOString()
-                };
+            const bill = {
+                billNo:       document.getElementById('billNo').value,
+                date:         document.getElementById('saleDate').value,
+                customerName: document.getElementById('customerName').value.trim(),
+                doctorName:   document.getElementById('doctorName').value.trim(),
+                medicines:    medicines,
+                grandTotal:   grandTotal,
+                savedAt:      new Date().toISOString()
+            };
 
-                const sales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
-                sales.push(bill);
-                localStorage.setItem('mm_sales', JSON.stringify(sales));
+            // ── Save to Supabase ──
+            const result = await dbSaveBill(bill);
 
-                // Show Success Modal
-                document.getElementById('successModalSub').innerHTML = `Bill No: <strong>${bill.billNo}</strong><br>Total Amount: <strong>${grandTotal}</strong>`;
-                document.getElementById('successModal').classList.add('open');
-                window.currentPrintBill = bill;
+            // Also keep localStorage as offline fallback
+            const sales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+            sales.push(bill);
+            localStorage.setItem('mm_sales', JSON.stringify(sales));
 
+            // Show Success Modal
+            document.getElementById('successModalSub').innerHTML = `Bill No: <strong>${bill.billNo}</strong><br>Total Amount: <strong>${grandTotal}</strong>`;
+            document.getElementById('successModal').classList.add('open');
+            window.currentPrintBill = bill;
+
+            if (result.success) {
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
+            } else {
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> Error: ${result.message || 'Try again'}`;
+            }
 
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Bill`;
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Bill`;
 
-                    // Reset form in background
-                    document.getElementById('customerName').value = '';
-                    document.getElementById('doctorName').value   = '';
-                    document.getElementById('medicineRows').innerHTML = '';
-                    rowCount = 0;
-                    addRow(); // start fresh with 1 row
-                    document.getElementById('saleDate').valueAsDate = new Date();
-                    generateBillNo();
-                    refreshNamesLists();
-                }, 500);
-            }, 800);
+                // Reset form in background
+                document.getElementById('customerName').value = '';
+                document.getElementById('doctorName').value   = '';
+                document.getElementById('medicineRows').innerHTML = '';
+                rowCount = 0;
+                addRow(); // start fresh with 1 row
+                document.getElementById('saleDate').valueAsDate = new Date();
+                generateBillNo();
+                refreshNamesLists();
+            }, 3000);
         }
 
         /* â”€â”€ Init: start with 1 row â”€â”€ */
@@ -1212,7 +1218,7 @@
             document.getElementById('qaModal').classList.remove('open');
         }
 
-        function saveQuickAdd() {
+        async function saveQuickAdd() {
             const name    = document.getElementById('qaName').value.trim();
             const phone   = document.getElementById('qaPhone').value.trim();
             const address = document.getElementById('qaAddress').value.trim();
@@ -1227,6 +1233,9 @@
             }
 
             if (_qaType === 'customer') {
+                // Save to Supabase
+                dbAddCustomer(name, phone, address);
+
                 const list = JSON.parse(localStorage.getItem('mm_customers') || '[]');
                 const exists = list.some(c => c.name.toLowerCase() === name.toLowerCase());
                 if (!exists) {
@@ -1236,6 +1245,9 @@
                 // Auto-fill the customer field
                 document.getElementById('customerName').value = name;
             } else {
+                // Save to Supabase
+                dbAddDoctor(name, phone, '', address);
+
                 const list = JSON.parse(localStorage.getItem('mm_doctors') || '[]');
                 const exists = list.some(d => d.name.toLowerCase() === name.toLowerCase());
                 if (!exists) {
@@ -1366,6 +1378,25 @@
     <script>
         refreshGlobalMedicineList();
         refreshNamesLists();
+
+        // ── Sync from Supabase on Load ──
+        (async function syncFromDatabase() {
+            try {
+                const [customers, doctors] = await Promise.all([
+                    dbGetCustomers(),
+                    dbGetDoctors()
+                ]);
+                if (customers && customers.length > 0) {
+                    localStorage.setItem('mm_customers', JSON.stringify(customers));
+                }
+                if (doctors && doctors.length > 0) {
+                    localStorage.setItem('mm_doctors', JSON.stringify(doctors));
+                }
+                refreshNamesLists();
+            } catch (err) {
+                console.error("Database sync failed:", err);
+            }
+        })();
     </script>
 
     <!-- â”€â”€ Quick-Add Customer / Doctor Modal â”€â”€ -->

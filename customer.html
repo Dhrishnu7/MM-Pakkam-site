@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -365,7 +365,7 @@
     </div>
 
     <script>
-        function handleSubmit(e) {
+        async function handleSubmit(e) {
             e.preventDefault();
 
             const name    = document.getElementById('name').value.trim();
@@ -392,24 +392,29 @@
             btn.disabled = true;
             btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
 
-            // â”€â”€ Save to localStorage â”€â”€
+            // ── Save to Supabase ──
+            const result = await dbAddCustomer(name, phone, address);
+
+            // Also keep localStorage as offline fallback
             const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
             if (!customers.find(c => c.name === name && c.phone === phone)) {
                 customers.push({ name, phone, address });
                 localStorage.setItem('mm_customers', JSON.stringify(customers));
             }
 
-            setTimeout(() => {
+            if (result.success) {
                 document.getElementById('toast').classList.add('show');
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
+            } else {
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> Error: ${result.message || 'Try again'}`;
+            }
 
-                setTimeout(() => {
-                    document.getElementById('toast').classList.remove('show');
-                    btn.disabled = false;
-                    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Customer`;
-                    document.getElementById('customerForm').reset();
-                }, 3000);
-            }, 900);
+            setTimeout(() => {
+                document.getElementById('toast').classList.remove('show');
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Customer`;
+                if (result.success) document.getElementById('customerForm').reset();
+            }, 3000);
         }
     </script>
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -500,61 +500,70 @@
         document.getElementById('purchaseDate').valueAsDate = new Date();
 
         // â”€â”€ Auto-calculate Total: (Qty Ã— Rate) + GST% â”€â”€
+        // ——— Auto-calculate Total: (Qty × Rate) + GST% ———
         function calcTotal() {
             const qty  = parseFloat(document.getElementById('quantity').value) || 0;
             const rate = parseFloat(document.getElementById('rate').value)     || 0;
             const gst  = parseFloat(document.getElementById('gst').value)      || 0;
             const base = qty * rate;
             const total = base + (base * gst / 100);
-            document.getElementById('total').value = total > 0 ? 'â‚¹ ' + total.toFixed(2) : '';
+            document.getElementById('total').value = total > 0 ? '₹ ' + total.toFixed(2) : '';
         }
         ['quantity', 'rate', 'gst'].forEach(id =>
             document.getElementById(id).addEventListener('input', calcTotal)
         );
 
-        // â”€â”€ Submit â”€â”€
-        function handleSubmit(e) {
+        // ── Submit ──
+        async function handleSubmit(e) {
             e.preventDefault();
 
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
             btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
 
-            setTimeout(() => {
-                // â”€â”€ Save purchase record to localStorage â”€â”€
-                const record = {
-                    billNo:      document.getElementById('billNo').value.trim(),
-                    firm:        document.getElementById('firm').value.trim(),
-                    date:        document.getElementById('purchaseDate').value,
-                    productName: document.getElementById('productName').value.trim(),
-                    batchNo:     document.getElementById('batchNo').value.trim(),
-                    expireDate:  document.getElementById('expireDate').value,
-                    quantity:    document.getElementById('quantity').value,
-                    mrp:         document.getElementById('mrp').value,
-                    rate:        document.getElementById('rate').value,
-                    gst:         document.getElementById('gst').value,
-                    savedAt:     new Date().toISOString()
-                };
-                const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
-                purchases.push(record);
-                localStorage.setItem('mm_purchases', JSON.stringify(purchases));
+            const record = {
+                billNo:      document.getElementById('billNo').value.trim(),
+                firm:        document.getElementById('firm').value.trim(),
+                date:        document.getElementById('purchaseDate').value,
+                productName: document.getElementById('productName').value.trim(),
+                batchNo:     document.getElementById('batchNo').value.trim(),
+                expireDate:  document.getElementById('expireDate').value,
+                quantity:    document.getElementById('quantity').value,
+                mrp:         document.getElementById('mrp').value,
+                rate:        document.getElementById('rate').value,
+                gst:         document.getElementById('gst').value,
+                savedAt:     new Date().toISOString()
+            };
 
+            // ── Save to Supabase ──
+            const result = await dbAddPurchase(record);
+
+            // Also keep localStorage as offline fallback
+            const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+            purchases.push(record);
+            localStorage.setItem('mm_purchases', JSON.stringify(purchases));
+
+            if (result.success) {
                 document.getElementById('toast').classList.add('show');
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
+            } else {
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> Error: ${result.message || 'Try again'}`;
+            }
 
-                setTimeout(() => {
-                    document.getElementById('toast').classList.remove('show');
-                    btn.disabled = false;
-                    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Purchase`;
+            setTimeout(() => {
+                document.getElementById('toast').classList.remove('show');
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Purchase`;
+                if (result.success) {
                     document.getElementById('purchaseForm').reset();
                     document.getElementById('purchaseDate').valueAsDate = new Date();
-                }, 3000);
-            }, 900);
+                }
+            }, 3000);
         }
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-           Medicine List â€” localStorage helpers
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        /* ══════════════════════════════════════════════════════════════════ 
+           Medicine List — localStorage helpers
+        ══════════════════════════════════════════════════════════════════  */
         const ML_KEY = 'mm_medicine_list';
         const getMedList = () => JSON.parse(localStorage.getItem(ML_KEY) || '[]');
         const setMedList = list => localStorage.setItem(ML_KEY, JSON.stringify(list));
