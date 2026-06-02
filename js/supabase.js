@@ -21,9 +21,9 @@ async function dbAddCustomer(name, phone, address) {
     const { data, error } = await _supabase.from('customers')
         .upsert({ name: name.trim(), phone: phone.trim(), address: address?.trim() || '' },
                  { onConflict: 'name,phone', ignoreDuplicates: true })
-        .select().single();
+        .select();
     if (error) { console.error('customer add:', error); return { success: false, message: error.message }; }
-    return { success: true, data };
+    return { success: true, data: data?.[0] || null };
 }
 async function dbDeleteCustomer(id) {
     const { error } = await _supabase.from('customers').delete().eq('id', id);
@@ -42,9 +42,9 @@ async function dbAddDoctor(name, phone, clinic, address) {
     const { data, error } = await _supabase.from('doctors')
         .upsert({ name: name.trim(), phone: phone.trim(), clinic: clinic?.trim() || '', address: address?.trim() || '' },
                  { onConflict: 'name,phone', ignoreDuplicates: true })
-        .select().single();
+        .select();
     if (error) { console.error('doctor add:', error); return { success: false, message: error.message }; }
-    return { success: true, data };
+    return { success: true, data: data?.[0] || null };
 }
 async function dbDeleteDoctor(id) {
     const { error } = await _supabase.from('doctors').delete().eq('id', id);
