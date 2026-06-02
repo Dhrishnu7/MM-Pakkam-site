@@ -24,7 +24,7 @@
             color: #0f172a;
         }
 
-        /* â”€â”€ Navbar â”€â”€ */
+        /* ── Navbar ── */
         header {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(16px);
@@ -74,7 +74,7 @@
             letter-spacing: -0.01em;
         }
 
-        /* â”€â”€ Dashboard Wrapper â”€â”€ */
+        /* ── Dashboard Wrapper ── */
         .dashboard-wrapper {
             flex: 1;
             display: flex;
@@ -84,7 +84,7 @@
             padding: 3.5rem 2rem 4rem;
         }
 
-        /* â”€â”€ Dashboard Header â”€â”€ */
+        /* ── Dashboard Header ── */
         .dashboard-header {
             text-align: center;
             margin-bottom: 3rem;
@@ -103,7 +103,7 @@
             font-size: 1rem;
         }
 
-        /* â”€â”€ Cards Grid â”€â”€ */
+        /* ── Cards Grid ── */
         .dashboard {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -112,7 +112,7 @@
             max-width: 1280px;
         }
 
-        /* â”€â”€ Card â”€â”€ */
+        /* ── Card ── */
         .section-card {
             background: rgba(255,255,255,0.75);
             backdrop-filter: blur(20px);
@@ -173,7 +173,7 @@
         .card-report::before { background: linear-gradient(90deg, #f43f5e, #fb7185); }
         .card-report:hover { box-shadow: 0 20px 40px rgba(244,63,94,0.2); }
 
-        /* â”€â”€ Icon â”€â”€ */
+        /* ── Icon ── */
         .icon-wrapper {
             width: 68px; height: 68px;
             border-radius: 18px;
@@ -224,7 +224,7 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        /* â”€â”€ Footer â”€â”€ */
+        /* ── Footer ── */
         footer {
             text-align: center;
             padding: 1.2rem;
@@ -233,7 +233,7 @@
             border-top: 1px solid rgba(0,0,0,0.05);
         }
 
-        /* â”€â”€ Responsive â”€â”€ */
+        /* ── Responsive ── */
         @media (max-width: 1100px) {
             .dashboard { grid-template-columns: repeat(3, 1fr); }
         }
@@ -248,7 +248,7 @@
 </head>
 <body>
     <script>
-        // â”€â”€ Auth Guard â”€â”€
+        // ── Auth Guard ──
         mmRequireAuth();
         document.addEventListener('DOMContentLoaded', () => mmInjectUserBar());
     </script>
