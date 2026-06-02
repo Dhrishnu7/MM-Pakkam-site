@@ -1041,7 +1041,6 @@
             const fields = [
                 { el: document.getElementById('batch_' + id),    val: match.batchNo      || '' },
                 { el: document.getElementById('exp_'   + id),    val: match.expireDate    || '' },
-                { el: document.getElementById('mrp_'   + id),    val: match.mrp           || '' },
                 { el: document.getElementById('rate_'  + id),    val: match.rate          || '' },
                 { el: document.getElementById('gst_'   + id),    val: match.gst           || '' },
             ];
@@ -1052,7 +1051,7 @@
                 if (val !== '') flashCell(el);
             });
 
-            // Recalc total with the newly filled rate/gst
+            // Recalc total with the newly filled data
             calcRowTotal(id);
         }
 
@@ -1070,17 +1069,17 @@
             updateGrandTotal();
         }
 
-        /* ── Calc row total ── */
+        /* ── Calc row total: qty × MRP × (1 - disc%) × (1 + gst%) ── */
         function calcRowTotal(rowId) {
             const qty      = parseFloat(document.getElementById('qty_'      + rowId).value) || 0;
-            const rate     = parseFloat(document.getElementById('rate_'     + rowId).value) || 0;
+            const mrp      = parseFloat(document.getElementById('mrp_'      + rowId).value) || 0;
             const gst      = parseFloat(document.getElementById('gst_'      + rowId).value) || 0;
             const discount = parseFloat(document.getElementById('discount_' + rowId).value) || 0;
-            const base     = qty * rate;
-            const afterGST = base + (base * gst / 100);
-            const total    = afterGST - (afterGST * discount / 100);
-            const totalEl  = document.getElementById('total_' + rowId);
-            totalEl.value  = total > 0 ? total.toFixed(2) : '';
+            const base        = qty * mrp;
+            const afterDisc   = base - (base * discount / 100);
+            const total       = afterDisc + (afterDisc * gst / 100);
+            const totalEl     = document.getElementById('total_' + rowId);
+            totalEl.value     = total > 0 ? total.toFixed(2) : '';
             updateGrandTotal();
         }
 
@@ -1136,9 +1135,9 @@
                 <td><input class="t-input" id="exp_${id}"   type="month" style="min-width:120px;"></td>
                 <td><input class="t-input" id="qty_${id}"   type="number" placeholder="0" min="0" style="min-width:60px;"
                     oninput="calcRowTotal(${id})"></td>
-                <td><input class="t-input" id="mrp_${id}"   type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"></td>
-                <td><input class="t-input" id="rate_${id}"  type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"
+                <td><input class="t-input" id="mrp_${id}"   type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"
                     oninput="calcRowTotal(${id})"></td>
+                <td><input class="t-input" id="rate_${id}"  type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"></td>
                 <td><input class="t-input" id="gst_${id}"   type="number" placeholder="0" min="0" max="100" step="0.01" style="min-width:56px;"
                     oninput="calcRowTotal(${id})"></td>
                 <td><input class="t-input" id="discount_${id}" type="number" placeholder="0" min="0" max="100" step="0.01" style="min-width:56px;"
