@@ -1131,10 +1131,17 @@
             const match = map[productVal.toLowerCase()];
 
             if (match) {
+                const purchaseMrp  = parseFloat(match.mrp)  || 0;
+                const purchasePack = parseFloat(match.pack) || 1;
+                const salesMrp     = purchasePack > 0
+                    ? parseFloat((purchaseMrp / purchasePack).toFixed(2))
+                    : purchaseMrp;
+
                 const fields = [
                     { el: document.getElementById('batch_' + id),    val: match.batchNo      || '' },
                     { el: document.getElementById('exp_'   + id),    val: match.expireDate    || '' },
                     { el: document.getElementById('pack_'  + id),    val: match.pack          || '' },
+                    { el: document.getElementById('mrp_'   + id),    val: salesMrp > 0 ? salesMrp : '' },
                     { el: document.getElementById('rate_'  + id),    val: match.rate          || '' },
                     { el: document.getElementById('gst_'   + id),    val: match.gst           || '' },
                 ];
