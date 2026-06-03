@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -277,6 +277,17 @@
         }
         .btn-clear-data:hover { background: #ffe4e6; }
 
+        .btn-print-report {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 0.72rem 1.4rem; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 700; font-family: 'Inter', sans-serif;
+            cursor: pointer; border: none;
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: white; box-shadow: 0 4px 14px rgba(124,58,237,0.3);
+            transition: all 0.25s ease; white-space: nowrap;
+        }
+        .btn-print-report:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,0.4); }
+
         /* ── Expiry Checker ── */
         .expiry-section {
             width: 100%; max-width: 860px;
@@ -477,6 +488,12 @@
                         <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
                     </svg>
                     Generate
+                </button>
+                <button class="btn-print-report" onclick="printReport()" title="Print hardcopy of the current report">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M9 21h6v-5H9v5z"/>
+                    </svg>
+                    Print Report
                 </button>
             </div>
         </div>
@@ -974,6 +991,199 @@
                 loadData();
             }
         });
+
+        // ── Print Report ──
+        function printReport() {
+            const from     = document.getElementById('fromDate').value;
+            const to       = document.getElementById('toDate').value;
+            const type     = document.getElementById('reportType').value;
+
+            // Read current summary values from DOM
+            const totalSales    = document.getElementById('totalSales').textContent;
+            const salesCount    = document.getElementById('salesCount').textContent;
+            const totalPurchase = document.getElementById('totalPurchase').textContent;
+            const purchaseCount = document.getElementById('purchaseCount').textContent;
+            const netProfit     = document.getElementById('netProfit').textContent;
+            const totalItems    = document.getElementById('totalItems').textContent;
+            const profitColor   = document.getElementById('netProfit').style.color || '#065f46';
+
+            // Build rows from currentData filtered by activeTab
+            const filtered = activeTab === 'all' ? currentData : currentData.filter(r => r.type === activeTab);
+
+            const typeLabel = { all: 'All Transactions', sales: 'Sales Only', purchase: 'Purchases Only' }[type] || type;
+
+            const fmtD = (d) => {
+                if (!d) return '-';
+                const p = d.split('-');
+                return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : d;
+            };
+
+            const tableRows = filtered.map(r => `
+                <tr>
+                    <td><strong>${r.billNo}</strong></td>
+                    <td>${fmtD(r.date)}</td>
+                    <td><span class="badge ${r.type === 'sales' ? 'badge-sale' : 'badge-purchase'}">${r.type === 'sales' ? 'Sale' : 'Purchase'}</span></td>
+                    <td>${r.product}</td>
+                    <td style="text-align:center">${r.qty}</td>
+                    <td style="text-align:right">${r.rate.toFixed(2)}</td>
+                    <td style="text-align:center">${r.gst}%</td>
+                    <td style="text-align:right;font-weight:700;color:${r.type === 'sales' ? '#059669' : '#e11d48'}">
+                        ${r.type === 'sales' ? '+' : '-'}&#8377; ${r.total.toFixed(2)}
+                    </td>
+                </tr>`).join('');
+
+            const emptyRow = filtered.length === 0
+                ? `<tr><td colspan="8" style="text-align:center;padding:2rem;color:#94a3b8">No records found for the selected period.</td></tr>`
+                : '';
+
+            const dateRange = (from && to)
+                ? `${fmtD(from)} &mdash; ${fmtD(to)}`
+                : (from ? `From ${fmtD(from)}` : (to ? `Up to ${fmtD(to)}` : 'All Dates'));
+
+            const printWin = window.open('', '_blank');
+            if (!printWin) { alert('Please allow popups to print the report.'); return; }
+
+            const now = new Date().toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+            printWin.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Report - Mudhalvar Marundhagam Pakkam</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: white; color: #0f172a; padding: 1rem; font-size: 0.8rem; }
+  @page { size: A4; margin: 12mm 10mm; }
+  @media print { .no-print { display: none !important; } }
+
+  /* Header */
+  .rpt-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 0.7rem; border-bottom: 2px solid #e11d48; margin-bottom: 0.8rem; }
+  .rpt-store-name { font-size: 1.2rem; font-weight: 800; color: #0f172a; }
+  .rpt-store-addr { font-size: 0.65rem; color: #475569; margin-top: 3px; line-height: 1.5; }
+  .rpt-logo { background: linear-gradient(135deg, #f43f5e, #e11d48); border-radius: 10px; padding: 0.5rem 1rem; text-align: center; }
+  .rpt-logo-text { font-size: 0.9rem; font-weight: 900; color: white; }
+  .rpt-logo-sub  { font-size: 0.52rem; color: rgba(255,255,255,0.85); margin-top:2px; }
+  .rpt-meta { text-align: right; font-size: 0.65rem; color: #475569; line-height: 1.7; }
+  .rpt-meta strong { color: #0f172a; }
+
+  /* Title bar */
+  .rpt-title-bar { background: linear-gradient(135deg, #fff1f2, #ffe4e6); border: 1px solid #fecdd3; border-radius: 10px; padding: 0.6rem 1rem; margin-bottom: 1rem; display:flex; align-items:center; justify-content:space-between; }
+  .rpt-title-bar h2 { font-size: 0.95rem; font-weight: 800; color: #be123c; }
+  .rpt-title-bar span { font-size: 0.75rem; color: #64748b; }
+
+  /* Summary grid */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
+  .s-card { border-radius: 10px; padding: 0.8rem 1rem; border: 1px solid #e2e8f0; }
+  .s-label { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; }
+  .s-value { font-size: 1.1rem; font-weight: 800; margin-top: 2px; }
+  .s-sub   { font-size: 0.6rem; color: #94a3b8; margin-top: 2px; }
+  .c-sales    { border-top: 3px solid #10b981; } .c-sales .s-label { color: #059669; } .c-sales .s-value { color: #065f46; }
+  .c-purchase { border-top: 3px solid #f59e0b; } .c-purchase .s-label { color: #d97706; } .c-purchase .s-value { color: #92400e; }
+  .c-profit   { border-top: 3px solid #f43f5e; } .c-profit .s-label { color: #e11d48; }
+  .c-items    { border-top: 3px solid #8b5cf6; } .c-items .s-label { color: #7c3aed; } .c-items .s-value { color: #4c1d95; }
+
+  /* Table */
+  .rpt-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; margin-bottom: 1rem; }
+  .rpt-table thead tr { background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; }
+  .rpt-table th { padding: 0.4rem 0.5rem; font-weight: 700; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em; text-align: left; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap; }
+  .rpt-table tbody tr:nth-child(even) { background: #fff1f2; }
+  .rpt-table td { padding: 0.45rem 0.5rem; border: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+  .badge { display:inline-block; padding:0.15rem 0.5rem; border-radius:20px; font-size:0.65rem; font-weight:700; }
+  .badge-sale     { background:#d1fae5; color:#065f46; }
+  .badge-purchase { background:#fef3c7; color:#92400e; }
+
+  /* Footer */
+  .rpt-footer { display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:0.6rem; border-top:1px solid #e2e8f0; font-size:0.62rem; color:#94a3b8; }
+  .rpt-footer strong { color:#0f172a; }
+
+  /* Print button */
+  .print-btn-wrap { text-align:center; padding:1.2rem; }
+  .print-btn { padding:0.7rem 2rem; background:linear-gradient(135deg,#f43f5e,#e11d48); color:white; border:none; border-radius:10px; font-size:0.95rem; font-weight:700; cursor:pointer; font-family:inherit; }
+</style>
+</head>
+<body>
+
+<!-- Store Header -->
+<div class="rpt-header">
+  <div>
+    <div class="rpt-store-name">Mudhalvar Marundhagam Pakkam</div>
+    <div class="rpt-store-addr">Shop No-01, Krishna Complex, KTP Road, Pakkam, THIRUVALLUR - 602024<br>Ph: 9551561821</div>
+  </div>
+  <div class="rpt-logo">
+    <div class="rpt-logo-text">MM</div>
+    <div class="rpt-logo-sub">நலமாக வாழ வழிகாட்டுகிறோம்</div>
+  </div>
+  <div class="rpt-meta">
+    <div><strong>Report Generated</strong></div>
+    <div>${now}</div>
+    <div style="margin-top:4px"><strong>Filter:</strong> ${typeLabel}</div>
+  </div>
+</div>
+
+<!-- Title -->
+<div class="rpt-title-bar">
+  <h2>📊 Transaction Report</h2>
+  <span>Period: <strong>${dateRange}</strong></span>
+</div>
+
+<!-- Summary -->
+<div class="summary-grid">
+  <div class="s-card c-sales">
+    <div class="s-label">Total Sales</div>
+    <div class="s-value">${totalSales}</div>
+    <div class="s-sub">${salesCount}</div>
+  </div>
+  <div class="s-card c-purchase">
+    <div class="s-label">Total Purchase</div>
+    <div class="s-value">${totalPurchase}</div>
+    <div class="s-sub">${purchaseCount}</div>
+  </div>
+  <div class="s-card c-profit">
+    <div class="s-label">Net Profit</div>
+    <div class="s-value" style="color:${profitColor}">${netProfit}</div>
+    <div class="s-sub">Sales &minus; Purchase</div>
+  </div>
+  <div class="s-card c-items">
+    <div class="s-label">Total Items</div>
+    <div class="s-value">${totalItems}</div>
+    <div class="s-sub">Units sold / purchased</div>
+  </div>
+</div>
+
+<!-- Transaction Table -->
+<table class="rpt-table">
+  <thead>
+    <tr>
+      <th>Bill No</th>
+      <th>Date</th>
+      <th>Type</th>
+      <th>Product</th>
+      <th>Qty</th>
+      <th>Rate (&#8377;)</th>
+      <th>GST %</th>
+      <th>Total (&#8377;)</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${tableRows}${emptyRow}
+  </tbody>
+</table>
+
+<!-- Footer -->
+<div class="rpt-footer">
+  <span>Mudhalvar Marundhagam Pakkam &mdash; Confidential</span>
+  <span>Printed on: <strong>${now}</strong></span>
+</div>
+
+<div class="no-print print-btn-wrap">
+  <button class="print-btn" onclick="window.print()">🖨️ Print Hardcopy</button>
+</div>
+<script>window.onload = () => window.print();<\/script>
+</body>
+</html>`);
+            printWin.document.close();
+        }
     </script>
 
 </body>
