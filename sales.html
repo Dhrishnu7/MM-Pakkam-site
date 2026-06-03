@@ -838,8 +838,17 @@
                                 + New Customer
                             </button>
                         </div>
-                        <input type="text" id="customerName" list="customerList" placeholder="Select or type…" autocomplete="off">
+                        <input type="text" id="customerName" list="customerList" placeholder="Select or type…" autocomplete="off"
+                            onchange="autoFillCustomerAddress()">
                         <datalist id="customerList"></datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Delivery Address</label>
+                        <textarea id="deliveryAddress" rows="2"
+                            placeholder="Auto-filled from customer data…"
+                            style="font-family:'Inter',sans-serif;font-size:0.88rem;color:#0f172a;background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:10px;padding:0.65rem 0.9rem;outline:none;width:100%;resize:vertical;transition:all 0.22s ease;line-height:1.5;"
+                            onfocus="this.style.borderColor='#8b5cf6';this.style.boxShadow='0 0 0 3px rgba(139,92,246,0.15)'"
+                            onblur="this.style.borderColor='#e9d5ff';this.style.boxShadow='none'"></textarea>
                     </div>
                     <div class="form-group">
                         <div class="field-label-row">
@@ -1056,6 +1065,26 @@
         function refreshGlobalMedicineList() {
             const dl = document.getElementById('globalMedicineList');
             if (dl) dl.innerHTML = getMedicineOptions();
+        }
+
+        /* ── Auto-fill Delivery Address from Customer data ── */
+        function autoFillCustomerAddress() {
+            const name      = (document.getElementById('customerName')?.value || '').trim();
+            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+            const match     = customers.find(c => (c.name || '').trim().toLowerCase() === name.toLowerCase());
+            const addrEl    = document.getElementById('deliveryAddress');
+            if (!addrEl) return;
+            if (match && match.address) {
+                addrEl.value = match.address;
+                addrEl.style.borderColor  = '#8b5cf6';
+                addrEl.style.boxShadow    = '0 0 0 3px rgba(139,92,246,0.15)';
+                setTimeout(() => {
+                    addrEl.style.borderColor = '#e9d5ff';
+                    addrEl.style.boxShadow   = 'none';
+                }, 1200);
+            } else {
+                addrEl.value = '';
+            }
         }
 
         /* ── Refresh Customer & Doctor Datalists ── */
@@ -1314,15 +1343,19 @@
             const _custMatch = _custList.find(c => (c.name || '').trim().toLowerCase() === _custNameVal.toLowerCase());
             const _custPhone = _custMatch ? (_custMatch.phone || '') : '';
 
+            const _custAddress = _custMatch ? (_custMatch.address || '') : '';
+            const _deliveryAddr = document.getElementById('deliveryAddress').value.trim() || _custAddress;
+
             const bill = {
-                billNo:        document.getElementById('billNo').value,
-                date:          document.getElementById('saleDate').value,
-                customerName:  _custNameVal,
-                customerPhone: _custPhone,
-                doctorName:    document.getElementById('doctorName').value.trim(),
-                medicines:     medicines,
-                grandTotal:    grandTotal,
-                savedAt:       new Date().toISOString()
+                billNo:           document.getElementById('billNo').value,
+                date:             document.getElementById('saleDate').value,
+                customerName:     _custNameVal,
+                customerPhone:    _custPhone,
+                deliveryAddress:  _deliveryAddr,
+                doctorName:       document.getElementById('doctorName').value.trim(),
+                medicines:        medicines,
+                grandTotal:       grandTotal,
+                savedAt:          new Date().toISOString()
             };
 
             // ── Save to Supabase ──
@@ -1350,6 +1383,7 @@
 
                 // Reset form in background
                 document.getElementById('customerName').value = '';
+                document.getElementById('deliveryAddress').value = '';
                 document.getElementById('doctorName').value   = '';
                 document.getElementById('medicineRows').innerHTML = '';
                 rowCount = 0;
@@ -1529,8 +1563,9 @@
                     list.push({ name, phone, address });
                     localStorage.setItem('mm_customers', JSON.stringify(list));
                 }
-                // Auto-fill the customer field
+                // Auto-fill the customer field + delivery address
                 document.getElementById('customerName').value = name;
+                autoFillCustomerAddress();
             } else {
                 // Save to Supabase
                 dbAddDoctor(name, phone, '', address);
