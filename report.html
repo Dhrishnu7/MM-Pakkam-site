@@ -637,6 +637,22 @@
     </div>
 
     <script>
+        // ── Bulk-delete helpers (defined inline to avoid caching issues) ──
+        async function dbDeleteAllBills() {
+            try {
+                const { error } = await _supabase.from('bills').delete().gte('id', 0);
+                if (error) { console.error('deleteAllBills:', error); return false; }
+                return true;
+            } catch(e) { console.error('deleteAllBills:', e); return false; }
+        }
+        async function dbDeleteAllPurchases() {
+            try {
+                const { error } = await _supabase.from('purchases').delete().gte('id', 0);
+                if (error) { console.error('deleteAllPurchases:', error); return false; }
+                return true;
+            } catch(e) { console.error('deleteAllPurchases:', e); return false; }
+        }
+
         // ── Set default dates (this month) ──
         const today = new Date();
         const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
