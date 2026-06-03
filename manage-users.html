@@ -116,6 +116,8 @@
         }
         .btn-reset { background:#dbeafe; color:#1d4ed8; border:1.5px solid #93c5fd; }
         .btn-reset:hover { background:#2563eb; color:white; border-color:#2563eb; }
+        .btn-rename { background:#fef3c7; color:#92400e; border:1.5px solid #fcd34d; }
+        .btn-rename:hover { background:#f59e0b; color:white; border-color:#f59e0b; }
         .btn-delete { background:#fee2e2; color:#dc2626; border:1.5px solid #fca5a5; }
         .btn-delete:hover { background:#ef4444; color:white; border-color:#ef4444; }
 
@@ -319,7 +321,7 @@
         <div class="modal-card">
             <div class="modal-hd">
                 <h3>🔑 Reset Password</h3>
-                <button class="modal-x" onclick="closeResetModal()">Ã—</button>
+                <button class="modal-x" onclick="closeResetModal()">×</button>
             </div>
             <div class="modal-bd">
                 <p style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">
@@ -337,12 +339,36 @@
         </div>
     </div>
 
+    <!-- Rename Modal -->
+    <div class="modal-overlay" id="renameModal">
+        <div class="modal-card">
+            <div class="modal-hd">
+                <h3>✏️ Edit Name</h3>
+                <button class="modal-x" onclick="closeRenameModal()">×</button>
+            </div>
+            <div class="modal-bd">
+                <p style="font-size:0.85rem;color:#64748b;margin-bottom:1rem;">
+                    Change username for <strong id="renameForUser" style="color:#0f172a;"></strong>:
+                </p>
+                <input type="text" class="modal-input" id="renameNewUsername" placeholder="New username (min 3 chars)" autocomplete="off" spellcheck="false">
+                <div class="inline-error" id="renameError" style="margin-top:5px;"></div>
+            </div>
+            <div class="modal-ft">
+                <button class="modal-cancel-btn" onclick="closeRenameModal()">Cancel</button>
+                <button class="modal-save-btn" id="renameSaveBtn" onclick="doRename()" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 14px rgba(245,158,11,0.3);">
+                    Save Name
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Owner-only gate
         const _session = mmRequireOwner();
         mmInjectUserBar();
 
-        let _resetTarget = null;
+        let _resetTarget  = null;
+        let _renameTarget = null;
 
         function renderUsers() {
             const users = mmGetUsers();
@@ -362,19 +388,23 @@
                 const dateStr  = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : '—';
                 return `
                 <div class="user-row">
-                    <div class="user-avatar ${isOwner ? 'owner' : ''}">${initials}</div>
+                    <div class="user-avatar ${isOwner ? 'owner' : ''}">\${initials}</div>
                     <div class="user-info">
-                        <div class="user-name">${u.username} ${isMe ? '<span style="font-size:0.7rem;color:#94a3b8;">(you)</span>' : ''}</div>
-                        <div class="user-meta">Added ${dateStr}</div>
+                        <div class="user-name">\${u.username} \${isMe ? '<span style="font-size:0.7rem;color:#94a3b8;">(you)</span>' : ''}</div>
+                        <div class="user-meta">Added \${dateStr}</div>
                     </div>
-                    <span class="role-pill ${isOwner ? 'role-owner' : 'role-worker'}">${u.role}</span>
+                    <span class="role-pill \${isOwner ? 'role-owner' : 'role-worker'}">\${u.role}</span>
                     <div class="user-actions">
-                        <button class="action-btn btn-reset" onclick="openResetModal('${u.username}')">
+                        <button class="action-btn btn-rename" onclick="openRenameModal('\${u.username}')">
+                            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Rename
+                        </button>
+                        <button class="action-btn btn-reset" onclick="openResetModal('\${u.username}')">
                             <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                             Reset
                         </button>
                         ${!isOwner && !isMe ? `
-                        <button class="action-btn btn-delete" onclick="deleteUser('${u.username}')">
+                        <button class="action-btn btn-delete" onclick="deleteUser('\${u.username}')">
                             <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             Delete
                         </button>` : ''}
@@ -435,6 +465,49 @@
             showToast('User Removed', `"${username}" has been deleted.`);
         }
 
+        function openRenameModal(username) {
+            _renameTarget = username;
+            document.getElementById('renameForUser').textContent = username;
+            document.getElementById('renameNewUsername').value = username;
+            document.getElementById('renameError').classList.remove('show');
+            document.getElementById('renameModal').classList.add('open');
+            setTimeout(() => {
+                const inp = document.getElementById('renameNewUsername');
+                inp.focus();
+                inp.select();
+            }, 200);
+        }
+        function closeRenameModal() { document.getElementById('renameModal').classList.remove('open'); }
+
+        function doRename() {
+            const btn    = document.getElementById('renameSaveBtn');
+            const errDiv = document.getElementById('renameError');
+            const newName = document.getElementById('renameNewUsername').value.trim();
+            errDiv.classList.remove('show');
+            if (newName.length < 3) { errDiv.textContent = 'Username must be at least 3 characters.'; return errDiv.classList.add('show'); }
+
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+
+            const result = mmRenameUser(_renameTarget, newName);
+
+            btn.disabled = false;
+            btn.textContent = 'Save Name';
+
+            if (result.success) {
+                closeRenameModal();
+                renderUsers();
+                // Refresh navbar user pill if renaming self
+                const bar = document.querySelector('.mm-user-bar');
+                if (bar) bar.remove();
+                mmInjectUserBar();
+                showToast('Name Updated ✓', `Username changed to "${newName}".`);
+            } else {
+                errDiv.textContent = result.message;
+                errDiv.classList.add('show');
+            }
+        }
+
         function openResetModal(username) {
             _resetTarget = username;
             document.getElementById('resetForUser').textContent = username;
@@ -477,9 +550,10 @@
             setTimeout(() => t.classList.remove('show'), 3500);
         }
 
-        // Close modal on overlay click / Escape
+        // Close modals on overlay click / Escape
         document.getElementById('resetModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeResetModal(); });
-        document.addEventListener('keydown', e => { if(e.key==='Escape') closeResetModal(); });
+        document.getElementById('renameModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeRenameModal(); });
+        document.addEventListener('keydown', e => { if(e.key==='Escape') { closeResetModal(); closeRenameModal(); } });
 
         // Init
         renderUsers();

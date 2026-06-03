@@ -235,6 +235,32 @@ async function mmResetPassword(username, newPassword) {
     return { success: true };
 }
 
+/** Rename a user. Returns { success, message } */
+function mmRenameUser(oldUsername, newUsername) {
+    const users = mmGetUsers();
+    const trimmed = newUsername.trim();
+    if (trimmed.length < 3) return { success: false, message: 'Username must be at least 3 characters.' };
+    if (users.find(u => u.username.toLowerCase() === trimmed.toLowerCase() && u.username.toLowerCase() !== oldUsername.toLowerCase())) {
+        return { success: false, message: 'Username already taken.' };
+    }
+    const user = users.find(u => u.username.toLowerCase() === oldUsername.toLowerCase());
+    if (!user) return { success: false, message: 'User not found.' };
+    user.username = trimmed;
+    mmSaveUsers(users);
+    // Update session if renaming the currently logged-in user
+    const session = mmGetSession();
+    if (session && session.username.toLowerCase() === oldUsername.toLowerCase()) {
+        session.username = trimmed;
+        const remember = localStorage.getItem(MM_REMEMBER_KEY) === 'true';
+        if (remember) {
+            localStorage.setItem(MM_SESSION_KEY, JSON.stringify(session));
+        } else {
+            sessionStorage.setItem(MM_SESSION_KEY, JSON.stringify(session));
+        }
+    }
+    return { success: true };
+}
+
 /* ─────────────────────────────────────────
    Navbar User-Info Injection
    Call mmInjectUserBar() on every protected page to
