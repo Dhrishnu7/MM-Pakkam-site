@@ -979,7 +979,7 @@
             purchases.forEach(p => {
                 const name = (p.productName || '').trim().toLowerCase();
                 if (!name) return;
-                stock[name] = (stock[name] || 0) + (parseFloat(p.quantity) || 0);
+                stock[name] = (stock[name] || 0) + ((parseFloat(p.quantity) || 0) * (parseFloat(p.pack) || 1));
             });
             // Subtract sold quantities from all past bills
             sales.forEach(bill => {
