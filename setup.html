@@ -467,7 +467,7 @@
 
                 <div class="card-heading">
                     <h1>Create New Account</h1>
-                    <p>Enter the owner's credentials to authorize, then set up the new worker account.</p>
+                    <p>Enter an owner's credentials to authorize, then create the new account with the chosen role.</p>
                 </div>
                 <div class="divider"></div>
 
@@ -514,7 +514,7 @@
                     </div>
                 </div>
 
-                <div class="section-label">New Worker Details</div>
+                <div class="section-label">New Account Details</div>
 
                 <div class="form-group">
                     <label for="newUser">New Username</label>
@@ -524,8 +524,16 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
                         </span>
-                        <input type="text" id="newUser" class="no-right-pad green-focus" placeholder="e.g. ravi_worker" autocomplete="off" spellcheck="false">
+                        <input type="text" id="newUser" class="no-right-pad green-focus" placeholder="e.g. owner2 or ravi_worker" autocomplete="off" spellcheck="false">
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="newRole">Role</label>
+                    <select id="newRole" style="font-family:'Inter',sans-serif;font-size:0.93rem;color:white;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;padding:0.82rem 1rem;outline:none;width:100%;transition:all 0.22s ease;cursor:pointer;-webkit-appearance:none;">
+                        <option value="owner" style="background:#1e293b;">&#128081; Owner — full access including user management</option>
+                        <option value="worker" style="background:#1e293b;">&#128119; Worker — billing &amp; reports access only</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -557,11 +565,11 @@
                     <div class="strength-lbl" id="strengthLbl">Enter a password</div>
                 </div>
 
-                <button class="submit-btn worker-btn" id="submitBtn" onclick="handleWorkerCreate()">
+                <button class="submit-btn owner-btn" id="submitBtn" onclick="handleWorkerCreate()">
                     <svg id="btnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                     </svg>
-                    <span id="btnText">Create Worker Account</span>
+                    <span id="btnText">Create Account</span>
                 </button>
 
                 <div class="back-login">
@@ -630,6 +638,7 @@
             const authPw   = document.getElementById('authPw').value;
             const newUser  = document.getElementById('newUser').value.trim();
             const newPw    = document.getElementById('newPw').value;
+            const role     = document.getElementById('newRole').value;
 
             if (!authUser || !authPw) return showError('Please enter the owner username and password to authorize.');
             if (newUser.length < 3)   return showError('New username must be at least 3 characters.');
@@ -641,20 +650,23 @@
             const authResult = await mmLogin(authUser, authPw, false);
             if (!authResult.success || authResult.user.role !== 'owner') {
                 showError('Owner username or password is incorrect.');
-                resetBtn('Create Worker Account', false);
+                resetBtn('Create Account', true);
                 return;
             }
             // Clear the temp session created by mmLogin
             mmClearSession();
 
             setBtnLoading('Creating account…');
-            const result = await mmAddWorker(newUser, newPw);
+            const result = role === 'owner'
+                ? await mmAddOwner(newUser, newPw)
+                : await mmAddWorker(newUser, newPw);
+
             if (result.success) {
-                setBtnDone(`"${newUser}" account created! Redirecting…`, true);
+                setBtnDone(`"${newUser}" ${role} account created! Redirecting…`, true);
                 setTimeout(() => window.location.replace('login.html'), 1000);
             } else {
                 showError(result.message);
-                resetBtn('Create Worker Account', false);
+                resetBtn('Create Account', true);
             }
         }
 
