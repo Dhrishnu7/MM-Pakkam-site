@@ -215,7 +215,14 @@
     <script src="js/auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
-</head>
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d9488">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MM Pakkam">
+    <link rel="apple-touch-icon" href="/icon-512.png">
+    <meta name="mobile-web-app-capable" content="yes"></head>
 <body>
     <header>
         <a class="logo" href="index.html">
@@ -561,6 +568,14 @@
         // Init
         renderUsers();
     </script>
-</body>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(r => console.log('[PWA] SW registered:', r.scope))
+                    .catch(e => console.warn('[PWA] SW failed:', e));
+            });
+        }
+    </script></body>
 </html>
 
