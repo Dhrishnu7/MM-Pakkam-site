@@ -480,31 +480,34 @@
         function closeRenameModal() { document.getElementById('renameModal').classList.remove('open'); }
 
         function doRename() {
-            const btn    = document.getElementById('renameSaveBtn');
-            const errDiv = document.getElementById('renameError');
+            const errDiv  = document.getElementById('renameError');
             const newName = document.getElementById('renameNewUsername').value.trim();
             errDiv.classList.remove('show');
-            if (newName.length < 3) { errDiv.textContent = 'Username must be at least 3 characters.'; return errDiv.classList.add('show'); }
 
-            btn.disabled = true;
-            btn.textContent = 'Saving…';
-
-            const result = mmRenameUser(_renameTarget, newName);
-
-            btn.disabled = false;
-            btn.textContent = 'Save Name';
-
-            if (result.success) {
-                closeRenameModal();
-                renderUsers();
-                // Refresh navbar user pill if renaming self
-                const bar = document.querySelector('.mm-user-bar');
-                if (bar) bar.remove();
-                mmInjectUserBar();
-                showToast('Name Updated ✓', `Username changed to "${newName}".`);
-            } else {
-                errDiv.textContent = result.message;
+            if (newName.length < 3) {
+                errDiv.textContent = 'Username must be at least 3 characters.';
                 errDiv.classList.add('show');
+                return;
+            }
+
+            try {
+                const result = mmRenameUser(_renameTarget, newName);
+                if (result.success) {
+                    closeRenameModal();
+                    renderUsers();
+                    // Refresh navbar user pill if renaming self
+                    const bar = document.querySelector('.mm-user-bar');
+                    if (bar) bar.remove();
+                    mmInjectUserBar();
+                    showToast('Name Updated ✓', `Username changed to "${newName}".`);
+                } else {
+                    errDiv.textContent = result.message;
+                    errDiv.classList.add('show');
+                }
+            } catch (e) {
+                errDiv.textContent = 'Something went wrong. Please try again.';
+                errDiv.classList.add('show');
+                console.error('Rename error:', e);
             }
         }
 
