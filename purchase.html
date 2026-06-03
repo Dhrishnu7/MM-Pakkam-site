@@ -448,27 +448,23 @@
                     <!-- Quantity, MRP -->
                     <div class="form-group">
                         <label>Quantity</label>
-                        <input type="number" id="quantity" placeholder="0" min="0" oninput="calcRate()">
+                        <input type="number" id="quantity" placeholder="0" min="0" oninput="calcTotal()">
                     </div>
                     <div class="form-group">
                         <label>MRP (₹)</label>
                         <input type="number" id="mrp" placeholder="0.00" min="0" step="0.01">
                     </div>
 
-                    <!-- Bill Total → auto-calc Rate -->
+                    <!-- Rate (manual) -->
                     <div class="form-group">
-                        <label>Bill Total (₹)</label>
-                        <input type="number" id="billTotal" placeholder="Total from supplier bill" min="0" step="0.01" oninput="calcRate()">
-                    </div>
-                    <div class="form-group">
-                        <label>Rate (₹) — Auto</label>
-                        <input type="number" id="rate" placeholder="Bill Total ÷ Qty" min="0" step="0.01" readonly style="background:#fef3c7; border-color:#fcd34d; font-weight:700; color:#92400e;">
+                        <label>Rate (₹)</label>
+                        <input type="number" id="rate" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()">
                     </div>
 
                     <!-- GST -->
                     <div class="form-group">
                         <label>GST (%)</label>
-                        <input type="number" id="gst" placeholder="e.g. 12" min="0" max="100" step="0.01">
+                        <input type="number" id="gst" placeholder="e.g. 12" min="0" max="100" step="0.01" oninput="calcTotal()">
                     </div>
 
                     <!-- Total full width -->
@@ -509,27 +505,14 @@
         // ── Default today's date ──
         document.getElementById('purchaseDate').valueAsDate = new Date();
 
-        // ── Auto-calculate Rate = Bill Total ÷ Quantity ──
-        function calcRate() {
-            const qty       = parseFloat(document.getElementById('quantity').value)  || 0;
-            const billTotal = parseFloat(document.getElementById('billTotal').value) || 0;
-            const rateEl    = document.getElementById('rate');
-            if (qty > 0 && billTotal > 0) {
-                rateEl.value = (billTotal / qty).toFixed(2);
-            } else {
-                rateEl.value = '';
-            }
-            calcTotal();
-        }
-
-        // ── Auto-calculate Total: Rate + GST% ──
+        // ── Auto-calculate Total = Rate × Quantity + GST% ──
         function calcTotal() {
-            const rate = parseFloat(document.getElementById('rate').value) || 0;
-            const gst  = parseFloat(document.getElementById('gst').value)  || 0;
-            const total = rate + (rate * gst / 100);
+            const qty  = parseFloat(document.getElementById('quantity').value) || 0;
+            const rate = parseFloat(document.getElementById('rate').value)     || 0;
+            const gst  = parseFloat(document.getElementById('gst').value)      || 0;
+            const total = (rate * qty) + (rate * qty * gst / 100);
             document.getElementById('total').value = total > 0 ? '₹ ' + total.toFixed(2) : '';
         }
-        document.getElementById('gst').addEventListener('input', calcTotal);
 
         // ── Submit ──
         async function handleSubmit(e) {
