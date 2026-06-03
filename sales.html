@@ -1203,14 +1203,20 @@
 
             const grandTotal = document.getElementById('grandTotal').textContent;
 
+            const _custNameVal = document.getElementById('customerName').value.trim();
+            const _custList = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+            const _custMatch = _custList.find(c => (c.name || '').trim().toLowerCase() === _custNameVal.toLowerCase());
+            const _custPhone = _custMatch ? (_custMatch.phone || '') : '';
+
             const bill = {
-                billNo:       document.getElementById('billNo').value,
-                date:         document.getElementById('saleDate').value,
-                customerName: document.getElementById('customerName').value.trim(),
-                doctorName:   document.getElementById('doctorName').value.trim(),
-                medicines:    medicines,
-                grandTotal:   grandTotal,
-                savedAt:      new Date().toISOString()
+                billNo:        document.getElementById('billNo').value,
+                date:          document.getElementById('saleDate').value,
+                customerName:  _custNameVal,
+                customerPhone: _custPhone,
+                doctorName:    document.getElementById('doctorName').value.trim(),
+                medicines:     medicines,
+                grandTotal:    grandTotal,
+                savedAt:       new Date().toISOString()
             };
 
             // ── Save to Supabase ──
@@ -1535,7 +1541,6 @@
                     <td class="td-left">${r.m.product || ''}</td>
                     <td>${r.m.batch || '-'}</td>
                     <td>${r.m.exp || '-'}</td>
-                    <td></td>
                     <td>₹${r.mrpUnit.toFixed(2)}</td>
                     <td>${r.m.qty}</td>
                     <td>${r.discPct}</td>
@@ -1599,7 +1604,6 @@
                             <th>Description of Goods</th>
                             <th>Batch No</th>
                             <th>Expiry Date</th>
-                            <th>HSN</th>
                             <th>MRP per unit</th>
                             <th>Qty</th>
                             <th>Discount %</th>
