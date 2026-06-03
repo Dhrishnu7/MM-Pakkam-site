@@ -637,20 +637,40 @@
     </div>
 
     <script>
-        // ── Bulk-delete helpers (defined inline to avoid caching issues) ──
+        // ── Bulk-delete helpers: fetch IDs first, then delete by ID (bypasses RLS filter issues) ──
         async function dbDeleteAllBills() {
             try {
-                const { error } = await _supabase.from('bills').delete().gte('id', 0);
-                if (error) { console.error('deleteAllBills:', error); return false; }
-                return true;
-            } catch(e) { console.error('deleteAllBills:', e); return false; }
+                // Step 1: get all bill IDs
+                const { data: rows, error: fetchErr } = await _supabase.from('bills').select('id');
+                if (fetchErr) return { ok: false, msg: 'Fetch IDs failed: ' + fetchErr.message };
+                if (!rows || rows.length === 0) return { ok: true }; // nothing to delete
+
+                // Step 2: delete in batches of 100
+                const ids = rows.map(r => r.id);
+                for (let i = 0; i < ids.length; i += 100) {
+                    const batch = ids.slice(i, i + 100);
+                    const { error } = await _supabase.from('bills').delete().in('id', batch);
+                    if (error) return { ok: false, msg: 'Bills delete failed: ' + error.message };
+                }
+                return { ok: true };
+            } catch(e) { return { ok: false, msg: e.message }; }
         }
         async function dbDeleteAllPurchases() {
             try {
-                const { error } = await _supabase.from('purchases').delete().gte('id', 0);
-                if (error) { console.error('deleteAllPurchases:', error); return false; }
-                return true;
-            } catch(e) { console.error('deleteAllPurchases:', e); return false; }
+                // Step 1: get all purchase IDs
+                const { data: rows, error: fetchErr } = await _supabase.from('purchases').select('id');
+                if (fetchErr) return { ok: false, msg: 'Fetch IDs failed: ' + fetchErr.message };
+                if (!rows || rows.length === 0) return { ok: true }; // nothing to delete
+
+                // Step 2: delete in batches of 100
+                const ids = rows.map(r => r.id);
+                for (let i = 0; i < ids.length; i += 100) {
+                    const batch = ids.slice(i, i + 100);
+                    const { error } = await _supabase.from('purchases').delete().in('id', batch);
+                    if (error) return { ok: false, msg: 'Purchases delete failed: ' + error.message };
+                }
+                return { ok: true };
+            } catch(e) { return { ok: false, msg: e.message }; }
         }
 
         // ── Set default dates (this month) ──
@@ -890,13 +910,15 @@
 
             try {
                 // Delete from Supabase (bill_items cascade from bills)
-                const [billsOk, purchasesOk] = await Promise.all([
+                const [billsRes, purchasesRes] = await Promise.all([
                     dbDeleteAllBills(),
                     dbDeleteAllPurchases()
                 ]);
 
-                if (!billsOk || !purchasesOk) {
-                    alert('⚠️ Some data could not be deleted from the database. Please try again or check your connection.');
+                if (!billsRes.ok || !purchasesRes.ok) {
+                    const errMsg = (!billsRes.ok ? 'Bills: ' + billsRes.msg : '') +
+                                   (!purchasesRes.ok ? '  Purchases: ' + purchasesRes.msg : '');
+                    alert('⚠️ Could not delete from database:\n' + errMsg);
                     if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
                     return;
                 }
