@@ -207,6 +207,18 @@ async function mmAddWorker(username, password) {
     return { success: true };
 }
 
+/** Add a new owner (owner function). Returns { success, message } */
+async function mmAddOwner(username, password) {
+    const users = mmGetUsers();
+    if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
+        return { success: false, message: 'Username already exists.' };
+    }
+    const hash = await mmHashPassword(password);
+    users.push({ username: username.trim(), passwordHash: hash, role: 'owner', createdAt: Date.now() });
+    mmSaveUsers(users);
+    return { success: true };
+}
+
 /** Delete a user by username (owner function) */
 function mmDeleteUser(username) {
     const users = mmGetUsers().filter(u => u.username.toLowerCase() !== username.toLowerCase());

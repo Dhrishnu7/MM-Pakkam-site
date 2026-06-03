@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -259,19 +259,19 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                             </svg>
                         </div>
-                        Add New Worker
+                        Add New User
                     </div>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="newUsername">Username</label>
-                        <input type="text" id="newUsername" placeholder="e.g. ravi_worker" autocomplete="off">
+                        <input type="text" id="newUsername" placeholder="e.g. ravi_owner" autocomplete="off">
                         <div class="inline-error" id="addError"></div>
                     </div>
                     <div class="form-group">
-                        <label for="newPassword">Temporary Password</label>
+                        <label for="newPassword">Password</label>
                         <div class="input-wrap">
-                            <input type="password" id="newPassword" placeholder="Set a password" autocomplete="new-password">
+                            <input type="password" id="newPassword" placeholder="Min 6 characters" autocomplete="new-password">
                             <button type="button" class="pw-toggle-light" onclick="toggleNewPw()">
                                 <svg id="newEye" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -280,13 +280,20 @@
                             </button>
                         </div>
                     </div>
+                    <div class="form-group" style="grid-column:1/-1;">
+                        <label for="newRole">Role</label>
+                        <select id="newRole" style="font-family:'Inter',sans-serif;font-size:0.92rem;color:#0f172a;background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:10px;padding:0.72rem 1rem;outline:none;width:100%;transition:all 0.22s ease;cursor:pointer;">
+                            <option value="worker">👷 Worker — can access billing &amp; reports</option>
+                            <option value="owner">👑 Owner — full access including user management</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-actions-row">
-                    <button class="add-worker-btn" id="addWorkerBtn" onclick="addWorker()">
+                    <button class="add-worker-btn" id="addWorkerBtn" onclick="addUser()">
                         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
                         </svg>
-                        Add Worker
+                        Add User
                     </button>
                 </div>
             </div>
@@ -388,11 +395,12 @@
             }
         }
 
-        async function addWorker() {
+        async function addUser() {
             const btn      = document.getElementById('addWorkerBtn');
             const errDiv   = document.getElementById('addError');
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value;
+            const role     = document.getElementById('newRole').value;
             errDiv.classList.remove('show');
 
             if (username.length < 3) { errDiv.textContent='Username must be 3+ characters.'; return errDiv.classList.add('show'); }
@@ -401,20 +409,23 @@
             btn.disabled = true;
             btn.innerHTML = `<svg class="spinner" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Adding…`;
 
-            const result = await mmAddWorker(username, password);
+            const result = role === 'owner'
+                ? await mmAddOwner(username, password)
+                : await mmAddWorker(username, password);
 
             if (result.success) {
                 document.getElementById('newUsername').value = '';
                 document.getElementById('newPassword').value = '';
+                document.getElementById('newRole').value = 'worker';
                 renderUsers();
-                showToast('Worker Added! ✓', `"${username}" can now log in.`);
+                showToast(`${role === 'owner' ? '👑 Owner' : '👷 Worker'} Added! ✓`, `"${username}" can now log in as ${role}.`);
             } else {
                 errDiv.textContent = result.message;
                 errDiv.classList.add('show');
             }
 
             btn.disabled = false;
-            btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg> Add Worker`;
+            btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg> Add User`;
         }
 
         function deleteUser(username) {
