@@ -1270,16 +1270,8 @@
   <button class="print-btn" onclick="window.print()">🖨️ Print Hardcopy</button>
 </div>
 <script>window.onload = () => window.print();<\/script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(r => console.log('[PWA] SW registered:', r.scope))
-                    .catch(e => console.warn('[PWA] SW failed:', e));
-            });
-        }
-    </script></body>
-</html>`);
+<\/body>
+<\/html>`);
             printWin.document.close();
         }
     </script>
