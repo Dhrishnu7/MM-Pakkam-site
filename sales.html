@@ -862,6 +862,7 @@
                                 <th>Product Name</th>
                                 <th>Batch No</th>
                                 <th>Exp. Date</th>
+                                <th title="Units per pack/strip">Pack</th>
                                 <th>Qty</th>
                                 <th title="MRP is for reference only — not used in Total">MRP (₹) ⓘ</th>
                                 <th>Rate (₹)</th>
@@ -1041,6 +1042,7 @@
             const fields = [
                 { el: document.getElementById('batch_' + id),    val: match.batchNo      || '' },
                 { el: document.getElementById('exp_'   + id),    val: match.expireDate    || '' },
+                { el: document.getElementById('pack_'  + id),    val: match.pack          || '' },
                 { el: document.getElementById('rate_'  + id),    val: match.rate          || '' },
                 { el: document.getElementById('gst_'   + id),    val: match.gst           || '' },
             ];
@@ -1133,6 +1135,7 @@
                 </td>
                 <td><input class="t-input" id="batch_${id}" type="text" placeholder="Batch No" style="min-width:90px;"></td>
                 <td><input class="t-input" id="exp_${id}"   type="month" style="min-width:120px;"></td>
+                <td><input class="t-input" id="pack_${id}"  type="number" placeholder="—" min="1" step="1" style="min-width:60px;" title="Units per pack"></td>
                 <td><input class="t-input" id="qty_${id}"   type="number" placeholder="0" min="0" style="min-width:60px;"
                     oninput="calcRowTotal(${id})"></td>
                 <td><input class="t-input" id="mrp_${id}"   type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"
@@ -1170,6 +1173,7 @@
                 const product  = (document.getElementById('product_'  + rid)?.value || '').trim();
                 const batch    = (document.getElementById('batch_'    + rid)?.value || '').trim();
                 const exp      = (document.getElementById('exp_'      + rid)?.value || '').trim();
+                const pack     = parseFloat(document.getElementById('pack_'     + rid)?.value) || 0;
                 const qty      = parseFloat(document.getElementById('qty_'      + rid)?.value) || 0;
                 const mrp      = parseFloat(document.getElementById('mrp_'      + rid)?.value) || 0;
                 const rate     = parseFloat(document.getElementById('rate_'     + rid)?.value) || 0;
@@ -1177,7 +1181,7 @@
                 const discount = parseFloat(document.getElementById('discount_' + rid)?.value) || 0;
                 const total    = parseFloat(document.getElementById('total_'    + rid)?.value) || 0;
                 if (product && qty > 0) {
-                    medicines.push({ product, batch, exp, qty, mrp, rate, gst, discount, total });
+                    medicines.push({ product, batch, exp, pack, qty, mrp, rate, gst, discount, total });
                 }
             });
             return medicines;

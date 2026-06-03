@@ -431,7 +431,7 @@
                         <datalist id="productNameList"></datalist>
                     </div>
 
-                    <!-- Batch No, Expire Date -->
+                    <!-- Batch No, Expire Date, Pack -->
                     <div class="form-group">
                         <label>Batch No</label>
                         <input type="text" id="batchNo" placeholder="e.g. BT20240001">
@@ -439,6 +439,10 @@
                     <div class="form-group">
                         <label>Expire Date</label>
                         <input type="month" id="expireDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Pack</label>
+                        <input type="number" id="pack" placeholder="e.g. 10" min="1" step="1" title="Number of units per pack/strip">
                     </div>
 
                     <!-- Quantity, MRP -->
@@ -543,6 +547,7 @@
                 batchNo:     document.getElementById('batchNo').value.trim(),
                 expireDate:  document.getElementById('expireDate').value,
                 quantity:    document.getElementById('quantity').value,
+                pack:        document.getElementById('pack').value,
                 mrp:         document.getElementById('mrp').value,
                 rate:        document.getElementById('rate').value,
                 gst:         document.getElementById('gst').value,
