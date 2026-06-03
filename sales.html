@@ -404,6 +404,22 @@
             color: #065f46 !important;
         }
 
+        /* ── Stock badge ── */
+        .stock-badge {
+            display: inline-block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-top: 4px;
+            letter-spacing: 0.02em;
+            transition: all 0.2s ease;
+        }
+        .stock-ok  { background: #d1fae5; color: #065f46; }
+        .stock-low { background: #fef3c7; color: #92400e; }
+        .stock-out { background: #fee2e2; color: #991b1b; }
+        .stock-unknown { background: #f1f5f9; color: #64748b; }
+
         @media (max-width: 580px) {
             header { padding: 0.8rem 1rem; }
             .logo-text { font-size: 0.95rem; }
@@ -954,6 +970,76 @@
             return map;
         }
 
+        /* ── Build stock map: total purchased − total sold ── */
+        function buildStockMap() {
+            const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+            const sales     = JSON.parse(localStorage.getItem('mm_sales')     || '[]');
+            const stock = {};
+            // Add purchased quantities
+            purchases.forEach(p => {
+                const name = (p.productName || '').trim().toLowerCase();
+                if (!name) return;
+                stock[name] = (stock[name] || 0) + (parseFloat(p.quantity) || 0);
+            });
+            // Subtract sold quantities from all past bills
+            sales.forEach(bill => {
+                (bill.medicines || []).forEach(m => {
+                    const name = (m.product || '').trim().toLowerCase();
+                    if (!name) return;
+                    stock[name] = (stock[name] || 0) - (parseFloat(m.qty) || 0);
+                });
+            });
+            return stock;
+        }
+
+        /* ── Show / refresh stock badge for a specific row ── */
+        function showStockBadge(rowId, productName) {
+            const badge = document.getElementById('stock_badge_' + rowId);
+            if (!badge) return;
+            if (!productName || !productName.trim()) {
+                badge.textContent = '';
+                badge.className = 'stock-badge';
+                return;
+            }
+            const stockMap = buildStockMap();
+            const available = Math.round(stockMap[productName.trim().toLowerCase()] ?? -1);
+            if (available < 0) {
+                // No purchase record found — just show no purchase data
+                badge.textContent = 'No purchase data';
+                badge.className = 'stock-badge stock-unknown';
+            } else if (available === 0) {
+                badge.textContent = '⚠ Out of stock';
+                badge.className = 'stock-badge stock-out';
+            } else if (available <= 10) {
+                badge.textContent = `⚠ Only ${available} in stock`;
+                badge.className = 'stock-badge stock-low';
+            } else {
+                badge.textContent = `✓ ${available} in stock`;
+                badge.className = 'stock-badge stock-ok';
+            }
+        }
+
+        /* ── Warn if qty exceeds stock ── */
+        function checkStockOnQtyChange(rowId) {
+            calcRowTotal(rowId);
+            const qtyEl = document.getElementById('qty_' + rowId);
+            const productEl = document.getElementById('product_' + rowId);
+            if (!qtyEl || !productEl) return;
+            const productName = productEl.value.trim();
+            if (!productName) return;
+            const qty = parseFloat(qtyEl.value) || 0;
+            const stockMap = buildStockMap();
+            const available = Math.round(stockMap[productName.toLowerCase()] ?? -1);
+            const badge = document.getElementById('stock_badge_' + rowId);
+            if (!badge) return;
+            if (available >= 0 && qty > available) {
+                badge.textContent = `⚠ Qty ${qty} exceeds stock (${available})`;
+                badge.className = 'stock-badge stock-out';
+            } else {
+                showStockBadge(rowId, productName);
+            }
+        }
+
         /* ── Build datalist options from mm_medicine_list + purchases ── */
         function getMedicineOptions() {
             const medList   = JSON.parse(localStorage.getItem('mm_medicine_list') || '[]');
@@ -1019,7 +1105,12 @@
             const productInput = document.getElementById('product_' + id);
             if (!productInput) return;
             const productVal = productInput.value.trim();
-            if (!productVal) return;
+
+            // If cleared, reset badge
+            if (!productVal) {
+                showStockBadge(id, '');
+                return;
+            }
 
             // Check if this medicine is already in another row
             let isDuplicate = false;
@@ -1032,29 +1123,31 @@
             if (isDuplicate) {
                 alert('This medicine is already added to the bill.');
                 productInput.value = '';
+                showStockBadge(id, '');
                 return;
             }
 
             const map = buildMedicineMap();
             const match = map[productVal.toLowerCase()];
-            if (!match) return;
 
-            const fields = [
-                { el: document.getElementById('batch_' + id),    val: match.batchNo      || '' },
-                { el: document.getElementById('exp_'   + id),    val: match.expireDate    || '' },
-                { el: document.getElementById('pack_'  + id),    val: match.pack          || '' },
-                { el: document.getElementById('rate_'  + id),    val: match.rate          || '' },
-                { el: document.getElementById('gst_'   + id),    val: match.gst           || '' },
-            ];
+            if (match) {
+                const fields = [
+                    { el: document.getElementById('batch_' + id),    val: match.batchNo      || '' },
+                    { el: document.getElementById('exp_'   + id),    val: match.expireDate    || '' },
+                    { el: document.getElementById('pack_'  + id),    val: match.pack          || '' },
+                    { el: document.getElementById('rate_'  + id),    val: match.rate          || '' },
+                    { el: document.getElementById('gst_'   + id),    val: match.gst           || '' },
+                ];
+                fields.forEach(({ el, val }) => {
+                    if (!el) return;
+                    el.value = val;
+                    if (val !== '') flashCell(el);
+                });
+                calcRowTotal(id);
+            }
 
-            fields.forEach(({ el, val }) => {
-                if (!el) return;
-                el.value = val;
-                if (val !== '') flashCell(el);
-            });
-
-            // Recalc total with the newly filled data
-            calcRowTotal(id);
+            // Always show stock badge (even if no purchase record)
+            showStockBadge(id, productVal);
         }
 
         /* ── Update row count badge and add btn ── */
@@ -1132,12 +1225,13 @@
                         list="globalMedicineList" placeholder="Medicine name"
                         autocomplete="off" style="min-width:150px;"
                         onchange="autoFillRow(${id})">
+                    <div id="stock_badge_${id}" class="stock-badge"></div>
                 </td>
                 <td><input class="t-input" id="batch_${id}" type="text" placeholder="Batch No" style="min-width:90px;"></td>
                 <td><input class="t-input" id="exp_${id}"   type="month" style="min-width:120px;"></td>
                 <td><input class="t-input" id="pack_${id}"  type="number" placeholder="—" min="1" step="1" style="min-width:60px;" title="Units per pack"></td>
                 <td><input class="t-input" id="qty_${id}"   type="number" placeholder="0" min="0" style="min-width:60px;"
-                    oninput="calcRowTotal(${id})"></td>
+                    oninput="checkStockOnQtyChange(${id})"></td>
                 <td><input class="t-input" id="mrp_${id}"   type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"
                     oninput="calcRowTotal(${id})"></td>
                 <td><input class="t-input" id="rate_${id}"  type="number" placeholder="0.00" min="0" step="0.01" style="min-width:70px;"></td>
