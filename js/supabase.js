@@ -159,6 +159,12 @@ async function dbDeleteBill(id) {
     const { error } = await _supabase.from('bills').delete().eq('id', id);
     return !error;
 }
+async function dbDeleteAllBills() {
+    // Delete all rows by matching id >= 0 (all positive integer IDs)
+    const { error } = await _supabase.from('bills').delete().gte('id', 0);
+    if (error) { console.error('deleteAllBills:', error); return false; }
+    return true;
+}
 
 /* ─────────────────────────────────────────────────────
    REPORT HELPERS
@@ -169,4 +175,10 @@ async function dbGetReportData(fromDate, toDate) {
         dbGetPurchases(fromDate, toDate),
     ]);
     return { bills, purchases };
+}
+
+async function dbDeleteAllPurchases() {
+    const { error } = await _supabase.from('purchases').delete().gte('id', 0);
+    if (error) { console.error('deleteAllPurchases:', error); return false; }
+    return true;
 }

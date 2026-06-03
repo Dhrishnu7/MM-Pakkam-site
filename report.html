@@ -257,6 +257,10 @@
             from { opacity: 0; transform: translateY(20px); }
             to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
 
         @media (max-width: 700px) {
             header { padding: 0.8rem 1rem; }
@@ -857,12 +861,46 @@
             return `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
 
-        function clearAllData() {
-            if (confirm("Are you sure you want to completely clear all Sales, Purchases, Customer Names, and Doctor Names? This cannot be undone.")) {
+        async function clearAllData() {
+            if (!confirm("Are you sure you want to completely clear ALL Sales and Purchases from the database? This cannot be undone.")) return;
+
+            // Disable button and show loading state
+            const btn = document.querySelector('.btn-clear-data');
+            const origHTML = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Clearing…`;
+            }
+
+            try {
+                // Delete from Supabase (bill_items cascade from bills)
+                const [billsOk, purchasesOk] = await Promise.all([
+                    dbDeleteAllBills(),
+                    dbDeleteAllPurchases()
+                ]);
+
+                if (!billsOk || !purchasesOk) {
+                    alert('⚠️ Some data could not be deleted from the database. Please try again or check your connection.');
+                    if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+                    return;
+                }
+
+                // Clear localStorage too
                 localStorage.removeItem('mm_sales');
                 localStorage.removeItem('mm_purchases');
-                // We keep mm_medicine_list so they don't have to re-import the catalog
+
+                // Reload report
+                allData = [];
+                currentData = [];
+                renderTable(activeTab);
+                updateSummary([]);
                 loadData();
+
+            } catch (err) {
+                console.error('Clear data error:', err);
+                alert('❌ Error clearing data: ' + (err.message || err));
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
             }
         }
 
