@@ -1,12 +1,11 @@
 /**
  * auth.js — MM Pakkam Authentication Module
- * Uses a pure-JS SHA-256 implementation so it works on file://, http://, and https://.
- * No server required — credentials stored securely in localStorage.
+ * Users stored in Supabase (mm_users table) — works across ALL devices and deployments.
+ * Session stored in localStorage/sessionStorage (device-specific by design).
  */
 
 /* ─────────────────────────────────────────
-   Pure-JS SHA-256  (works on file:// too)
-   Based on the public domain implementation by Angel Marin & Paul Johnston
+   Pure-JS SHA-256  (works on file://, http://, https://)
 ───────────────────────────────────────────*/
 function _sha256(str) {
     function safe_add(x, y) {
@@ -34,7 +33,6 @@ function _sha256(str) {
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     ];
 
-    // UTF-8 encode
     var bytes = [];
     for (var i = 0; i < str.length; i++) {
         var c = str.charCodeAt(i);
@@ -65,34 +63,104 @@ function _sha256(str) {
     return H.map(n => (n >>> 0).toString(16).padStart(8,'0')).join('');
 }
 
-const MM_USERS_KEY   = 'mm_auth_users';
-const MM_SESSION_KEY = 'mm_auth_session';
+/* ─────────────────────────────────────────
+   Supabase Config (same project as supabase.js)
+───────────────────────────────────────────*/
+const _AUTH_SUPABASE_URL = 'https://jwyyjdwlbgjijmwillow.supabase.co';
+const _AUTH_SUPABASE_KEY = 'sb_publishable_sY9QwFEMckky9KDJoc1O_w_zN7qY0mo';
+const MM_SESSION_KEY  = 'mm_auth_session';
 const MM_REMEMBER_KEY = 'mm_auth_remember';
 
+// Lazy Supabase client — returns existing _supabase global or creates a new one
+function _authDB() {
+    if (typeof _supabase !== 'undefined' && _supabase) return _supabase;
+    if (typeof supabase !== 'undefined' && supabase && supabase.createClient) {
+        return supabase.createClient(_AUTH_SUPABASE_URL, _AUTH_SUPABASE_KEY);
+    }
+    return null;
+}
+
 /* ─────────────────────────────────────────
-   Password Hashing  (pure-JS SHA-256)
+   Password Hashing
 ───────────────────────────────────────────*/
 async function mmHashPassword(password) {
-    // Pure-JS SHA-256 — works on file://, http://, and https://
     return _sha256(password);
 }
 
 /* ─────────────────────────────────────────
-   User Store
+   User Store — Supabase (mm_users table)
+   Falls back to localStorage if Supabase unavailable.
 ───────────────────────────────────────────*/
-function mmGetUsers() {
-    try { return JSON.parse(localStorage.getItem(MM_USERS_KEY) || '[]'); }
+
+// localStorage fallback helpers
+function _localGetUsers() {
+    try { return JSON.parse(localStorage.getItem('mm_auth_users') || '[]'); }
     catch { return []; }
 }
-function mmSaveUsers(users) {
-    localStorage.setItem(MM_USERS_KEY, JSON.stringify(users));
+function _localSaveUsers(users) {
+    try { localStorage.setItem('mm_auth_users', JSON.stringify(users)); } catch {}
 }
-function mmHasUsers() {
-    return mmGetUsers().length > 0;
+
+async function mmGetUsers() {
+    const db = _authDB();
+    if (db) {
+        try {
+            const { data, error } = await db.from('mm_users').select('*');
+            if (!error && data) return data;
+            // If error is "table not found", fall through to localStorage
+            console.warn('[auth] Supabase mm_users fetch failed:', error?.message || error);
+        } catch (e) {
+            console.warn('[auth] Supabase unreachable, using localStorage:', e.message);
+        }
+    }
+    return _localGetUsers();
+}
+
+async function mmHasUsers() {
+    const users = await mmGetUsers();
+    return users.length > 0;
+}
+
+// Upsert a single user record to Supabase (and localStorage as backup)
+async function _saveUser(userObj) {
+    const db = _authDB();
+    if (db) {
+        try {
+            const { error } = await db.from('mm_users')
+                .upsert({ ...userObj }, { onConflict: 'username' });
+            if (!error) {
+                // Keep localStorage in sync as backup
+                const local = _localGetUsers();
+                const idx = local.findIndex(u => u.username.toLowerCase() === userObj.username.toLowerCase());
+                if (idx >= 0) local[idx] = userObj; else local.push(userObj);
+                _localSaveUsers(local);
+                return true;
+            }
+            console.warn('[auth] Supabase upsert failed:', error.message);
+        } catch (e) {
+            console.warn('[auth] Supabase upsert failed:', e.message);
+        }
+    }
+    // localStorage fallback
+    const local = _localGetUsers();
+    const idx = local.findIndex(u => u.username.toLowerCase() === userObj.username.toLowerCase());
+    if (idx >= 0) local[idx] = userObj; else local.push(userObj);
+    _localSaveUsers(local);
+    return false; // indicates we fell back to localStorage
+}
+
+async function _deleteUser(username) {
+    const db = _authDB();
+    if (db) {
+        try {
+            await db.from('mm_users').delete().ilike('username', username);
+        } catch {}
+    }
+    _localSaveUsers(_localGetUsers().filter(u => u.username.toLowerCase() !== username.toLowerCase()));
 }
 
 /* ─────────────────────────────────────────
-   Session
+   Session  (always localStorage/sessionStorage — per-device by design)
 ───────────────────────────────────────────*/
 function mmGetSession() {
     const remember = localStorage.getItem(MM_REMEMBER_KEY) === 'true';
@@ -122,36 +190,31 @@ function mmClearSession() {
 }
 
 /* ─────────────────────────────────────────
-   Auth Guards  (call at top of every page)
+   Auth Guards  (async — await on each page)
 ───────────────────────────────────────────*/
 
 /**
  * Redirect to login.html if not logged in.
  * Returns the current session object if logged in.
  */
-function mmRequireAuth() {
-    // If no owner account exists yet → go to first-time setup
-    if (!mmHasUsers()) {
-        if (!window.location.pathname.endsWith('setup.html')) {
-            window.location.replace('setup.html');
+async function mmRequireAuth() {
+    if (!mmGetSession()) {
+        if (!window.location.pathname.endsWith('login.html') &&
+            !window.location.pathname.endsWith('setup.html')) {
+            // Check if any users exist; if not, send to setup
+            const hasUsers = await mmHasUsers();
+            window.location.replace(hasUsers ? 'login.html' : 'setup.html');
         }
         return null;
     }
-    const session = mmGetSession();
-    if (!session) {
-        if (!window.location.pathname.endsWith('login.html')) {
-            window.location.replace('login.html');
-        }
-        return null;
-    }
-    return session;
+    return mmGetSession();
 }
 
 /**
  * Redirect to index.html if logged-in user is not the owner.
  */
-function mmRequireOwner() {
-    const session = mmRequireAuth();
+async function mmRequireOwner() {
+    const session = await mmRequireAuth();
     if (session && session.role !== 'owner') {
         window.location.replace('index.html');
         return null;
@@ -171,7 +234,7 @@ function mmCurrentUser() {
 /** Login. Returns { success, message } */
 async function mmLogin(username, password, remember) {
     try {
-        const users = mmGetUsers();
+        const users = await mmGetUsers();
         const hash  = await mmHashPassword(password);
         const user  = users.find(u =>
             u.username.toLowerCase() === username.trim().toLowerCase() &&
@@ -182,7 +245,7 @@ async function mmLogin(username, password, remember) {
         return { success: true, user };
     } catch (err) {
         console.error('[auth] mmLogin error:', err);
-        return { success: false, message: 'Sign-in failed. Please try again or check your browser settings (cookies/storage may be blocked).' };
+        return { success: false, message: 'Sign-in failed. Please try again.' };
     }
 }
 
@@ -192,97 +255,93 @@ function mmLogout() {
     window.location.replace('login.html');
 }
 
-/** Create first owner account (setup page only). Returns { success, message } */
+/** Create first owner account. Returns { success, message } */
 async function mmCreateOwner(username, password) {
-    if (mmHasUsers()) return { success: false, message: 'Owner already exists.' };
+    const already = await mmHasUsers();
+    if (already) return { success: false, message: 'Owner already exists.' };
     const hash = await mmHashPassword(password);
-    mmSaveUsers([{ username: username.trim(), passwordHash: hash, role: 'owner', createdAt: Date.now() }]);
+    const user = { username: username.trim(), passwordHash: hash, role: 'owner', createdAt: Date.now() };
+    await _saveUser(user);
     return { success: true };
 }
 
 /** Add a worker (owner function). Returns { success, message } */
 async function mmAddWorker(username, password) {
-    const users = mmGetUsers();
+    const users = await mmGetUsers();
     if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
         return { success: false, message: 'Username already exists.' };
     }
     const hash = await mmHashPassword(password);
-    users.push({ username: username.trim(), passwordHash: hash, role: 'worker', createdAt: Date.now() });
-    mmSaveUsers(users);
+    await _saveUser({ username: username.trim(), passwordHash: hash, role: 'worker', createdAt: Date.now() });
     return { success: true };
 }
 
 /** Add a new owner (owner function). Returns { success, message } */
 async function mmAddOwner(username, password) {
-    const users = mmGetUsers();
+    const users = await mmGetUsers();
     if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
         return { success: false, message: 'Username already exists.' };
     }
     const hash = await mmHashPassword(password);
-    users.push({ username: username.trim(), passwordHash: hash, role: 'owner', createdAt: Date.now() });
-    mmSaveUsers(users);
+    await _saveUser({ username: username.trim(), passwordHash: hash, role: 'owner', createdAt: Date.now() });
     return { success: true };
 }
 
 /** Delete a user by username (owner function) */
-function mmDeleteUser(username) {
-    const users = mmGetUsers().filter(u => u.username.toLowerCase() !== username.toLowerCase());
-    mmSaveUsers(users);
+async function mmDeleteUser(username) {
+    await _deleteUser(username);
 }
 
 /** Reset a user's password. Returns { success, message } */
 async function mmResetPassword(username, newPassword) {
-    const users = mmGetUsers();
+    const users = await mmGetUsers();
     const user  = users.find(u => u.username.toLowerCase() === username.toLowerCase());
     if (!user) return { success: false, message: 'User not found.' };
     user.passwordHash = await mmHashPassword(newPassword);
-    mmSaveUsers(users);
+    await _saveUser(user);
     return { success: true };
 }
 
 /** Rename a user. Returns { success, message } */
-function mmRenameUser(oldUsername, newUsername) {
-    const users = mmGetUsers();
+async function mmRenameUser(oldUsername, newUsername) {
+    const users  = await mmGetUsers();
     const trimmed = newUsername.trim();
     if (trimmed.length < 3) return { success: false, message: 'Username must be at least 3 characters.' };
-    if (users.find(u => u.username.toLowerCase() === trimmed.toLowerCase() && u.username.toLowerCase() !== oldUsername.toLowerCase())) {
+    if (users.find(u => u.username.toLowerCase() === trimmed.toLowerCase() &&
+                        u.username.toLowerCase() !== oldUsername.toLowerCase())) {
         return { success: false, message: 'Username already taken.' };
     }
     const user = users.find(u => u.username.toLowerCase() === oldUsername.toLowerCase());
     if (!user) return { success: false, message: 'User not found.' };
+
+    // Delete old record, save with new name
+    await _deleteUser(oldUsername);
     user.username = trimmed;
-    mmSaveUsers(users);
+    await _saveUser(user);
+
     // Update session if renaming the currently logged-in user
     const session = mmGetSession();
     if (session && session.username.toLowerCase() === oldUsername.toLowerCase()) {
         session.username = trimmed;
         const remember = localStorage.getItem(MM_REMEMBER_KEY) === 'true';
-        if (remember) {
-            localStorage.setItem(MM_SESSION_KEY, JSON.stringify(session));
-        } else {
-            sessionStorage.setItem(MM_SESSION_KEY, JSON.stringify(session));
-        }
+        if (remember) localStorage.setItem(MM_SESSION_KEY, JSON.stringify(session));
+        else sessionStorage.setItem(MM_SESSION_KEY, JSON.stringify(session));
     }
     return { success: true };
 }
 
 /* ─────────────────────────────────────────
    Navbar User-Info Injection
-   Call mmInjectUserBar() on every protected page to
-   automatically add the logged-in user pill + logout btn.
 ───────────────────────────────────────────*/
 function mmInjectUserBar() {
     const session = mmGetSession();
     if (!session) return;
 
-    // Inject CSS once
     if (!document.getElementById('mm-auth-styles')) {
         const style = document.createElement('style');
         style.id = 'mm-auth-styles';
         style.textContent = `
-            .mm-user-bar {
-                display: flex; align-items: center; gap: 10px;
-            }
+            .mm-user-bar { display: flex; align-items: center; gap: 10px; }
             .mm-user-pill {
                 display: inline-flex; align-items: center; gap: 8px;
                 background: rgba(255,255,255,0.7);
@@ -297,54 +356,35 @@ function mmInjectUserBar() {
                 color: white; font-weight: 800; font-size: 0.75rem;
                 flex-shrink: 0; letter-spacing: 0.02em;
             }
-            .mm-user-name {
-                font-size: 0.82rem; font-weight: 700; color: #0f172a;
-            }
+            .mm-user-name { font-size: 0.82rem; font-weight: 700; color: #0f172a; }
             .mm-role-badge {
                 font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em;
                 text-transform: uppercase; padding: 2px 7px; border-radius: 20px;
             }
-            .mm-role-owner {
-                background: linear-gradient(135deg,#fef3c7,#fde68a);
-                color: #92400e; border: 1px solid #fcd34d;
-            }
-            .mm-role-worker {
-                background: linear-gradient(135deg,#dbeafe,#bfdbfe);
-                color: #1e40af; border: 1px solid #93c5fd;
-            }
+            .mm-role-owner { background: linear-gradient(135deg,#fef3c7,#fde68a); color: #92400e; border: 1px solid #fcd34d; }
+            .mm-role-worker { background: linear-gradient(135deg,#dbeafe,#bfdbfe); color: #1e40af; border: 1px solid #93c5fd; }
             .mm-manage-btn {
                 display: inline-flex; align-items: center; gap: 5px;
                 padding: 6px 13px; border-radius: 50px;
                 border: 1.5px solid rgba(139,92,246,0.35);
                 background: rgba(237,233,254,0.8);
                 color: #6d28d9; font-size: 0.78rem; font-weight: 700;
-                text-decoration: none; transition: all 0.22s ease;
-                cursor: pointer;
+                text-decoration: none; transition: all 0.22s ease; cursor: pointer;
             }
-            .mm-manage-btn:hover {
-                background: #7c3aed; color: white; border-color: #7c3aed;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(124,58,237,0.3);
-            }
+            .mm-manage-btn:hover { background: #7c3aed; color: white; border-color: #7c3aed; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,58,237,0.3); }
             .mm-logout-btn {
                 display: inline-flex; align-items: center; gap: 5px;
                 padding: 6px 13px; border-radius: 50px;
                 border: 1.5px solid rgba(239,68,68,0.3);
                 background: rgba(254,242,242,0.8);
                 color: #dc2626; font-size: 0.78rem; font-weight: 700;
-                cursor: pointer; transition: all 0.22s ease;
-                font-family: 'Inter', sans-serif;
+                cursor: pointer; transition: all 0.22s ease; font-family: 'Inter', sans-serif;
             }
-            .mm-logout-btn:hover {
-                background: #ef4444; color: white; border-color: #ef4444;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(239,68,68,0.3);
-            }
+            .mm-logout-btn:hover { background: #ef4444; color: white; border-color: #ef4444; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
         `;
         document.head.appendChild(style);
     }
 
-    // Build the user bar HTML
     const initials = session.username.slice(0, 2).toUpperCase();
     const isOwner  = session.role === 'owner';
     const bar = document.createElement('div');
@@ -370,7 +410,6 @@ function mmInjectUserBar() {
         </button>
     `;
 
-    // Append to header
     const header = document.querySelector('header');
     if (header) header.appendChild(bar);
 }
