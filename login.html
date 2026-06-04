@@ -615,15 +615,33 @@
     </div>
 
     <script>
-        // ── Redirect if already logged in ──
+        // ── Redirect if already logged in; show notice if no account yet ──
         (function() {
             try {
-                if (!mmHasUsers()) {
-                    window.location.replace('setup.html');
-                    return;
-                }
                 if (mmGetSession()) {
                     window.location.replace('index.html');
+                    return;
+                }
+                if (!mmHasUsers()) {
+                    // Don't hard-redirect — that causes a loop when coming from setup.html.
+                    // Instead, disable the form and show a friendly notice.
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const form = document.getElementById('loginForm');
+                        const btn  = document.getElementById('loginBtn');
+                        if (form) form.style.opacity = '0.4';
+                        if (btn)  btn.disabled = true;
+                        const box  = document.getElementById('errorBox');
+                        const text = document.getElementById('errorText');
+                        if (box && text) {
+                            // Re-use the error box as an info box
+                            box.style.background    = 'rgba(14,165,233,0.1)';
+                            box.style.borderColor   = 'rgba(14,165,233,0.3)';
+                            box.querySelector('svg').setAttribute('stroke','#38bdf8');
+                            text.style.color        = '#93c5fd';
+                            text.innerHTML = 'No account found. <a href="setup.html" style="color:#38bdf8;font-weight:800;">Create an owner account first →</a>';
+                            box.classList.add('visible');
+                        }
+                    });
                 }
             } catch(e) { /* continue to show login */ }
         })();
