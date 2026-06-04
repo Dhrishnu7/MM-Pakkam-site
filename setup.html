@@ -490,7 +490,7 @@
 
                 <div class="back-login">
                     <span>Already have an account?</span>
-                    <a href="login.html">Sign in</a>
+                    <a href="#" onclick="window.location.href='login.html?t='+Date.now();return false;">Sign in</a>
                 </div>
                 <p class="footer-txt">&copy; 2026 Mudhalvar Marundhagam Pakkam</p>
             `;
@@ -712,8 +712,25 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(r => console.log('[PWA] SW registered:', r.scope))
+                    .then(reg => {
+                        console.log('[PWA] SW registered:', reg.scope);
+                        // Force new SW to activate and reload for fresh files
+                        reg.addEventListener('updatefound', () => {
+                            const nw = reg.installing;
+                            if (!nw) return;
+                            nw.addEventListener('statechange', () => {
+                                if (nw.state === 'installed') {
+                                    // Tell new SW to skip waiting immediately
+                                    nw.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                            });
+                        });
+                    })
                     .catch(e => console.warn('[PWA] SW failed:', e));
+                // Reload when new SW takes control so fresh files are served
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    window.location.reload();
+                });
             });
         }
     </script></body>

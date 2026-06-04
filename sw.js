@@ -1,5 +1,5 @@
 // ── MM Pakkam Service Worker ──
-const CACHE_NAME = 'mm-pakkam-v3';
+const CACHE_NAME = 'mm-pakkam-v4';
 
 // Pages and assets to cache for offline use
 const PRECACHE_URLS = [
