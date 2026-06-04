@@ -170,15 +170,20 @@ function mmCurrentUser() {
 
 /** Login. Returns { success, message } */
 async function mmLogin(username, password, remember) {
-    const users = mmGetUsers();
-    const hash  = await mmHashPassword(password);
-    const user  = users.find(u =>
-        u.username.toLowerCase() === username.trim().toLowerCase() &&
-        u.passwordHash === hash
-    );
-    if (!user) return { success: false, message: 'Invalid username or password.' };
-    mmSaveSession(user, remember);
-    return { success: true, user };
+    try {
+        const users = mmGetUsers();
+        const hash  = await mmHashPassword(password);
+        const user  = users.find(u =>
+            u.username.toLowerCase() === username.trim().toLowerCase() &&
+            u.passwordHash === hash
+        );
+        if (!user) return { success: false, message: 'Invalid username or password.' };
+        mmSaveSession(user, remember);
+        return { success: true, user };
+    } catch (err) {
+        console.error('[auth] mmLogin error:', err);
+        return { success: false, message: 'Sign-in failed. Please try again or check your browser settings (cookies/storage may be blocked).' };
+    }
 }
 
 /** Logout */

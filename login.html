@@ -729,12 +729,29 @@
         @keyframes pwaBounceIn { from{opacity:0;transform:translateX(-50%) translateY(30px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
     </style>
     <script>
-        // ── Service Worker ──
+        // ── Service Worker — auto-reload on new version ──
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(r => console.log('[PWA] SW registered:', r.scope))
+                    .then(reg => {
+                        console.log('[PWA] SW registered:', reg.scope);
+                        // When a new SW takes over, reload to get fresh scripts
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            if (!newWorker) return;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+                                    console.log('[PWA] New SW activated — reloading for fresh auth.');
+                                    window.location.reload();
+                                }
+                            });
+                        });
+                    })
                     .catch(e => console.warn('[PWA] SW failed:', e));
+                // Also reload if the SW controller changes (e.g. after skipWaiting)
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    window.location.reload();
+                });
             });
         }
 
