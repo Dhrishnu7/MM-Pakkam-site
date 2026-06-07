@@ -1417,9 +1417,6 @@
 
             // Always fetch fresh data from localStorage
             _allSalesForSearch = JSON.parse(localStorage.getItem('mm_sales') || '[]');
-            _allSalesForSearch.forEach((b, i) => {
-                if (!b.id) b.id = b.savedAt || `temp_id_${i}`;
-            });
             const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
 
             const queryTerms = query.split(/\\s+/).filter(t => t.length > 0);
@@ -1484,8 +1481,8 @@
                     <td><small>${medsList}</small></td>
                     <td style="font-weight:700">₹${parseFloat(bill.total||0).toFixed(2)}</td>
                     <td>
-                        <button class="action-btn btn-preview" onclick='previewBill("${bill.id}")'>Preview</button>
-                        <button class="action-btn btn-print" onclick='printBill("${bill.id}")'>Print</button>
+                        <button class="action-btn btn-preview" onclick='previewBill("${bill.id || bill.billNo}")'>Preview</button>
+                        <button class="action-btn btn-print" onclick='printBill("${bill.id || bill.billNo}")'>Print</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1591,8 +1588,8 @@
         }
 
         function getBillObj(id) {
-            // id might be string or number
-            return _allSalesForSearch.find(b => String(b.id) === String(id));
+            // id might be string or number, could be bill.id or bill.billNo
+            return _allSalesForSearch.find(b => String(b.id) === String(id) || String(b.billNo) === String(id));
         }
 
         function previewBill(id) {
