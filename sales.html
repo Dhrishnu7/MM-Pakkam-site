@@ -780,23 +780,32 @@
             const map = {};
             purchases.forEach(p => {
                 if (p.productName) {
-                    // If same name appears multiple times, prefer the latest entry (last in array)
-                    map[p.productName.trim().toLowerCase()] = p;
+                    const baseName = p.productName.trim();
+                    // Always map the base name (latest entry wins)
+                    map[baseName.toLowerCase()] = p;
+                    // Also map the batch-specific name
+                    if (p.batchNo) {
+                        const batchName = `${baseName} (Batch: ${p.batchNo.trim()})`;
+                        map[batchName.toLowerCase()] = p;
+                    }
                 }
             });
             return map;
         }
 
         /* -- Calculate Stock -- */
-        function getStock(productName) {
+        function getStock(productName, batchNo) {
             if (!productName) return 0;
             const name = productName.trim().toLowerCase();
+            const batch = (batchNo || '').trim().toLowerCase();
             
             const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
             let totalPurchased = 0;
             purchases.forEach(p => {
                 if ((p.productName || '').trim().toLowerCase() === name) {
-                    totalPurchased += parseFloat(p.quantity) || 0;
+                    if (!batch || (p.batchNo || '').trim().toLowerCase() === batch) {
+                        totalPurchased += parseFloat(p.quantity) || 0;
+                    }
                 }
             });
             
@@ -805,7 +814,9 @@
             sales.forEach(s => {
                 (s.medicines || []).forEach(m => {
                     if ((m.product || '').trim().toLowerCase() === name) {
-                        totalSold += parseFloat(m.qty) || 0;
+                        if (!batch || (m.batch || '').trim().toLowerCase() === batch) {
+                            totalSold += parseFloat(m.qty) || 0;
+                        }
                     }
                 });
             });
@@ -818,10 +829,23 @@
             const medList   = JSON.parse(localStorage.getItem('mm_medicine_list') || '[]');
             const purchases = JSON.parse(localStorage.getItem('mm_purchases')     || '[]');
             const seen = new Set(), names = [];
-            [...medList, ...purchases.map(p => p.productName).filter(Boolean)].forEach(name => {
-                const t = (name || '').trim();
+            
+            medList.forEach(m => {
+                const t = (m || '').trim();
                 if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); names.push(t); }
             });
+
+            purchases.forEach(p => {
+                if (p.productName) {
+                    const base = p.productName.trim();
+                    let t = base;
+                    if (p.batchNo) {
+                        t = `${base} (Batch: ${p.batchNo.trim()})`;
+                    }
+                    if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); names.push(t); }
+                }
+            });
+            
             return names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
         }
 
@@ -880,23 +904,31 @@
             const productVal = productInput.value.trim();
             if (!productVal) return;
 
-            // Check if this medicine is already in another row
+            const map = buildMedicineMap();
+            const match = map[productVal.toLowerCase()];
+            if (!match) return;
+
+            // Check if this medicine and batch is already in another row
             let isDuplicate = false;
             document.querySelectorAll('[id^="product_"]').forEach(el => {
-                if (el.id !== 'product_' + id && el.value.trim().toLowerCase() === productVal.toLowerCase()) {
-                    isDuplicate = true;
+                if (el.id !== 'product_' + id) {
+                    const rowId = el.id.split('_')[1];
+                    const batchInput = document.getElementById('batch_' + rowId);
+                    if (el.value.trim().toLowerCase() === match.productName.trim().toLowerCase() &&
+                        batchInput && batchInput.value.trim().toLowerCase() === (match.batchNo || '').trim().toLowerCase()) {
+                        isDuplicate = true;
+                    }
                 }
             });
 
             if (isDuplicate) {
-                alert('This medicine is already added to the bill.');
+                alert('This medicine (with this batch) is already added to the bill.');
                 productInput.value = '';
                 return;
             }
 
-            const map = buildMedicineMap();
-            const match = map[productVal.toLowerCase()];
-            if (!match) return;
+            // Clean product name back to base name
+            productInput.value = match.productName;
 
             const purchaseMrp  = parseFloat(match.mrp)  || 0;
             const purchasePack = parseFloat(match.pack) || 1;
@@ -921,7 +953,7 @@
 
             const stockEl = document.getElementById('stock_' + id);
             if (stockEl) {
-                stockEl.value = getStock(productVal);
+                stockEl.value = getStock(match.productName, match.batchNo);
                 flashCell(stockEl);
                 checkStockOnQtyChange(id);
             }
@@ -1093,9 +1125,9 @@
             }
 
             for (const med of medicines) {
-                const stock = getStock(med.product);
+                const stock = getStock(med.product, med.batch);
                 if (med.qty > stock) {
-                    alert(`Cannot proceed. Quantity (${med.qty}) for "${med.product}" is more than available stock (${stock}).`);
+                    alert(`Cannot proceed. Quantity (${med.qty}) for "${med.product}" (Batch: ${med.batch}) is more than available stock (${stock}).`);
                     return;
                 }
             }
