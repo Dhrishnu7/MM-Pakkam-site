@@ -1437,7 +1437,8 @@
                 let searchableText = cName + ' ' + cPhone;
                 const meds = s.medicines || [];
                 for (let m of meds) {
-                    searchableText += ' ' + (m.product || '').toLowerCase();
+                    const medName = m.product || m.productName || m.name || '';
+                    searchableText += ' ' + medName.toLowerCase();
                 }
 
                 // If ALL terms match somewhere in the searchable text, keep this bill
@@ -1470,7 +1471,7 @@
                     if (cust && cust.phone) dispPhone = cust.phone;
                 }
 
-                const medsList = (bill.medicines || []).map(m => m.product).join(', ');
+                const medsList = (bill.medicines || []).map(m => m.product || m.productName || m.name || 'Unknown').join(', ');
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
