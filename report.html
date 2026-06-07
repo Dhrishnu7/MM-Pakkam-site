@@ -441,6 +441,7 @@
             width: 100%; max-width: 860px;
             box-shadow: 0 8px 28px rgba(0,0,0,0.07);
             margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
             animation: fadeUp 0.5s ease 0.3s forwards; opacity: 0;
         }
         .search-bar {
@@ -611,6 +612,34 @@
             </div>
         </div>
 
+        <!-- Search Bills Section -->
+        <div class="search-bills-section">
+            <div class="table-header" style="margin-bottom: 0.8rem;">
+                <div class="table-title">Search Past Bills</div>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="billSearchInput" class="search-input" placeholder="Search by customer name, phone, or medicine name..." onkeydown="if(event.key === 'Enter') doBillSearch()">
+                <button class="search-btn" onclick="doBillSearch()">Search</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="bills-results-table" id="billsResultsTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Bill No</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total (₹)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="billsResultsBody"></tbody>
+                </table>
+                <div class="empty-state" id="billsEmptyState" style="padding: 2rem 1rem;">
+                    <p>Enter a query to search past bills.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- ══ Medicine Expiry Checker ══ -->
         <div class="expiry-section">
             <button class="expiry-toggle-btn" id="expiryToggleBtn" onclick="toggleExpiryPanel()">
@@ -716,34 +745,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
                 <p>No records found for the selected period.</p>
-            </div>
-        </div>
-
-        <!-- Search Bills Section -->
-        <div class="search-bills-section">
-            <div class="table-header" style="margin-bottom: 0.8rem;">
-                <div class="table-title">Search Past Bills</div>
-            </div>
-            <div class="search-bar">
-                <input type="text" id="billSearchInput" class="search-input" placeholder="Search by customer name, phone, or medicine name..." onkeydown="if(event.key === 'Enter') doBillSearch()">
-                <button class="search-btn" onclick="doBillSearch()">Search</button>
-            </div>
-            <div style="overflow-x:auto;">
-                <table class="bills-results-table" id="billsResultsTable" style="display:none;">
-                    <thead>
-                        <tr>
-                            <th>Bill No</th>
-                            <th>Date</th>
-                            <th>Customer</th>
-                            <th>Total (₹)</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="billsResultsBody"></tbody>
-                </table>
-                <div class="empty-state" id="billsEmptyState" style="padding: 2rem 1rem;">
-                    <p>Enter a query to search past bills.</p>
-                </div>
             </div>
         </div>
 
