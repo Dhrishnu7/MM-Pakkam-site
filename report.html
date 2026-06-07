@@ -431,6 +431,84 @@
             text-align: center; padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.92rem;
         }
         .expiry-empty span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+
+        /* ── Search Bills Section ── */
+        .search-bills-section {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: 20px; padding: 1.8rem 2rem;
+            width: 100%; max-width: 860px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.07);
+            margin-top: 1.5rem;
+            animation: fadeUp 0.5s ease 0.3s forwards; opacity: 0;
+        }
+        .search-bar {
+            display: flex; gap: 0.8rem; margin-bottom: 1.2rem;
+        }
+        .search-input {
+            flex: 1; font-family: 'Inter', sans-serif; font-size: 0.95rem;
+            padding: 0.8rem 1.2rem; border-radius: 12px;
+            border: 1.5px solid #cbd5e1; background: white;
+            outline: none; transition: all 0.2s;
+        }
+        .search-input:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.15); }
+        .search-btn {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white; border: none; border-radius: 12px;
+            padding: 0.8rem 1.4rem; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; box-shadow: 0 4px 14px rgba(14,165,233,0.3);
+        }
+        .search-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(14,165,233,0.4); }
+
+        .bills-results-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .bills-results-table th {
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+            color: #0369a1; padding: 0.8rem; text-align: left;
+            border-bottom: 1.5px solid #bae6fd; background: #f0f9ff;
+        }
+        .bills-results-table td {
+            font-size: 0.88rem; color: #334155; padding: 0.8rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .bills-results-table tbody tr:hover { background: #f8fafc; }
+        .action-btn {
+            padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem;
+            font-weight: 700; cursor: pointer; border: none; margin-right: 5px;
+            transition: all 0.2s;
+        }
+        .btn-preview { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .btn-preview:hover { background: #e2e8f0; }
+        .btn-print { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+        .btn-print:hover { background: #d1fae5; }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15,23,42,0.4); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: white; border-radius: 16px; width: 90%; max-width: 600px;
+            max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: translateY(20px); transition: transform 0.3s;
+        }
+        .modal-overlay.open .modal-content { transform: translateY(0); }
+        .modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f5f9;
+        }
+        .modal-title { font-weight: 800; font-size: 1.2rem; color: #0f172a; }
+        .modal-close {
+            background: #f1f5f9; border: none; border-radius: 50%;
+            width: 32px; height: 32px; font-size: 1.2rem; color: #64748b;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: #e2e8f0; color: #0f172a; }
+        .modal-body { padding: 1.5rem; }
     </style>
     <script src="js/auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -641,6 +719,50 @@
             </div>
         </div>
 
+        <!-- Search Bills Section -->
+        <div class="search-bills-section">
+            <div class="table-header" style="margin-bottom: 0.8rem;">
+                <div class="table-title">Search Past Bills</div>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="billSearchInput" class="search-input" placeholder="Search by customer name, phone, or medicine name..." onkeydown="if(event.key === 'Enter') doBillSearch()">
+                <button class="search-btn" onclick="doBillSearch()">Search</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="bills-results-table" id="billsResultsTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>Bill No</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Total (₹)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="billsResultsBody"></tbody>
+                </table>
+                <div class="empty-state" id="billsEmptyState" style="padding: 2rem 1rem;">
+                    <p>Enter a query to search past bills.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal-overlay" id="previewModal" onclick="if(event.target===this) closePreviewModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Invoice Preview</div>
+                <button class="modal-close" onclick="closePreviewModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="previewModalBody">
+                <!-- Invoice content injected here -->
+            </div>
+            <div class="modal-header" style="border-top: 1px solid #f1f5f9; border-bottom: none; justify-content: flex-end;">
+                <button class="search-btn" id="previewPrintBtn">Print Invoice</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1273,6 +1395,202 @@
 <\/body>
 <\/html>`);
             printWin.document.close();
+        }
+
+        /* ── Search & Print Bills Logic ── */
+        let _allSalesForSearch = [];
+
+        function doBillSearch() {
+            const query = document.getElementById('billSearchInput').value.trim().toLowerCase();
+            const table = document.getElementById('billsResultsTable');
+            const tbody = document.getElementById('billsResultsBody');
+            const empty = document.getElementById('billsEmptyState');
+
+            if (!query) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                empty.innerHTML = '<p>Enter a query to search past bills.</p>';
+                return;
+            }
+
+            // Always fetch fresh data from localStorage or global array if any
+            _allSalesForSearch = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+
+            const results = _allSalesForSearch.filter(s => {
+                const cName = (s.customerName || '').toLowerCase();
+                const cPhone = (s.customerPhone || '').toLowerCase();
+                if (cName.includes(query) || cPhone.includes(query)) return true;
+                
+                // Check medicines
+                const meds = s.medicines || [];
+                for (let m of meds) {
+                    if ((m.product || '').toLowerCase().includes(query)) return true;
+                }
+                return false;
+            });
+
+            if (results.length === 0) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                empty.innerHTML = '<p>No bills found matching your search.</p>';
+                return;
+            }
+
+            // Sort by date desc
+            results.sort((a,b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+            tbody.innerHTML = '';
+            results.forEach(bill => {
+                const d = new Date(bill.savedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true});
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${bill.billNo || '-'}</td>
+                    <td>${d}</td>
+                    <td>${bill.customerName || 'Walk-in'}<br><small style="color:#64748b">${bill.customerPhone || ''}</small></td>
+                    <td style="font-weight:700">₹${parseFloat(bill.total||0).toFixed(2)}</td>
+                    <td>
+                        <button class="action-btn btn-preview" onclick='previewBill("${bill.id}")'>Preview</button>
+                        <button class="action-btn btn-print" onclick='printBill("${bill.id}")'>Print</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            empty.style.display = 'none';
+            table.style.display = 'table';
+        }
+
+        function getBillHTML(bill) {
+            let deliveryAddress = (bill.deliveryAddress || '').trim();
+            if (!deliveryAddress && bill.customerName) {
+                const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+                const cust = customers.find(c => (c.name || '').trim().toLowerCase() === (bill.customerName || '').trim().toLowerCase());
+                if (cust) deliveryAddress = cust.address || '';
+            }
+
+            const fmtTime = new Date(bill.savedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+            const fmtDate = new Date(bill.savedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+            let totalValue = 0, totalCGST = 0, totalSGST = 0, totalDiscount = 0;
+            const rows = (bill.medicines || []).map((m, i) => {
+                const mrpUnit  = parseFloat(m.mrp)      || 0;
+                const qty      = parseFloat(m.qty)      || 0;
+                const discPct  = parseFloat(m.discount) || 0;
+                const gstPct   = parseFloat(m.gst)      || 0;
+                const base     = qty * mrpUnit;
+                const discVal  = base * (discPct / 100);
+                const netBase  = base - discVal;
+                const cgst     = netBase * (gstPct / 200);
+                const sgst     = netBase * (gstPct / 200);
+                const payable  = netBase + cgst + sgst;
+                totalValue    += netBase;
+                totalCGST     += cgst;
+                totalSGST     += sgst;
+                totalDiscount += discVal;
+                return { i: i + 1, m, mrpUnit, qty, discPct, discVal, netBase, gstPct, cgst, sgst, payable };
+            });
+
+            const tableRows = rows.map(r => `
+                <tr>
+                    <td style="border:1px solid #000; padding:4px; text-align:center">${r.i}</td>
+                    <td style="border:1px solid #000; padding:4px"><strong>${r.m.product}</strong></td>
+                    <td style="border:1px solid #000; padding:4px">${r.m.batch || '-'}</td>
+                    <td style="border:1px solid #000; padding:4px">${r.m.exp || '-'}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center">${r.qty}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right">₹${r.mrpUnit.toFixed(2)}</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center">${r.discPct}%</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:center">${r.gstPct}%</td>
+                    <td style="border:1px solid #000; padding:4px; text-align:right">₹${r.payable.toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            return `
+            <div style="font-family: Arial, sans-serif; color: #000; width: 100%; max-width: 800px; margin: 0 auto;">
+                <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px">
+                    <h1 style="margin:0 0 5px; font-size:24px">Mudhalvar Marundhagam Pakkam</h1>
+                    <p style="margin:0; font-size:14px">#123 Main Road, City - 600000 | Ph: 9876543210</p>
+                    <p style="margin:0; font-size:14px">DL No: TN-12-123456 | GSTIN: 33ABCDE1234F1Z5</p>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:14px">
+                    <div>
+                        <p style="margin:2px 0"><strong>Bill To:</strong> ${bill.customerName || 'Cash / Walk-in'}</p>
+                        ${bill.customerPhone ? `<p style="margin:2px 0"><strong>Phone:</strong> ${bill.customerPhone}</p>` : ''}
+                        ${deliveryAddress ? `<p style="margin:2px 0"><strong>Address:</strong> ${deliveryAddress}</p>` : ''}
+                        ${bill.doctorName ? `<p style="margin:2px 0; margin-top:8px"><strong>Doctor:</strong> ${bill.doctorName}</p>` : ''}
+                    </div>
+                    <div style="text-align:right">
+                        <p style="margin:2px 0"><strong>Invoice No:</strong> ${bill.billNo || '-'}</p>
+                        <p style="margin:2px 0"><strong>Date:</strong> ${fmtDate}</p>
+                        <p style="margin:2px 0"><strong>Time:</strong> ${fmtTime}</p>
+                    </div>
+                </div>
+
+                <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:15px">
+                    <thead>
+                        <tr>
+                            <th style="border:1px solid #000; padding:4px; text-align:center; width:5%">S.No</th>
+                            <th style="border:1px solid #000; padding:4px; text-align:left; width:30%">Medicine</th>
+                            <th style="border:1px solid #000; padding:4px; text-align:left; width:12%">Batch</th>
+                            <th style="border:1px solid #000; padding:4px; text-align:left; width:10%">Exp</th>
+                            <th style="border:1px solid #000; padding:4px; text-align:center; width:8%">Qty</th>
+                            <th style="border:1px solid #000; padding:4px; text-align:right; width:10%">MRP</th>
+                            <th style="border:1px solid #000; padding:4px; text-align:center; width:7%">Disc</th>
+                            <th style="border:1px solid #000; padding:4px; text-align:center; width:7%">GST</th>
+                            <th style="border:1px solid #000; padding:4px; text-align:right; width:11%">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+
+                <div style="display:flex; justify-content:flex-end; border-top:1px solid #000; padding-top:10px">
+                    <table style="width:280px; font-size:14px; border-collapse:collapse">
+                        <tr><td style="padding:2px">Total Value:</td><td style="text-align:right; padding:2px">₹${totalValue.toFixed(2)}</td></tr>
+                        <tr><td style="padding:2px">Total Discount:</td><td style="text-align:right; padding:2px">₹${totalDiscount.toFixed(2)}</td></tr>
+                        <tr><td style="padding:2px">CGST:</td><td style="text-align:right; padding:2px">₹${totalCGST.toFixed(2)}</td></tr>
+                        <tr><td style="padding:2px">SGST:</td><td style="text-align:right; padding:2px">₹${totalSGST.toFixed(2)}</td></tr>
+                        <tr><td style="padding:4px 2px; font-weight:bold; border-top:1px solid #000; font-size:16px">Net Payable:</td><td style="text-align:right; padding:4px 2px; font-weight:bold; border-top:1px solid #000; font-size:16px">₹${parseFloat(bill.total||0).toFixed(2)}</td></tr>
+                    </table>
+                </div>
+            </div>`;
+        }
+
+        function getBillObj(id) {
+            // id might be string or number
+            return _allSalesForSearch.find(b => String(b.id) === String(id));
+        }
+
+        function previewBill(id) {
+            const bill = getBillObj(id);
+            if(!bill) return;
+            const html = getBillHTML(bill);
+            document.getElementById('previewModalBody').innerHTML = html;
+            document.getElementById('previewPrintBtn').onclick = () => printBill(id);
+            document.getElementById('previewModal').classList.add('open');
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.remove('open');
+        }
+
+        function printBill(id) {
+            const bill = getBillObj(id);
+            if(!bill) return;
+            const html = getBillHTML(bill);
+            const printWindow = window.open('', '_blank');
+            if(!printWindow) { alert('Please allow popups to print invoices.'); return; }
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Invoice - ${bill.billNo || id}</title>
+                    <style>@media print { body { padding: 0; margin: 0; } }</style>
+                </head>
+                <body onload="window.print();">
+                    ${html}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
     </script>
 
