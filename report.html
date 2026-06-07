@@ -1417,6 +1417,9 @@
 
             // Always fetch fresh data from localStorage
             _allSalesForSearch = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+            _allSalesForSearch.forEach((b, i) => {
+                if (!b.id) b.id = b.savedAt || `temp_id_${i}`;
+            });
             const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
 
             const queryTerms = query.split(/\\s+/).filter(t => t.length > 0);
