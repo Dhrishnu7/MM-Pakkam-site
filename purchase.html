@@ -123,10 +123,21 @@
             border-radius: 24px;
             padding: 2.5rem;
             width: 100%;
-            max-width: 700px;
+            max-width: 800px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.08);
             animation: fadeUp 0.6s ease 0.1s forwards;
             opacity: 0;
+        }
+
+        /* ── Section Label ── */
+        .section-label {
+            font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.08em; color: #64748b; margin-bottom: 1rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, #e2e8f0, transparent);
         }
 
         /* ── Grid Layout ── */
@@ -134,6 +145,11 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.2rem 1.4rem;
+        }
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem 1.2rem;
         }
         .full-width { grid-column: 1 / -1; }
 
@@ -192,11 +208,104 @@
             border-radius: 2px;
         }
 
+        /* ── Line Items Area ── */
+        .line-items-container {
+            margin-top: 1.5rem;
+        }
+
+        .line-item {
+            background: rgba(255,255,255,0.7);
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.4rem;
+            margin-bottom: 1rem;
+            position: relative;
+            transition: all 0.25s ease;
+            animation: itemSlideIn 0.35s ease forwards;
+        }
+        .line-item:hover {
+            border-color: #fcd34d;
+            box-shadow: 0 4px 16px rgba(245,158,11,0.08);
+        }
+        @keyframes itemSlideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .line-item-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .item-number {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.78rem; font-weight: 800; color: #d97706;
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .item-number .badge {
+            width: 24px; height: 24px; border-radius: 8px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white; font-size: 0.72rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .remove-item-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 12px; border-radius: 20px;
+            border: 1.5px solid rgba(239,68,68,0.3);
+            background: #fef2f2; color: #ef4444;
+            font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .remove-item-btn:hover { background: #ef4444; color: white; border-color: #ef4444; }
+
+        /* ── Add More Button ── */
+        .add-item-btn {
+            width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 0.9rem;
+            border-radius: 14px;
+            border: 2px dashed #fcd34d;
+            background: rgba(254,243,199,0.3);
+            color: #d97706;
+            font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; transition: all 0.25s ease;
+            margin-bottom: 1.5rem;
+        }
+        .add-item-btn:hover {
+            background: #fef3c7; border-color: #f59e0b;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(245,158,11,0.15);
+        }
+        .add-item-btn .plus-icon {
+            width: 22px; height: 22px; border-radius: 7px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white; font-size: 1rem; font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* ── Grand Total ── */
+        .grand-total-bar {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 1.5px solid #fcd34d;
+            border-radius: 14px;
+            padding: 1rem 1.4rem;
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .grand-total-bar .gt-label {
+            font-size: 0.82rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.06em; color: #92400e;
+        }
+        .grand-total-bar .gt-count {
+            font-size: 0.75rem; font-weight: 600; color: #a16207; margin-top: 2px;
+        }
+        .grand-total-bar .gt-value {
+            font-size: 1.35rem; font-weight: 800; color: #92400e;
+        }
+
         /* ── Buttons ── */
         .form-actions {
             display: flex;
             gap: 0.8rem;
-            margin-top: 2rem;
         }
         .btn {
             flex: 1;
@@ -257,7 +366,9 @@
             .logo-text { font-size: 0.95rem; }
             .form-card { padding: 1.8rem 1.2rem; }
             .form-grid { grid-template-columns: 1fr; }
+            .form-grid-3 { grid-template-columns: 1fr; }
             .full-width { grid-column: 1; }
+            .line-item { padding: 1rem; }
         }
 
         /* ── Field label row (label + import button) ── */
@@ -361,6 +472,12 @@
             transition:background 0.18s;
         }
         .btn-mcancel:hover { background:#f1f5f9; }
+
+        /* ── Medicine import buttons row in header ── */
+        .med-import-actions {
+            display: flex; gap: 0.5rem; align-items: center;
+            justify-content: flex-end; margin-bottom: 0.6rem;
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="js/auth.js"></script>
@@ -395,14 +512,15 @@
         <div class="page-header">
             <div class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Purchase</div>
             <h1>Add Purchase</h1>
-            <p>Fill in the purchase details below</p>
+            <p>Add multiple items in one go — same bill, multiple products</p>
         </div>
 
         <div class="form-card">
             <form id="purchaseForm" onsubmit="handleSubmit(event)" novalidate>
-                <div class="form-grid">
 
-                    <!-- Row 1: Bill No, Firm -->
+                <!-- ═══ Bill Header Section ═══ -->
+                <div class="section-label">📋 Bill Details</div>
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
                     <div class="form-group">
                         <label>Bill No</label>
                         <input type="text" id="billNo" placeholder="e.g. BL-001">
@@ -411,75 +529,41 @@
                         <label>Firm</label>
                         <input type="text" id="firm" placeholder="e.g. Sun Pharma">
                     </div>
-
-                    <!-- Date full width -->
                     <div class="form-group full-width">
                         <label>Date</label>
                         <input type="date" id="purchaseDate">
                     </div>
+                </div>
 
-                    <div class="divider"></div>
+                <!-- ═══ Medicine Import Actions ═══ -->
+                <div class="med-import-actions">
+                    <button type="button" class="clear-btn-sm" onclick="clearImportedMedicines()">
+                        🗑️ Clear Imported
+                    </button>
+                    <button type="button" class="import-btn-sm" onclick="openImportModal()">
+                        📋 Import Medicine List
+                    </button>
+                </div>
 
-                    <!-- Product Name full width -->
-                    <div class="form-group full-width">
-                        <div class="field-label-row">
-                            <label>Product Name</label>
-                            <div style="display:flex; gap:0.5rem;">
-                                <button type="button" class="clear-btn-sm" onclick="clearImportedMedicines()">
-                                    🗑️ Clear Imported
-                                </button>
-                                <button type="button" class="import-btn-sm" onclick="openImportModal()">
-                                    📋 Import Medicine List
-                                </button>
-                            </div>
-                        </div>
-                        <input type="text" id="productName" list="productNameList"
-                               placeholder="Type or select medicine…" autocomplete="off">
-                        <datalist id="productNameList"></datalist>
-                    </div>
+                <!-- ═══ Line Items Section ═══ -->
+                <div class="section-label">💊 Product Items</div>
+                <div class="line-items-container" id="lineItemsContainer">
+                    <!-- Line items will be rendered here by JS -->
+                </div>
 
-                    <!-- Batch No, Expire Date, Pack -->
-                    <div class="form-group">
-                        <label>Batch No</label>
-                        <input type="text" id="batchNo" placeholder="e.g. BT20240001">
-                    </div>
-                    <div class="form-group">
-                        <label>Expire Date</label>
-                        <input type="month" id="expireDate">
-                    </div>
-                    <div class="form-group">
-                        <label>Pack</label>
-                        <input type="number" id="pack" placeholder="e.g. 10" min="1" step="1" title="Number of units per pack/strip">
-                    </div>
+                <!-- Add More Button -->
+                <button type="button" class="add-item-btn" onclick="addLineItem()">
+                    <span class="plus-icon">+</span>
+                    Add Another Item
+                </button>
 
-                    <!-- Quantity, MRP -->
-                    <div class="form-group">
-                        <label>Quantity</label>
-                        <input type="number" id="quantity" placeholder="0" min="0" oninput="calcTotal()">
+                <!-- Grand Total -->
+                <div class="grand-total-bar">
+                    <div>
+                        <div class="gt-label">Grand Total</div>
+                        <div class="gt-count" id="itemCountLabel">1 item</div>
                     </div>
-                    <div class="form-group">
-                        <label>MRP (₹)</label>
-                        <input type="number" id="mrp" placeholder="0.00" min="0" step="0.01">
-                    </div>
-
-                    <!-- Purchase Rate (manual) -->
-                    <div class="form-group">
-                        <label>Purchase Rate (₹)</label>
-                        <input type="number" id="rate" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()">
-                    </div>
-
-                    <!-- GST -->
-                    <div class="form-group">
-                        <label>GST (%)</label>
-                        <input type="number" id="gst" placeholder="e.g. 12" min="0" max="100" step="0.01" oninput="calcTotal()">
-                    </div>
-
-                    <!-- Total full width -->
-                    <div class="form-group full-width">
-                        <label>Total (₹)</label>
-                        <input type="text" id="total" placeholder="Auto-calculated" readonly>
-                    </div>
-
+                    <div class="gt-value" id="grandTotalValue">₹ 0.00</div>
                 </div>
 
                 <div class="form-actions">
@@ -488,7 +572,7 @@
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                         </svg>
-                        Save Purchase
+                        Save All Purchases
                     </button>
                 </div>
             </form>
@@ -512,62 +596,254 @@
         // ── Default today's date ──
         document.getElementById('purchaseDate').valueAsDate = new Date();
 
-        // ── Auto-calculate Total = Rate × Quantity + GST% ──
-        function calcTotal() {
-            const qty  = parseFloat(document.getElementById('quantity').value) || 0;
-            const rate = parseFloat(document.getElementById('rate').value)     || 0;
-            const gst  = parseFloat(document.getElementById('gst').value)      || 0;
-            const total = (rate * qty) + (rate * qty * gst / 100);
-            document.getElementById('total').value = total > 0 ? '₹ ' + total.toFixed(2) : '';
+        // ── Line Item Counter ──
+        let lineItemCounter = 0;
+
+        // ── Create a single line item HTML ──
+        function createLineItemHTML(index) {
+            const id = `item_${index}`;
+            return `
+            <div class="line-item" id="${id}" data-index="${index}">
+                <div class="line-item-header">
+                    <div class="item-number">
+                        <span class="badge">${getVisualIndex(index)}</span>
+                        Item ${getVisualIndex(index)}
+                    </div>
+                    <button type="button" class="remove-item-btn" onclick="removeLineItem('${id}')">
+                        ✕ Remove
+                    </button>
+                </div>
+                <div class="form-grid" style="margin-bottom:0.6rem;">
+                    <div class="form-group full-width">
+                        <label>Product Name</label>
+                        <input type="text" class="li-productName" list="productNameList"
+                               placeholder="Type or select medicine…" autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label>Batch No</label>
+                        <input type="text" class="li-batchNo" placeholder="e.g. BT20240001">
+                    </div>
+                    <div class="form-group">
+                        <label>Expire Date</label>
+                        <input type="month" class="li-expireDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Pack</label>
+                        <input type="number" class="li-pack" placeholder="e.g. 10" min="1" step="1">
+                    </div>
+                </div>
+                <div class="form-grid-3" style="margin-top:0.8rem;">
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" class="li-quantity" placeholder="0" min="0" oninput="calcItemTotal('${id}')">
+                    </div>
+                    <div class="form-group">
+                        <label>MRP (₹)</label>
+                        <input type="number" class="li-mrp" placeholder="0.00" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Rate (₹)</label>
+                        <input type="number" class="li-rate" placeholder="0.00" min="0" step="0.01" oninput="calcItemTotal('${id}')">
+                    </div>
+                </div>
+                <div class="form-grid" style="margin-top:0.8rem;">
+                    <div class="form-group">
+                        <label>GST (%)</label>
+                        <input type="number" class="li-gst" placeholder="e.g. 12" min="0" max="100" step="0.01" oninput="calcItemTotal('${id}')">
+                    </div>
+                    <div class="form-group">
+                        <label>Total (₹)</label>
+                        <input type="text" class="li-total" placeholder="Auto-calculated" readonly>
+                    </div>
+                </div>
+            </div>`;
         }
 
-        // ── Submit ──
+        function getVisualIndex(internalIndex) {
+            const container = document.getElementById('lineItemsContainer');
+            const items = container.querySelectorAll('.line-item');
+            let vi = 0;
+            for (const item of items) {
+                vi++;
+                if (item.dataset.index == internalIndex) return vi;
+            }
+            // Fallback for new items not yet in DOM
+            return items.length + 1;
+        }
+
+        function addLineItem() {
+            lineItemCounter++;
+            const container = document.getElementById('lineItemsContainer');
+            container.insertAdjacentHTML('beforeend', createLineItemHTML(lineItemCounter));
+            renumberItems();
+            updateGrandTotal();
+        }
+
+        function removeLineItem(id) {
+            const container = document.getElementById('lineItemsContainer');
+            const items = container.querySelectorAll('.line-item');
+            if (items.length <= 1) {
+                showToast('Cannot Remove', 'At least one item is required.');
+                return;
+            }
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.transition = 'all 0.3s ease';
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(-20px)';
+                setTimeout(() => {
+                    el.remove();
+                    renumberItems();
+                    updateGrandTotal();
+                }, 300);
+            }
+        }
+
+        function renumberItems() {
+            const container = document.getElementById('lineItemsContainer');
+            const items = container.querySelectorAll('.line-item');
+            items.forEach((item, i) => {
+                const badge = item.querySelector('.badge');
+                const numLabel = item.querySelector('.item-number');
+                if (badge) badge.textContent = i + 1;
+                if (numLabel) {
+                    numLabel.innerHTML = `<span class="badge">${i + 1}</span> Item ${i + 1}`;
+                }
+            });
+            const count = items.length;
+            document.getElementById('itemCountLabel').textContent = `${count} item${count !== 1 ? 's' : ''}`;
+        }
+
+        // ── Calculate per-item total ──
+        function calcItemTotal(itemId) {
+            const el = document.getElementById(itemId);
+            if (!el) return;
+            const qty  = parseFloat(el.querySelector('.li-quantity').value) || 0;
+            const rate = parseFloat(el.querySelector('.li-rate').value)     || 0;
+            const gst  = parseFloat(el.querySelector('.li-gst').value)     || 0;
+            const total = (rate * qty) + (rate * qty * gst / 100);
+            el.querySelector('.li-total').value = total > 0 ? '₹ ' + total.toFixed(2) : '';
+            updateGrandTotal();
+        }
+
+        // ── Grand Total ──
+        function updateGrandTotal() {
+            const container = document.getElementById('lineItemsContainer');
+            const items = container.querySelectorAll('.line-item');
+            let grand = 0;
+            items.forEach(item => {
+                const totalStr = item.querySelector('.li-total').value || '';
+                const num = parseFloat(totalStr.replace(/[^0-9.]/g, '')) || 0;
+                grand += num;
+            });
+            document.getElementById('grandTotalValue').textContent = '₹ ' + grand.toFixed(2);
+        }
+
+        // ── Submit all items ──
         async function handleSubmit(e) {
             e.preventDefault();
 
             const btn = document.getElementById('saveBtn');
+            const container = document.getElementById('lineItemsContainer');
+            const items = container.querySelectorAll('.line-item');
+
+            if (items.length === 0) {
+                showToast('No Items', 'Please add at least one item.');
+                return;
+            }
+
+            // Gather header data
+            const billNo = document.getElementById('billNo').value.trim();
+            const firm   = document.getElementById('firm').value.trim();
+            const date   = document.getElementById('purchaseDate').value;
+
+            // Gather all line items
+            const records = [];
+            let hasEmpty = false;
+            items.forEach(item => {
+                const productName = item.querySelector('.li-productName').value.trim();
+                if (!productName) { hasEmpty = true; }
+                records.push({
+                    billNo,
+                    firm,
+                    date,
+                    productName,
+                    batchNo:    item.querySelector('.li-batchNo').value.trim(),
+                    expireDate: item.querySelector('.li-expireDate').value,
+                    pack:       item.querySelector('.li-pack').value,
+                    quantity:   item.querySelector('.li-quantity').value,
+                    mrp:        item.querySelector('.li-mrp').value,
+                    rate:       item.querySelector('.li-rate').value,
+                    gst:        item.querySelector('.li-gst').value,
+                    savedAt:    new Date().toISOString()
+                });
+            });
+
+            if (hasEmpty) {
+                if (!confirm('Some items have empty product names. Save anyway?')) return;
+            }
+
             btn.disabled = true;
-            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving...`;
+            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin .7s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Saving ${records.length} item(s)...`;
 
-            const record = {
-                billNo:      document.getElementById('billNo').value.trim(),
-                firm:        document.getElementById('firm').value.trim(),
-                date:        document.getElementById('purchaseDate').value,
-                productName: document.getElementById('productName').value.trim(),
-                batchNo:     document.getElementById('batchNo').value.trim(),
-                expireDate:  document.getElementById('expireDate').value,
-                quantity:    document.getElementById('quantity').value,
-                pack:        document.getElementById('pack').value,
-                mrp:         document.getElementById('mrp').value,
-                rate:        document.getElementById('rate').value,
-                gst:         document.getElementById('gst').value,
-                savedAt:     new Date().toISOString()
-            };
+            let successCount = 0;
+            let failCount = 0;
 
-            // ── Save to Supabase ──
-            const result = await dbAddPurchase(record);
+            for (const record of records) {
+                const result = await dbAddPurchase(record);
+                if (result.success) {
+                    successCount++;
+                } else {
+                    failCount++;
+                    console.error('Failed to save:', record, result.message);
+                }
 
-            // Also keep localStorage as offline fallback
-            const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
-            purchases.push(record);
-            localStorage.setItem('mm_purchases', JSON.stringify(purchases));
+                // Also keep localStorage as offline fallback
+                const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+                purchases.push(record);
+                localStorage.setItem('mm_purchases', JSON.stringify(purchases));
+            }
 
-            if (result.success) {
-                document.getElementById('toast').classList.add('show');
+            if (failCount === 0) {
+                showToast(
+                    `${successCount} Purchase(s) Saved!`,
+                    `All ${successCount} item(s) added successfully.`
+                );
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
             } else {
-                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> Error: ${result.message || 'Try again'}`;
+                showToast(
+                    `Partial Save`,
+                    `${successCount} saved, ${failCount} failed. Check console.`
+                );
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> ${failCount} Error(s)`;
             }
 
             setTimeout(() => {
                 document.getElementById('toast').classList.remove('show');
                 btn.disabled = false;
-                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Purchase`;
-                if (result.success) {
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save All Purchases`;
+                if (failCount === 0) {
+                    // Reset form: clear header + rebuild single line item
                     document.getElementById('purchaseForm').reset();
                     document.getElementById('purchaseDate').valueAsDate = new Date();
+                    document.getElementById('lineItemsContainer').innerHTML = '';
+                    lineItemCounter = 0;
+                    addLineItem();
                 }
             }, 3000);
+        }
+
+        // ── Toast helper ──
+        function showToast(title, subtitle) {
+            const t  = document.getElementById('toast');
+            const ti = document.getElementById('toastTitle');
+            const ts = document.getElementById('toastSub');
+            if (ti) ti.textContent = title;
+            if (ts) ts.textContent = subtitle;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
         }
 
         /* ══════════════════════════════════════════════════════════════════ 
@@ -581,11 +857,7 @@
             if (confirm("Are you sure you want to clear all imported medicines? (Purchase history will remain).")) {
                 localStorage.removeItem(ML_KEY);
                 refreshProductDatalist();
-                const t=document.getElementById('toast');
-                const ti=document.getElementById('toastTitle'); const ts=document.getElementById('toastSub');
-                if(ti) ti.textContent=`Cleared!`;
-                if(ts) ts.textContent=`Imported medicines removed.`;
-                t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+                showToast('Cleared!', 'Imported medicines removed.');
             }
         }
 
@@ -701,13 +973,15 @@
             setMedList([...existing,...fresh]);
             refreshProductDatalist();
             closeImportModal();
-            const t=document.getElementById('toast');
-            const ti=document.getElementById('toastTitle'); const ts=document.getElementById('toastSub');
-            if(ti) ti.textContent=`${fresh.length} medicine(s) imported!`;
-            if(ts) ts.textContent=`${getMedList().length} total in medicine list.`;
-            t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+            showToast(`${fresh.length} medicine(s) imported!`, `${getMedList().length} total in medicine list.`);
         }
+
+        // ── Initialize with one line item ──
+        addLineItem();
     </script>
+
+    <!-- Shared datalist for all product name inputs -->
+    <datalist id="productNameList"></datalist>
 
     <!-- ── Import Medicine List Modal ── -->
     <div class="modal-overlay" id="importModal">
@@ -755,4 +1029,3 @@
         }
     </script></body>
 </html>
-
