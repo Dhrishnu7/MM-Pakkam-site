@@ -873,7 +873,7 @@
             const dl = document.getElementById('productNameList');
             if (dl) dl.innerHTML = getAllMedNames().map(n => `<option value="${n}">`).join('');
         }
-        refreshProductDatalist(); // populate on page load
+        window.addEventListener('DOMContentLoaded', refreshProductDatalist); // populate on page load
 
         /* ── Import Modal State ── */
         let _iRows=[], _iHdrs=[], _iCol=-1, _iNames=[], _iFileCount=0;
