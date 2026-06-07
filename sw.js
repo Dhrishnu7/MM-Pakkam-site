@@ -1,5 +1,6 @@
 // ── MM Pakkam Service Worker ──
-const CACHE_NAME = 'mm-pakkam-v4';
+// IMPORTANT: Change CACHE_NAME on every deploy so installed apps get the latest version
+const CACHE_NAME = 'mm-pakkam-v5';
 
 // Pages and assets to cache for offline use
 const PRECACHE_URLS = [
@@ -28,11 +29,11 @@ self.addEventListener('install', event => {
             return Promise.allSettled(
                 PRECACHE_URLS.map(url => cache.add(url).catch(() => {}))
             );
-        }).then(() => self.skipWaiting())
+        }).then(() => self.skipWaiting()) // Force activate immediately
     );
 });
 
-// ── Activate: remove old caches ──
+// ── Activate: remove ALL old caches so app gets fresh files ──
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(keys =>
@@ -44,16 +45,21 @@ self.addEventListener('activate', event => {
                         return caches.delete(key);
                     })
             )
-        ).then(() => self.clients.claim())
+        ).then(() => {
+            console.log('[SW] Claiming all clients — new version active');
+            return self.clients.claim(); // Take over all tabs immediately
+        })
     );
 });
 
 // ── Fetch handler ──
+// Strategy: Network-first for everything except images
+// This ensures the web app and installed app ALWAYS get the latest from Vercel
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
-    // Always network-first for Supabase API & Google Fonts
-    if (url.hostname.includes('supabase') || url.hostname.includes('googleapis') || url.hostname.includes('jsdelivr')) {
+    // Always network-first for Supabase API & CDNs
+    if (url.hostname.includes('supabase') || url.hostname.includes('googleapis') || url.hostname.includes('jsdelivr') || url.hostname.includes('cdnjs')) {
         event.respondWith(
             fetch(event.request).catch(() =>
                 new Response(JSON.stringify({ error: 'offline' }), {
@@ -64,8 +70,8 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // JS files: Network-first so updated auth.js / supabase.js are always fresh
-    if (url.pathname.endsWith('.js')) {
+    // HTML pages & JS files: ALWAYS network-first (get latest from Vercel)
+    if (event.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js') || url.pathname.endsWith('.json')) {
         event.respondWith(
             fetch(event.request)
                 .then(response => {
@@ -73,21 +79,7 @@ self.addEventListener('fetch', event => {
                     caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
                     return response;
                 })
-                .catch(() => caches.match(event.request))
-        );
-        return;
-    }
-
-    // For HTML pages: Network-first (get latest), fall back to cache
-    if (event.request.mode === 'navigate' || url.pathname.endsWith('.html')) {
-        event.respondWith(
-            fetch(event.request)
-                .then(response => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                    return response;
-                })
-                .catch(() => caches.match(event.request))
+                .catch(() => caches.match(event.request)) // Offline fallback
         );
         return;
     }
@@ -104,7 +96,7 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// ── Message handler ──
+// ── Message handler: force skip waiting when told by the page ──
 self.addEventListener('message', event => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();

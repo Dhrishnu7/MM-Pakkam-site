@@ -4,11 +4,13 @@
   "description": "Pharmacy billing, purchase, sales and report management system for Mudhalvar Marundhagam Pakkam.",
   "start_url": "/login.html",
   "scope": "/",
+  "id": "/login.html",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#f0fdfa",
   "theme_color": "#0d9488",
   "lang": "en",
+  "prefer_related_applications": false,
   "categories": ["business", "productivity"],
   "icons": [
     {
