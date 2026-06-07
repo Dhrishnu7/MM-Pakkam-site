@@ -1414,20 +1414,38 @@
                 return;
             }
 
-            // Always fetch fresh data from localStorage or global array if any
+            // Always fetch fresh data from localStorage
             _allSalesForSearch = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+
+            const queryTerms = query.split(/\\s+/).filter(t => t.length > 0);
 
             const results = _allSalesForSearch.filter(s => {
-                const cName = (s.customerName || '').toLowerCase();
-                const cPhone = (s.customerPhone || '').toLowerCase();
-                if (cName.includes(query) || cPhone.includes(query)) return true;
+                const cName = (s.customerName || '').trim().toLowerCase();
                 
-                // Check medicines
+                // Lookup phone from mm_customers
+                let cPhone = '';
+                if (cName) {
+                    const cust = customers.find(c => (c.name || '').trim().toLowerCase() === cName);
+                    if (cust && cust.phone) {
+                        cPhone = cust.phone.toLowerCase();
+                    }
+                }
+
+                // Build a combined string of all searchable attributes for this bill
+                let searchableText = cName + ' ' + cPhone;
                 const meds = s.medicines || [];
                 for (let m of meds) {
-                    if ((m.product || '').toLowerCase().includes(query)) return true;
+                    searchableText += ' ' + (m.product || '').toLowerCase();
                 }
-                return false;
+
+                // If ALL terms match somewhere in the searchable text, keep this bill
+                for (let term of queryTerms) {
+                    if (!searchableText.includes(term)) {
+                        return false;
+                    }
+                }
+                return true;
             });
 
             if (results.length === 0) {
