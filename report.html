@@ -1513,7 +1513,7 @@
             }
 
             const fmtTime = new Date(bill.savedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-            const fmtDate = new Date(bill.savedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const fmtDate = new Date(bill.savedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
             let totalValue = 0, totalCGST = 0, totalSGST = 0, totalDiscount = 0;
             const rows = (bill.medicines || []).map((m, i) => {
@@ -1535,118 +1535,148 @@
             });
 
             const tableRows = rows.map(r => `
-                <tr style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 10px 4px; text-align: center; vertical-align: top;">${r.i}</td>
-                    <td style="padding: 10px 4px; vertical-align: top;">
-                        <strong style="font-size: 14px;">${r.m.product}</strong>
-                        <div style="font-size: 11px; color: #555; margin-top: 3px;">Exp: ${r.m.exp || '-'} &nbsp;|&nbsp; Batch: ${r.m.batch || '-'}</div>
+                <tr>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">${r.i}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0;">
+                        <div style="font-weight: 600; color: #0f172a; font-size: 13px;">${r.m.product}</div>
+                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Exp: <span style="color:#0f172a">${r.m.exp || '-'}</span> &nbsp;|&nbsp; Batch: <span style="color:#0f172a">${r.m.batch || '-'}</span></div>
                     </td>
-                    <td style="padding: 10px 4px; text-align: center; vertical-align: top; font-weight: bold;">${r.qty}</td>
-                    <td style="padding: 10px 4px; text-align: right; vertical-align: top;">${r.mrpUnit.toFixed(2)}</td>
-                    <td style="padding: 10px 4px; text-align: center; vertical-align: top;">${r.discPct > 0 ? r.discPct + '%' : '-'}</td>
-                    <td style="padding: 10px 4px; text-align: center; vertical-align: top;">${r.gstPct}%</td>
-                    <td style="padding: 10px 4px; text-align: right; vertical-align: top; font-weight: bold;">${r.payable.toFixed(2)}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: 600; color: #0f172a;">${r.qty}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #475569;">${r.mrpUnit.toFixed(2)}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #475569;">${r.discPct > 0 ? r.discPct + '%' : '-'}</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #475569;">${r.gstPct}%</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 700; color: #0f172a;">${r.payable.toFixed(2)}</td>
                 </tr>
             `).join('');
 
             return `
-            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #000; width: 100%; max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; box-sizing: border-box;">
+            <div style="font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #1e293b; background: #fff; padding: 30px; box-sizing: border-box; font-size: 13px; line-height: 1.5;">
                 
-                <!-- Header Section -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
-                    <div>
-                        <h1 style="margin: 0 0 5px; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Mudhalvar Marundhagam Pakkam</h1>
-                        <p style="margin: 0 0 3px; font-size: 13px; color: #333;">Shop No-01, Krishna Complex, KTP Road, Pakkam, THIRUVALLUR - 602024</p>
-                        <p style="margin: 0 0 3px; font-size: 13px; color: #333;">Phone: <strong style="font-size: 14px;">9551561821</strong></p>
-                        <p style="margin: 0; font-size: 12px; color: #444;">D.L.No: TN-12-123456 &nbsp;|&nbsp; GSTIN: 33ABCDE1234F1Z5</p>
-                    </div>
-                    <div style="text-align: right;">
-                        <h2 style="margin: 0 0 6px; font-size: 22px; color: #000; text-transform: uppercase; letter-spacing: 1px; border: 1px solid #000; display: inline-block; padding: 4px 10px; border-radius: 4px;">TAX INVOICE</h2>
-                        <p style="margin: 6px 0 4px; font-size: 13px;">Invoice No: <strong style="font-size: 14px;">${bill.billNo || '-'}</strong></p>
-                        <p style="margin: 0 0 4px; font-size: 13px;">Date: <strong>${fmtDate}</strong></p>
-                        <p style="margin: 0; font-size: 13px;">Time: <strong>${fmtTime}</strong></p>
-                    </div>
-                </div>
-                
-                <!-- Party Details Section -->
-                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 14px; border: 1px solid #000; border-radius: 6px; overflow: hidden;">
-                    <div style="flex: 1; padding: 12px 15px; border-right: 1px solid #ccc; background: #fafafa;">
-                        <p style="margin: 0 0 6px; font-size: 11px; color: #555; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Billed To</p>
-                        <p style="margin: 0 0 4px; font-weight: bold; font-size: 15px; color: #000;">${bill.customerName || 'Cash / Walk-in Customer'}</p>
-                        ${bill.customerPhone ? `<p style="margin: 0 0 4px; color: #222;">Phone: ${bill.customerPhone}</p>` : ''}
-                        ${deliveryAddress ? `<p style="margin: 0; color: #222;">Address: ${deliveryAddress}</p>` : ''}
-                    </div>
-                    <div style="flex: 1; padding: 12px 15px; background: #fff;">
-                        <p style="margin: 0 0 6px; font-size: 11px; color: #555; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Prescribed By</p>
-                        <p style="margin: 0; font-weight: bold; font-size: 15px; color: #000;">${bill.doctorName ? `Dr. ${bill.doctorName}` : 'Self Prescribed'}</p>
-                    </div>
-                </div>
-
-                <!-- Products Table -->
-                <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 10px 4px; text-align: center; width: 6%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">#</th>
-                            <th style="padding: 10px 4px; text-align: left; width: 42%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">Product Details</th>
-                            <th style="padding: 10px 4px; text-align: center; width: 8%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">Qty</th>
-                            <th style="padding: 10px 4px; text-align: right; width: 10%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">MRP</th>
-                            <th style="padding: 10px 4px; text-align: center; width: 8%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">Disc</th>
-                            <th style="padding: 10px 4px; text-align: center; width: 8%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">GST</th>
-                            <th style="padding: 10px 4px; text-align: right; width: 18%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">Net Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>${tableRows}</tbody>
+                <!-- Header: Logo/Title Left, Info Right -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 25px;">
+                    <tr>
+                        <td valign="top">
+                            <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">Mudhalvar Marundhagam Pakkam</h1>
+                            <p style="margin: 0 0 4px; color: #475569;">Shop No-01, Krishna Complex, KTP Road</p>
+                            <p style="margin: 0 0 4px; color: #475569;">Pakkam, THIRUVALLUR - 602024</p>
+                            <p style="margin: 0; color: #475569;">Phone: <strong style="color: #0f172a;">9551561821</strong></p>
+                        </td>
+                        <td valign="top" align="right">
+                            <h2 style="margin: 0 0 10px; font-size: 28px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 2px;">Invoice</h2>
+                            <table cellpadding="0" cellspacing="0" style="font-size: 12px; color: #475569; margin-left: auto;">
+                                <tr><td style="padding-bottom: 4px; padding-right: 15px;">Invoice No:</td><td style="padding-bottom: 4px; font-weight: 600; color: #0f172a; text-align: right;">${bill.billNo || '-'}</td></tr>
+                                <tr><td style="padding-bottom: 4px; padding-right: 15px;">Date:</td><td style="padding-bottom: 4px; font-weight: 600; color: #0f172a; text-align: right;">${fmtDate}</td></tr>
+                                <tr><td>Time:</td><td style="font-weight: 600; color: #0f172a; text-align: right;">${fmtTime}</td></tr>
+                            </table>
+                        </td>
+                    </tr>
                 </table>
 
-                <!-- Footer Summary Section -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-top: 10px; border-top: 2px solid #000;">
-                    
-                    <!-- Terms -->
-                    <div style="width: 50%; font-size: 11px; color: #333; padding-right: 20px;">
-                        <p style="margin: 0 0 5px; font-weight: bold; color: #000; text-transform: uppercase;">Terms & Conditions</p>
-                        <p style="margin: 0 0 3px;">1. Goods once sold cannot be taken back or exchanged.</p>
-                        <p style="margin: 0 0 3px;">2. Medicines should be stored as per manufacturer guidelines.</p>
-                        <p style="margin: 0;">3. Subject to local jurisdiction only.</p>
+                <!-- Meta Details (GST, DL) -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 25px; background-color: #f8fafc; border-radius: 8px;">
+                    <tr>
+                        <td style="padding: 12px 15px; width: 50%;">
+                            <span style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">D.L.No</span><br>
+                            <strong style="font-size: 13px;">TN-12-123456</strong>
+                        </td>
+                        <td style="padding: 12px 15px; width: 50%; text-align: right;">
+                            <span style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">GSTIN</span><br>
+                            <strong style="font-size: 13px;">33ABCDE1234F1Z5</strong>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Billing Info -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                    <tr>
+                        <td valign="top" width="50%">
+                            <h3 style="margin: 0 0 8px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Billed To</h3>
+                            <p style="margin: 0 0 4px; font-size: 15px; font-weight: 700; color: #0f172a;">${bill.customerName || 'Cash / Walk-in Customer'}</p>
+                            ${bill.customerPhone ? `<p style="margin: 0 0 4px; color: #475569;">${bill.customerPhone}</p>` : ''}
+                            ${deliveryAddress ? `<p style="margin: 0; color: #475569; max-width: 80%;">${deliveryAddress}</p>` : ''}
+                        </td>
+                        <td valign="top" width="50%" align="right">
+                            <h3 style="margin: 0 0 8px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Prescribed By</h3>
+                            <p style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">${bill.doctorName ? `Dr. ${bill.doctorName}` : 'Self Prescribed'}</p>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Items Table -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 12px 8px; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; text-align: left; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">#</th>
+                            <th style="padding: 12px 8px; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; text-align: left; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">Product / Details</th>
+                            <th style="padding: 12px 8px; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; text-align: center; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">Qty</th>
+                            <th style="padding: 12px 8px; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">MRP</th>
+                            <th style="padding: 12px 8px; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">Disc</th>
+                            <th style="padding: 12px 8px; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">GST</th>
+                            <th style="padding: 12px 8px; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600;">Net Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+
+                <!-- Footer Summary -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 40px;">
+                    <tr>
+                        <!-- Terms -->
+                        <td valign="top" width="55%" style="padding-right: 30px;">
+                            <h4 style="margin: 0 0 8px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Terms & Conditions</h4>
+                            <ol style="margin: 0; padding-left: 15px; color: #64748b; font-size: 11px; line-height: 1.6;">
+                                <li>Goods once sold cannot be taken back or exchanged.</li>
+                                <li>Medicines should be stored as per manufacturer guidelines.</li>
+                                <li>Subject to local jurisdiction only.</li>
+                            </ol>
+                            <div style="margin-top: 25px; padding: 12px; background: #f8fafc; border-left: 3px solid #cbd5e1; border-radius: 4px;">
+                                <p style="margin: 0; font-size: 13px; color: #334155; font-weight: 500; font-style: italic;">"Wishing you a speedy recovery!"</p>
+                            </div>
+                        </td>
                         
-                        <div style="margin-top: 25px;">
-                            <p style="margin: 0; font-size: 14px; color: #000; font-weight: bold; font-style: italic;">"Wishing you a speedy recovery!"</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Totals -->
-                    <div style="width: 45%;">
-                        <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-bottom: 15px;">
-                            <tr>
-                                <td style="padding: 4px 0; color: #333;">Total Value</td>
-                                <td style="padding: 4px 0; text-align: right;">${totalValue.toFixed(2)}</td>
-                            </tr>
-                            ${totalDiscount > 0 ? `
-                            <tr>
-                                <td style="padding: 4px 0; color: #333;">Total Discount</td>
-                                <td style="padding: 4px 0; text-align: right;">-${totalDiscount.toFixed(2)}</td>
-                            </tr>` : ''}
-                            <tr>
-                                <td style="padding: 4px 0; color: #333;">CGST</td>
-                                <td style="padding: 4px 0; text-align: right;">${totalCGST.toFixed(2)}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 4px 0; color: #333;">SGST</td>
-                                <td style="padding: 4px 0; text-align: right;">${totalSGST.toFixed(2)}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 12px 0 0; font-size: 18px; font-weight: 900; border-top: 1px solid #ccc; margin-top: 5px; color: #000;">Net Amount</td>
-                                <td style="padding: 12px 0 0; font-size: 18px; font-weight: 900; text-align: right; border-top: 1px solid #ccc; margin-top: 5px; color: #000;">₹ ${parseFloat(bill.total||0).toFixed(2)}</td>
-                            </tr>
-                        </table>
-                        
-                        <!-- Signature -->
-                        <div style="text-align: center; margin-top: 40px; padding-top: 10px;">
-                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto 5px;"></div>
-                            <p style="margin: 0; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #444;">Authorized Signatory</p>
-                        </div>
+                        <!-- Calculations -->
+                        <td valign="top" width="45%">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="padding: 6px 0; color: #64748b;">Total Value</td>
+                                    <td style="padding: 6px 0; text-align: right; font-weight: 500;">₹${totalValue.toFixed(2)}</td>
+                                </tr>
+                                ${totalDiscount > 0 ? `
+                                <tr>
+                                    <td style="padding: 6px 0; color: #ef4444;">Discount</td>
+                                    <td style="padding: 6px 0; text-align: right; color: #ef4444; font-weight: 500;">- ₹${totalDiscount.toFixed(2)}</td>
+                                </tr>` : ''}
+                                <tr>
+                                    <td style="padding: 6px 0; color: #64748b;">CGST</td>
+                                    <td style="padding: 6px 0; text-align: right; font-weight: 500;">₹${totalCGST.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 6px 0; color: #64748b;">SGST</td>
+                                    <td style="padding: 6px 0; text-align: right; font-weight: 500;">₹${totalSGST.toFixed(2)}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2" style="padding-top: 12px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: white; padding: 15px 20px; border-radius: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
+                                            <span style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Net Payable</span>
+                                            <span style="font-size: 22px; font-weight: 800;">₹${parseFloat(bill.total||0).toFixed(2)}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Signature -->
+                <div style="text-align: right; padding-top: 20px;">
+                    <div style="display: inline-block; text-align: center;">
+                        <div style="border-bottom: 1px solid #cbd5e1; width: 180px; margin-bottom: 8px;"></div>
+                        <span style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">Authorized Signatory</span>
                     </div>
                 </div>
-                
+
             </div>`;
         }
 
