@@ -348,7 +348,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 700px;
+            min-width: 1200px;
         }
         thead th {
             background: linear-gradient(135deg, #fef2f2, #fee2e2);
@@ -662,8 +662,16 @@
                             <input type="date" id="entryDate">
                         </div>
                         <div class="form-group">
+                            <label>Bill No</label>
+                            <input type="text" id="billNo" placeholder="e.g. SH-001">
+                        </div>
+                        <div class="form-group">
                             <label>Prescription No</label>
                             <input type="text" id="prescriptionNo" placeholder="e.g. RX-001">
+                        </div>
+                        <div class="form-group">
+                            <label>Firm</label>
+                            <input type="text" id="firmName" placeholder="Supplier / Firm name…">
                         </div>
                     </div>
 
@@ -694,7 +702,7 @@
                     </div>
 
                     <div class="section-label">💊 Drug Details</div>
-                    <div class="form-grid-3" style="margin-bottom: 1.5rem;">
+                    <div class="form-grid" style="margin-bottom: 1rem;">
                         <div class="form-group">
                             <label>Drug Name</label>
                             <input type="text" id="drugName" list="drugList" placeholder="Select Schedule H drug…" autocomplete="off">
@@ -705,9 +713,35 @@
                             <input type="text" id="batchNo" placeholder="e.g. BT20240001">
                         </div>
                         <div class="form-group">
-                            <label>Quantity</label>
-                            <input type="number" id="qty" placeholder="0" min="1" step="1">
+                            <label>Expire Date</label>
+                            <input type="month" id="expireDate" placeholder="YYYY-MM">
                         </div>
+                        <div class="form-group">
+                            <label>Pack</label>
+                            <input type="text" id="pack" placeholder="e.g. 10s, 15ml">
+                        </div>
+                    </div>
+                    <div class="form-grid" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" id="qty" placeholder="0" min="1" step="1" oninput="calcTotal()">
+                        </div>
+                        <div class="form-group">
+                            <label>MRP (₹)</label>
+                            <input type="number" id="mrp" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()">
+                        </div>
+                        <div class="form-group">
+                            <label>Rate (₹)</label>
+                            <input type="number" id="rate" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()">
+                        </div>
+                        <div class="form-group">
+                            <label>GST (%)</label>
+                            <input type="number" id="gst" placeholder="0" min="0" step="0.01" oninput="calcTotal()">
+                        </div>
+                    </div>
+                    <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:14px; padding:1rem 1.4rem; margin-bottom:0.5rem; display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-size:0.85rem; font-weight:800; color:#991b1b; text-transform:uppercase; letter-spacing:0.06em;">Total Amount</span>
+                        <span id="totalDisplay" style="font-size:1.3rem; font-weight:800; color:#dc2626;">₹ 0.00</span>
                     </div>
 
                     <div class="form-actions">
@@ -735,12 +769,20 @@
                             <thead>
                                 <tr>
                                     <th>Date</th>
+                                    <th>Bill No</th>
                                     <th>Patient</th>
                                     <th>Doctor</th>
                                     <th>Drug</th>
                                     <th>Batch</th>
+                                    <th>Exp</th>
+                                    <th>Pack</th>
                                     <th>Qty</th>
-                                    <th>Prescription</th>
+                                    <th>MRP</th>
+                                    <th>Rate</th>
+                                    <th>GST</th>
+                                    <th>Total</th>
+                                    <th>Firm</th>
+                                    <th>Rx No</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -967,9 +1009,19 @@
         // Default today
         document.getElementById('entryDate').valueAsDate = new Date();
 
+        function calcTotal() {
+            const qty  = parseFloat(document.getElementById('qty').value) || 0;
+            const rate = parseFloat(document.getElementById('rate').value) || 0;
+            const gst  = parseFloat(document.getElementById('gst').value) || 0;
+            const base = qty * rate;
+            const total = base + (base * gst / 100);
+            document.getElementById('totalDisplay').textContent = '₹ ' + total.toFixed(2);
+        }
+
         function resetRegisterForm() {
             document.getElementById('registerForm').reset();
             document.getElementById('entryDate').valueAsDate = new Date();
+            document.getElementById('totalDisplay').textContent = '₹ 0.00';
         }
 
         function handleRegisterSubmit(e) {
@@ -987,16 +1039,30 @@
                 return;
             }
 
+            const qty  = parseFloat(document.getElementById('qty').value) || 0;
+            const rate = parseFloat(document.getElementById('rate').value) || 0;
+            const gst  = parseFloat(document.getElementById('gst').value) || 0;
+            const base = qty * rate;
+            const total = base + (base * gst / 100);
+
             const entry = {
                 id:               genId(),
                 date:             document.getElementById('entryDate').value,
+                billNo:           document.getElementById('billNo').value.trim(),
+                firmName:         document.getElementById('firmName').value.trim(),
                 patientName:      patientName,
                 patientAddress:   document.getElementById('patientAddress').value.trim(),
                 doctorName:       document.getElementById('doctorName').value.trim(),
                 doctorAddress:    document.getElementById('doctorAddress').value.trim(),
                 drugName:         drugName,
                 batchNo:          document.getElementById('batchNo').value.trim(),
-                qty:              parseInt(document.getElementById('qty').value) || 0,
+                expireDate:       document.getElementById('expireDate').value,
+                pack:             document.getElementById('pack').value.trim(),
+                qty:              qty,
+                mrp:              parseFloat(document.getElementById('mrp').value) || 0,
+                rate:             rate,
+                gst:              gst,
+                total:            total,
                 prescriptionNo:   document.getElementById('prescriptionNo').value.trim(),
                 savedAt:          new Date().toISOString()
             };
@@ -1035,7 +1101,7 @@
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8">
+                        <td colspan="16">
                             <div class="empty-state">
                                 <div class="es-icon">📋</div>
                                 <div class="es-title">${register.length === 0 ? 'No Entries Yet' : 'No Matches Found'}</div>
@@ -1051,6 +1117,7 @@
                 return `
                 <tr style="animation: rowSlideIn 0.3s ease forwards;">
                     <td style="white-space:nowrap; font-weight:600; font-size:0.82rem;">${dateStr}</td>
+                    <td style="font-size:0.84rem; font-weight:600;">${esc(entry.billNo || '—')}</td>
                     <td>
                         <div style="font-weight:600;">${esc(entry.patientName)}</div>
                         ${entry.patientAddress ? `<div style="font-size:0.73rem; color:#94a3b8;">${esc(entry.patientAddress)}</div>` : ''}
@@ -1061,7 +1128,14 @@
                     </td>
                     <td style="font-weight:700; color:#991b1b;">${esc(entry.drugName)}</td>
                     <td style="font-size:0.84rem;">${esc(entry.batchNo || '—')}</td>
+                    <td style="font-size:0.84rem;">${esc(entry.expireDate || '—')}</td>
+                    <td style="font-size:0.84rem;">${esc(entry.pack || '—')}</td>
                     <td style="font-weight:700;">${entry.qty || '—'}</td>
+                    <td style="font-size:0.84rem;">₹${(entry.mrp || 0).toFixed(2)}</td>
+                    <td style="font-size:0.84rem;">₹${(entry.rate || 0).toFixed(2)}</td>
+                    <td style="font-size:0.84rem;">${entry.gst || 0}%</td>
+                    <td style="font-weight:700; color:#dc2626;">₹${(entry.total || 0).toFixed(2)}</td>
+                    <td style="font-size:0.84rem;">${esc(entry.firmName || '—')}</td>
                     <td style="font-size:0.84rem;">${esc(entry.prescriptionNo || '—')}</td>
                     <td>
                         <button class="remove-row-btn" onclick="deleteEntry('${entry.id}')" title="Delete entry">✕</button>
