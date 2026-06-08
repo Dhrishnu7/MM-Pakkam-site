@@ -1085,7 +1085,95 @@
             updateUI();
             // Focus product name of new row
             setTimeout(() => document.getElementById('product_' + id)?.focus(), 50);
+            return id; // return row id for programmatic use
         }
+
+        /* -- Auto-fill Schedule H drugs from register into sales rows -- */
+        function autoFillScheduleH() {
+            const billNo       = (document.getElementById('billNo').value || '').trim();
+            const customerName = (document.getElementById('customerName').value || '').trim().toLowerCase();
+            const doctorName   = (document.getElementById('doctorName').value || '').trim().toLowerCase();
+
+            if (!billNo || !customerName) return; // need at least bill + customer
+
+            const register = JSON.parse(localStorage.getItem('mm_schedule_h_register') || '[]');
+            if (register.length === 0) return;
+
+            // Find matching entries: same billNo AND (customer or doctor match)
+            const matches = register.filter(e => {
+                const eBill = (e.billNo || '').trim();
+                const eCust = (e.patientName || '').trim().toLowerCase();
+                const eDoc  = (e.doctorName || '').trim().toLowerCase();
+                return eBill === billNo && eCust === customerName;
+            });
+
+            if (matches.length === 0) return;
+
+            // Check which drugs are already in the table to avoid duplicates
+            const existingDrugs = new Set();
+            document.querySelectorAll('[id^="product_"]').forEach(el => {
+                const rid = el.id.split('_')[1];
+                const batch = (document.getElementById('batch_' + rid)?.value || '').trim().toLowerCase();
+                existingDrugs.add((el.value || '').trim().toLowerCase() + '|' + batch);
+            });
+
+            let addedCount = 0;
+            matches.forEach(entry => {
+                const drugKey = (entry.drugName || '').toLowerCase() + '|' + (entry.batchNo || '').toLowerCase();
+                if (existingDrugs.has(drugKey)) return; // skip duplicates
+                existingDrugs.add(drugKey);
+
+                // If the first row is empty, use it; otherwise add a new row
+                let targetId;
+                const firstProduct = document.querySelector('[id^="product_"]');
+                if (firstProduct && !firstProduct.value.trim() && addedCount === 0) {
+                    targetId = firstProduct.id.split('_')[1];
+                } else {
+                    targetId = addRow();
+                    if (!targetId) return; // max rows reached
+                }
+
+                // Fill the row fields
+                const fields = {
+                    ['product_' + targetId]: entry.drugName || '',
+                    ['batch_' + targetId]:   entry.batchNo || '',
+                    ['exp_' + targetId]:     entry.expireDate || '',
+                    ['pack_' + targetId]:    entry.pack || '',
+                    ['qty_' + targetId]:     entry.qty || '',
+                    ['mrp_' + targetId]:     entry.mrp || '',
+                    ['rate_' + targetId]:    entry.rate || '',
+                    ['gst_' + targetId]:     entry.gst || '',
+                };
+
+                Object.entries(fields).forEach(([elId, val]) => {
+                    const el = document.getElementById(elId);
+                    if (el) {
+                        el.value = val;
+                        if (val !== '' && val !== 0) flashCell(el);
+                    }
+                });
+
+                calcRowTotal(targetId);
+                addedCount++;
+            });
+
+            if (addedCount > 0) {
+                updateGrandTotal();
+                // Show toast
+                document.getElementById('toastTitle').textContent = '⚠️ Schedule H Drugs Added!';
+                document.getElementById('toastSub').textContent = `${addedCount} Schedule H drug(s) auto-filled from register.`;
+                document.getElementById('toast').classList.add('show');
+                setTimeout(() => document.getElementById('toast').classList.remove('show'), 3500);
+            }
+        }
+
+        // Hook up auto-fill on customer/doctor name change
+        document.addEventListener('DOMContentLoaded', () => {
+            const custEl = document.getElementById('customerName');
+            const docEl  = document.getElementById('doctorName');
+            if (custEl) custEl.addEventListener('change', autoFillScheduleH);
+            if (docEl)  docEl.addEventListener('change', autoFillScheduleH);
+        });
 
         /* -- Collect all rows data -- */
         function collectMedicines() {

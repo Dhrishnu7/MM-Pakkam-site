@@ -666,10 +666,6 @@
                             <input type="text" id="billNo" placeholder="e.g. SH-001">
                         </div>
                         <div class="form-group">
-                            <label>Prescription No</label>
-                            <input type="text" id="prescriptionNo" placeholder="e.g. RX-001">
-                        </div>
-                        <div class="form-group">
                             <label>Firm</label>
                             <input type="text" id="firmName" placeholder="Supplier / Firm name…">
                         </div>
@@ -782,7 +778,7 @@
                                     <th>GST</th>
                                     <th>Total</th>
                                     <th>Firm</th>
-                                    <th>Rx No</th>
+
                                     <th></th>
                                 </tr>
                             </thead>
@@ -1063,7 +1059,7 @@
                 rate:             rate,
                 gst:              gst,
                 total:            total,
-                prescriptionNo:   document.getElementById('prescriptionNo').value.trim(),
+
                 savedAt:          new Date().toISOString()
             };
 
@@ -1092,7 +1088,7 @@
                     || (entry.doctorName || '').toLowerCase().includes(searchTerm)
                     || (entry.drugName || '').toLowerCase().includes(searchTerm)
                     || (entry.batchNo || '').toLowerCase().includes(searchTerm)
-                    || (entry.prescriptionNo || '').toLowerCase().includes(searchTerm)
+
                     || (entry.date || '').includes(searchTerm);
             });
 
@@ -1101,7 +1097,7 @@
             if (filtered.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="16">
+                        <td colspan="15">
                             <div class="empty-state">
                                 <div class="es-icon">📋</div>
                                 <div class="es-title">${register.length === 0 ? 'No Entries Yet' : 'No Matches Found'}</div>
@@ -1136,7 +1132,7 @@
                     <td style="font-size:0.84rem;">${entry.gst || 0}%</td>
                     <td style="font-weight:700; color:#dc2626;">₹${(entry.total || 0).toFixed(2)}</td>
                     <td style="font-size:0.84rem;">${esc(entry.firmName || '—')}</td>
-                    <td style="font-size:0.84rem;">${esc(entry.prescriptionNo || '—')}</td>
+
                     <td>
                         <button class="remove-row-btn" onclick="deleteEntry('${entry.id}')" title="Delete entry">✕</button>
                     </td>
