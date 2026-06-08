@@ -563,6 +563,7 @@
                         <option value="all">All Transactions</option>
                         <option value="sales">Sales Only</option>
                         <option value="purchase">Purchases Only</option>
+                        <option value="schedule_h">Schedule H Drugs</option>
                     </select>
                 </div>
                 <div class="filter-group" style="align-items: flex-end;">
@@ -959,9 +960,20 @@
             const to   = document.getElementById('toDate').value;
             const type = document.getElementById('reportType').value;
 
+            const shList = JSON.parse(localStorage.getItem('mm_schedule_h_drugs') || '[]').map(d => d.trim().toLowerCase());
+
             currentData = allData.filter(r => {
                 const inDate = (!from || r.date >= from) && (!to || r.date <= to);
-                const inType = type === 'all' || r.type === type;
+                
+                let inType = false;
+                if (type === 'all') {
+                    inType = true;
+                } else if (type === 'schedule_h') {
+                    inType = shList.includes((r.product || '').trim().toLowerCase());
+                } else {
+                    inType = r.type === type;
+                }
+                
                 return inDate && inType;
             });
 
