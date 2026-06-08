@@ -1535,67 +1535,118 @@
             });
 
             const tableRows = rows.map(r => `
-                <tr>
-                    <td style="border:1px solid #000; padding:4px; text-align:center">${r.i}</td>
-                    <td style="border:1px solid #000; padding:4px"><strong>${r.m.product}</strong></td>
-                    <td style="border:1px solid #000; padding:4px">${r.m.batch || '-'}</td>
-                    <td style="border:1px solid #000; padding:4px">${r.m.exp || '-'}</td>
-                    <td style="border:1px solid #000; padding:4px; text-align:center">${r.qty}</td>
-                    <td style="border:1px solid #000; padding:4px; text-align:right">₹${r.mrpUnit.toFixed(2)}</td>
-                    <td style="border:1px solid #000; padding:4px; text-align:center">${r.discPct}%</td>
-                    <td style="border:1px solid #000; padding:4px; text-align:center">${r.gstPct}%</td>
-                    <td style="border:1px solid #000; padding:4px; text-align:right">₹${r.payable.toFixed(2)}</td>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px 4px; text-align: center; vertical-align: top;">${r.i}</td>
+                    <td style="padding: 10px 4px; vertical-align: top;">
+                        <strong style="font-size: 14px;">${r.m.product}</strong>
+                        <div style="font-size: 11px; color: #555; margin-top: 3px;">Exp: ${r.m.exp || '-'} &nbsp;|&nbsp; Batch: ${r.m.batch || '-'}</div>
+                    </td>
+                    <td style="padding: 10px 4px; text-align: center; vertical-align: top; font-weight: bold;">${r.qty}</td>
+                    <td style="padding: 10px 4px; text-align: right; vertical-align: top;">${r.mrpUnit.toFixed(2)}</td>
+                    <td style="padding: 10px 4px; text-align: center; vertical-align: top;">${r.discPct > 0 ? r.discPct + '%' : '-'}</td>
+                    <td style="padding: 10px 4px; text-align: center; vertical-align: top;">${r.gstPct}%</td>
+                    <td style="padding: 10px 4px; text-align: right; vertical-align: top; font-weight: bold;">${r.payable.toFixed(2)}</td>
                 </tr>
             `).join('');
 
             return `
-            <div style="font-family: Arial, sans-serif; color: #000; width: 100%; max-width: 800px; margin: 0 auto;">
-                <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px">
-                    <h1 style="margin:0 0 5px; font-size:24px">Mudhalvar Marundhagam Pakkam</h1>
-                    <p style="margin:0; font-size:14px">#123 Main Road, City - 600000 | Ph: 9876543210</p>
-                    <p style="margin:0; font-size:14px">DL No: TN-12-123456 | GSTIN: 33ABCDE1234F1Z5</p>
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #000; width: 100%; max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; box-sizing: border-box;">
+                
+                <!-- Header Section -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
+                    <div>
+                        <h1 style="margin: 0 0 5px; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Mudhalvar Marundhagam Pakkam</h1>
+                        <p style="margin: 0 0 3px; font-size: 13px; color: #333;">Shop No-01, Krishna Complex, KTP Road, Pakkam, THIRUVALLUR - 602024</p>
+                        <p style="margin: 0 0 3px; font-size: 13px; color: #333;">Phone: <strong style="font-size: 14px;">9551561821</strong></p>
+                        <p style="margin: 0; font-size: 12px; color: #444;">D.L.No: TN-12-123456 &nbsp;|&nbsp; GSTIN: 33ABCDE1234F1Z5</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h2 style="margin: 0 0 6px; font-size: 22px; color: #000; text-transform: uppercase; letter-spacing: 1px; border: 1px solid #000; display: inline-block; padding: 4px 10px; border-radius: 4px;">TAX INVOICE</h2>
+                        <p style="margin: 6px 0 4px; font-size: 13px;">Invoice No: <strong style="font-size: 14px;">${bill.billNo || '-'}</strong></p>
+                        <p style="margin: 0 0 4px; font-size: 13px;">Date: <strong>${fmtDate}</strong></p>
+                        <p style="margin: 0; font-size: 13px;">Time: <strong>${fmtTime}</strong></p>
+                    </div>
                 </div>
                 
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; font-size:14px">
-                    <div>
-                        <p style="margin:2px 0"><strong>Bill To:</strong> ${bill.customerName || 'Cash / Walk-in'}</p>
-                        ${bill.customerPhone ? `<p style="margin:2px 0"><strong>Phone:</strong> ${bill.customerPhone}</p>` : ''}
-                        ${deliveryAddress ? `<p style="margin:2px 0"><strong>Address:</strong> ${deliveryAddress}</p>` : ''}
-                        ${bill.doctorName ? `<p style="margin:2px 0; margin-top:8px"><strong>Doctor:</strong> ${bill.doctorName}</p>` : ''}
+                <!-- Party Details Section -->
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 14px; border: 1px solid #000; border-radius: 6px; overflow: hidden;">
+                    <div style="flex: 1; padding: 12px 15px; border-right: 1px solid #ccc; background: #fafafa;">
+                        <p style="margin: 0 0 6px; font-size: 11px; color: #555; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Billed To</p>
+                        <p style="margin: 0 0 4px; font-weight: bold; font-size: 15px; color: #000;">${bill.customerName || 'Cash / Walk-in Customer'}</p>
+                        ${bill.customerPhone ? `<p style="margin: 0 0 4px; color: #222;">Phone: ${bill.customerPhone}</p>` : ''}
+                        ${deliveryAddress ? `<p style="margin: 0; color: #222;">Address: ${deliveryAddress}</p>` : ''}
                     </div>
-                    <div style="text-align:right">
-                        <p style="margin:2px 0"><strong>Invoice No:</strong> ${bill.billNo || '-'}</p>
-                        <p style="margin:2px 0"><strong>Date:</strong> ${fmtDate}</p>
-                        <p style="margin:2px 0"><strong>Time:</strong> ${fmtTime}</p>
+                    <div style="flex: 1; padding: 12px 15px; background: #fff;">
+                        <p style="margin: 0 0 6px; font-size: 11px; color: #555; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Prescribed By</p>
+                        <p style="margin: 0; font-weight: bold; font-size: 15px; color: #000;">${bill.doctorName ? `Dr. ${bill.doctorName}` : 'Self Prescribed'}</p>
                     </div>
                 </div>
 
-                <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:15px">
+                <!-- Products Table -->
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;">
                     <thead>
                         <tr>
-                            <th style="border:1px solid #000; padding:4px; text-align:center; width:5%">S.No</th>
-                            <th style="border:1px solid #000; padding:4px; text-align:left; width:30%">Medicine</th>
-                            <th style="border:1px solid #000; padding:4px; text-align:left; width:12%">Batch</th>
-                            <th style="border:1px solid #000; padding:4px; text-align:left; width:10%">Exp</th>
-                            <th style="border:1px solid #000; padding:4px; text-align:center; width:8%">Qty</th>
-                            <th style="border:1px solid #000; padding:4px; text-align:right; width:10%">MRP</th>
-                            <th style="border:1px solid #000; padding:4px; text-align:center; width:7%">Disc</th>
-                            <th style="border:1px solid #000; padding:4px; text-align:center; width:7%">GST</th>
-                            <th style="border:1px solid #000; padding:4px; text-align:right; width:11%">Total</th>
+                            <th style="padding: 10px 4px; text-align: center; width: 6%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">#</th>
+                            <th style="padding: 10px 4px; text-align: left; width: 42%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">Product Details</th>
+                            <th style="padding: 10px 4px; text-align: center; width: 8%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">Qty</th>
+                            <th style="padding: 10px 4px; text-align: right; width: 10%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">MRP</th>
+                            <th style="padding: 10px 4px; text-align: center; width: 8%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">Disc</th>
+                            <th style="padding: 10px 4px; text-align: center; width: 8%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">GST</th>
+                            <th style="padding: 10px 4px; text-align: right; width: 18%; border-bottom: 2px solid #000; border-top: 2px solid #000; color: #000; text-transform: uppercase; font-size: 11px;">Net Total</th>
                         </tr>
                     </thead>
                     <tbody>${tableRows}</tbody>
                 </table>
 
-                <div style="display:flex; justify-content:flex-end; border-top:1px solid #000; padding-top:10px">
-                    <table style="width:280px; font-size:14px; border-collapse:collapse">
-                        <tr><td style="padding:2px">Total Value:</td><td style="text-align:right; padding:2px">₹${totalValue.toFixed(2)}</td></tr>
-                        <tr><td style="padding:2px">Total Discount:</td><td style="text-align:right; padding:2px">₹${totalDiscount.toFixed(2)}</td></tr>
-                        <tr><td style="padding:2px">CGST:</td><td style="text-align:right; padding:2px">₹${totalCGST.toFixed(2)}</td></tr>
-                        <tr><td style="padding:2px">SGST:</td><td style="text-align:right; padding:2px">₹${totalSGST.toFixed(2)}</td></tr>
-                        <tr><td style="padding:4px 2px; font-weight:bold; border-top:1px solid #000; font-size:16px">Net Payable:</td><td style="text-align:right; padding:4px 2px; font-weight:bold; border-top:1px solid #000; font-size:16px">₹${parseFloat(bill.total||0).toFixed(2)}</td></tr>
-                    </table>
+                <!-- Footer Summary Section -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-top: 10px; border-top: 2px solid #000;">
+                    
+                    <!-- Terms -->
+                    <div style="width: 50%; font-size: 11px; color: #333; padding-right: 20px;">
+                        <p style="margin: 0 0 5px; font-weight: bold; color: #000; text-transform: uppercase;">Terms & Conditions</p>
+                        <p style="margin: 0 0 3px;">1. Goods once sold cannot be taken back or exchanged.</p>
+                        <p style="margin: 0 0 3px;">2. Medicines should be stored as per manufacturer guidelines.</p>
+                        <p style="margin: 0;">3. Subject to local jurisdiction only.</p>
+                        
+                        <div style="margin-top: 25px;">
+                            <p style="margin: 0; font-size: 14px; color: #000; font-weight: bold; font-style: italic;">"Wishing you a speedy recovery!"</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Totals -->
+                    <div style="width: 45%;">
+                        <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-bottom: 15px;">
+                            <tr>
+                                <td style="padding: 4px 0; color: #333;">Total Value</td>
+                                <td style="padding: 4px 0; text-align: right;">${totalValue.toFixed(2)}</td>
+                            </tr>
+                            ${totalDiscount > 0 ? `
+                            <tr>
+                                <td style="padding: 4px 0; color: #333;">Total Discount</td>
+                                <td style="padding: 4px 0; text-align: right;">-${totalDiscount.toFixed(2)}</td>
+                            </tr>` : ''}
+                            <tr>
+                                <td style="padding: 4px 0; color: #333;">CGST</td>
+                                <td style="padding: 4px 0; text-align: right;">${totalCGST.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 0; color: #333;">SGST</td>
+                                <td style="padding: 4px 0; text-align: right;">${totalSGST.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px 0 0; font-size: 18px; font-weight: 900; border-top: 1px solid #ccc; margin-top: 5px; color: #000;">Net Amount</td>
+                                <td style="padding: 12px 0 0; font-size: 18px; font-weight: 900; text-align: right; border-top: 1px solid #ccc; margin-top: 5px; color: #000;">₹ ${parseFloat(bill.total||0).toFixed(2)}</td>
+                            </tr>
+                        </table>
+                        
+                        <!-- Signature -->
+                        <div style="text-align: center; margin-top: 40px; padding-top: 10px;">
+                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto 5px;"></div>
+                            <p style="margin: 0; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #444;">Authorized Signatory</p>
+                        </div>
+                    </div>
                 </div>
+                
             </div>`;
         }
 
