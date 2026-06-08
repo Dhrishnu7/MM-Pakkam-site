@@ -510,6 +510,112 @@
         }
         .modal-close:hover { background: #e2e8f0; color: #0f172a; }
         .modal-body { padding: 1.5rem; }
+
+        /* ── Stock Report Section ── */
+        .stock-section {
+            width: 100%; max-width: 860px;
+            animation: fadeUp 0.5s ease 0.25s forwards; opacity: 0;
+            margin-bottom: 1.5rem;
+        }
+        .stock-toggle-btn {
+            width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+            background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(14,165,233,0.08));
+            border: 1.5px solid rgba(16,185,129,0.35);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.25s ease;
+        }
+        .stock-toggle-btn:hover {
+            background: linear-gradient(135deg, rgba(16,185,129,0.22), rgba(14,165,233,0.14));
+            border-color: rgba(16,185,129,0.65);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(16,185,129,0.15);
+        }
+        .stock-toggle-left { display: flex; align-items: center; gap: 12px; }
+        .stock-toggle-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.35);
+            flex-shrink: 0;
+        }
+        .stock-toggle-text { text-align: left; }
+        .stock-toggle-title { font-size: 0.95rem; font-weight: 800; color: #0f172a; }
+        .stock-toggle-sub   { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+        .stock-chevron {
+            font-size: 1.1rem; color: #10b981; font-weight: 700;
+            transition: transform 0.3s ease;
+        }
+        .stock-chevron.open { transform: rotate(180deg); }
+        .stock-panel {
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: 0 0 18px 18px;
+            border-top: none;
+            padding: 1.6rem 1.8rem 1.8rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+            display: none;
+        }
+        .stock-panel.open { display: block; }
+        .stock-toggle-btn.panel-open {
+            border-radius: 16px 16px 0 0;
+            border-bottom-color: transparent;
+        }
+        .stock-search-bar {
+            display: flex; gap: 0.7rem; margin-bottom: 1.2rem;
+        }
+        .stock-search-input {
+            flex: 1; font-family: 'Inter', sans-serif; font-size: 0.92rem;
+            padding: 0.7rem 1rem; border-radius: 10px;
+            border: 1.5px solid #a7f3d0; background: #f0fdf4;
+            outline: none; transition: all 0.2s;
+        }
+        .stock-search-input:focus { border-color: #10b981; background: white; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); }
+        .stock-summary-pills {
+            display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+        .stock-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 0.4rem 0.9rem; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 700;
+        }
+        .pill-in-stock   { background: #d1fae5; color: #065f46; border: 1.5px solid #6ee7b7; }
+        .pill-low-stock  { background: #fef3c7; color: #92400e; border: 1.5px solid #fde68a; }
+        .pill-out-stock  { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
+        .stock-table { width: 100%; border-collapse: collapse; }
+        .stock-table th {
+            font-size: 0.72rem; font-weight: 800;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            color: #065f46; padding: 0.75rem 0.9rem; text-align: left;
+            border-bottom: 1.5px solid #a7f3d0; background: #ecfdf5;
+        }
+        .stock-table td {
+            font-size: 0.87rem; color: #334155;
+            padding: 0.85rem 0.9rem;
+            border-bottom: 1px solid #f0fdf4;
+        }
+        .stock-table tbody tr { transition: background 0.15s; }
+        .stock-table tbody tr:hover { background: #f0fdf4; }
+        .stock-table tbody tr:last-child td { border-bottom: none; }
+        .stock-status-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 0.2rem 0.7rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 700;
+        }
+        .badge-in  { background: #d1fae5; color: #065f46; }
+        .badge-low { background: #fef3c7; color: #92400e; }
+        .badge-out { background: #fee2e2; color: #991b1b; }
+        .stock-qty-number {
+            font-size: 1rem; font-weight: 800;
+        }
+        .qty-good { color: #059669; }
+        .qty-low  { color: #d97706; }
+        .qty-out  { color: #dc2626; }
     </style>
     <script src="js/auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -638,6 +744,53 @@
                 </table>
                 <div class="empty-state" id="billsEmptyState" style="padding: 2rem 1rem;">
                     <p>Enter a query to search past bills.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ Stock Report ══ -->
+        <div class="stock-section">
+            <button class="stock-toggle-btn" id="stockToggleBtn" onclick="toggleStockPanel()">
+                <div class="stock-toggle-left">
+                    <div class="stock-toggle-icon">📦</div>
+                    <div class="stock-toggle-text">
+                        <div class="stock-toggle-title">Medicine Stock Report</div>
+                        <div class="stock-toggle-sub">View current stock levels for all medicines by batch</div>
+                    </div>
+                </div>
+                <div class="stock-chevron" id="stockChevron">▼</div>
+            </button>
+
+            <div class="stock-panel" id="stockPanel">
+                <!-- Search + Filters -->
+                <div class="stock-search-bar">
+                    <input type="text" id="stockSearchInput" class="stock-search-input"
+                        placeholder="Search by medicine name or batch no..."
+                        oninput="renderStockTable(this.value)">
+                </div>
+                <!-- Summary Pills -->
+                <div class="stock-summary-pills" id="stockSummaryPills"></div>
+                <!-- Table -->
+                <div style="overflow-x:auto;">
+                    <table class="stock-table" id="stockTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Medicine Name</th>
+                                <th>Batch No</th>
+                                <th>Exp. Date</th>
+                                <th>Total In (Purchased)</th>
+                                <th>Total Out (Sold)</th>
+                                <th>Current Stock</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody"></tbody>
+                    </table>
+                    <div id="stockEmptyState" style="display:none; text-align:center; padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.92rem;">
+                        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📦</span>
+                        No medicines found matching your search.
+                    </div>
                 </div>
             </div>
         </div>
@@ -1083,6 +1236,133 @@
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
             }
+        }
+
+        // ══════════════════════════════════════
+        // STOCK REPORT
+        // ══════════════════════════════════════
+        let _stockData = []; // cached stock rows
+
+        function toggleStockPanel() {
+            const panel  = document.getElementById('stockPanel');
+            const btn    = document.getElementById('stockToggleBtn');
+            const chev   = document.getElementById('stockChevron');
+            const isOpen = panel.classList.contains('open');
+            panel.classList.toggle('open');
+            btn.classList.toggle('panel-open');
+            chev.classList.toggle('open');
+            if (!isOpen) {
+                buildStockData();
+                renderStockTable('');
+            }
+        }
+
+        function buildStockData() {
+            const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+            const sales     = JSON.parse(localStorage.getItem('mm_sales')     || '[]');
+
+            // Build map: key = "productname|batchno"
+            const map = {};
+
+            // Add purchased quantities
+            purchases.forEach(p => {
+                const name  = (p.productName || '').trim();
+                const batch = (p.batchNo || '').trim();
+                if (!name) return;
+                const key = name.toLowerCase() + '|' + batch.toLowerCase();
+                if (!map[key]) {
+                    map[key] = {
+                        name:    name,
+                        batch:   batch,
+                        exp:     p.expireDate || '',
+                        totalIn: 0,
+                        totalOut: 0
+                    };
+                }
+                map[key].totalIn += parseFloat(p.quantity) || 0;
+                // keep the most recent expiry
+                if (p.expireDate && (!map[key].exp || p.expireDate > map[key].exp)) {
+                    map[key].exp = p.expireDate;
+                }
+            });
+
+            // Subtract sold quantities
+            sales.forEach(bill => {
+                (bill.medicines || []).forEach(m => {
+                    const name  = (m.product || '').trim();
+                    const batch = (m.batch   || '').trim();
+                    if (!name) return;
+                    const key = name.toLowerCase() + '|' + batch.toLowerCase();
+                    if (!map[key]) {
+                        // sold without a purchase record (manual entry)
+                        map[key] = { name, batch, exp: m.exp || '', totalIn: 0, totalOut: 0 };
+                    }
+                    map[key].totalOut += parseFloat(m.qty) || 0;
+                });
+            });
+
+            _stockData = Object.values(map)
+                .map(row => ({
+                    ...row,
+                    current: row.totalIn - row.totalOut
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        function renderStockTable(query) {
+            const q = (query || '').trim().toLowerCase();
+            const filtered = q
+                ? _stockData.filter(r =>
+                    r.name.toLowerCase().includes(q) ||
+                    r.batch.toLowerCase().includes(q))
+                : _stockData;
+
+            // Update summary pills
+            let inCnt = 0, lowCnt = 0, outCnt = 0;
+            filtered.forEach(r => {
+                if (r.current <= 0) outCnt++;
+                else if (r.current <= 10) lowCnt++;
+                else inCnt++;
+            });
+            document.getElementById('stockSummaryPills').innerHTML = `
+                <div class="stock-pill pill-in-stock">✅ ${inCnt} In Stock</div>
+                <div class="stock-pill pill-low-stock">⚠️ ${lowCnt} Low Stock (≤10)</div>
+                <div class="stock-pill pill-out-stock">❌ ${outCnt} Out of Stock</div>
+                <div class="stock-pill" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;">📦 ${filtered.length} Total Items</div>
+            `;
+
+            const tbody = document.getElementById('stockTableBody');
+            const emptyEl = document.getElementById('stockEmptyState');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyEl.style.display = 'block';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            tbody.innerHTML = filtered.map((row, idx) => {
+                const cur = row.current;
+                let statusClass, badgeClass, qtyClass, statusText, icon;
+                if (cur <= 0)  { statusClass = 'badge-out'; qtyClass = 'qty-out'; statusText = 'Out of Stock'; icon = '❌'; }
+                else if (cur <= 10) { statusClass = 'badge-low'; qtyClass = 'qty-low'; statusText = 'Low Stock'; icon = '⚠️'; }
+                else           { statusClass = 'badge-in';  qtyClass = 'qty-good'; statusText = 'In Stock';    icon = '✅'; }
+
+                const expDisplay = row.exp
+                    ? new Date(row.exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+                    : '—';
+
+                return `<tr>
+                    <td style="color:#94a3b8; font-weight:700;">${idx + 1}</td>
+                    <td><strong style="color:#0f172a;">${row.name}</strong></td>
+                    <td><code style="background:#f1f5f9;padding:2px 7px;border-radius:6px;font-size:0.82rem;">${row.batch || '—'}</code></td>
+                    <td style="color:#64748b;">${expDisplay}</td>
+                    <td style="color:#059669; font-weight:600;">${row.totalIn}</td>
+                    <td style="color:#e11d48; font-weight:600;">${row.totalOut}</td>
+                    <td><span class="stock-qty-number ${qtyClass}">${cur}</span></td>
+                    <td><span class="stock-status-badge ${statusClass}">${icon} ${statusText}</span></td>
+                </tr>`;
+            }).join('');
         }
 
         // ══════════════════════════════════════
