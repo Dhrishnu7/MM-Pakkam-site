@@ -824,7 +824,7 @@
             return totalPurchased - totalSold;
         }
 
-        /* -- Build datalist options from mm_medicine_list + purchases -- */
+        /* -- Build datalist options: ONLY unique base medicine names (no batch suffixes) -- */
         function getMedicineOptions() {
             const medList   = JSON.parse(localStorage.getItem('mm_medicine_list') || '[]');
             const purchases = JSON.parse(localStorage.getItem('mm_purchases')     || '[]');
@@ -835,18 +835,33 @@
                 if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); names.push(t); }
             });
 
+            // Only add the BASE name from purchases (not the batch-specific variant)
             purchases.forEach(p => {
                 if (p.productName) {
                     const base = p.productName.trim();
-                    let t = base;
-                    if (p.batchNo) {
-                        t = `${base} (Batch: ${p.batchNo.trim()})`;
-                    }
-                    if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); names.push(t); }
+                    if (base && !seen.has(base.toLowerCase())) { seen.add(base.toLowerCase()); names.push(base); }
                 }
             });
             
             return names.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
+        }
+
+        /* -- Get all batches for a given medicine name -- */
+        function getBatchesForProduct(productName) {
+            if (!productName) return [];
+            const name = productName.trim().toLowerCase();
+            const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+            const seen = new Set(), batches = [];
+            purchases.forEach(p => {
+                if ((p.productName || '').trim().toLowerCase() === name && p.batchNo) {
+                    const bk = p.batchNo.trim().toLowerCase();
+                    if (!seen.has(bk)) {
+                        seen.add(bk);
+                        batches.push(p);
+                    }
+                }
+            });
+            return batches; // array of purchase objects, one per batch
         }
 
         /* -- Refresh the single global datalist (handles 15,000+ items easily) -- */
@@ -897,38 +912,78 @@
             setTimeout(() => el.classList.remove('autofilled'), 1100);
         }
 
-        /* -- Autofill a row from purchase data -- */
+        /* -- Autofill a row: populate batch dropdown when medicine name is chosen -- */
         function autoFillRow(id) {
             const productInput = document.getElementById('product_' + id);
-            if (!productInput) return;
+            const batchSelect  = document.getElementById('batch_' + id);
+            if (!productInput || !batchSelect) return;
             const productVal = productInput.value.trim();
+
+            // Clear batch dropdown and dependent fields
+            batchSelect.innerHTML = '<option value="">— Select Batch —</option>';
+            ['exp_','pack_','mrp_','rate_','gst_','stock_','total_'].forEach(pfx => {
+                const el = document.getElementById(pfx + id);
+                if (el) el.value = '';
+            });
+
             if (!productVal) return;
 
-            const map = buildMedicineMap();
-            const match = map[productVal.toLowerCase()];
-            if (!match) return;
+            const batches = getBatchesForProduct(productVal);
+            if (batches.length === 0) return;
 
-            // Check if this medicine and batch is already in another row
+            // Populate batch dropdown options
+            batches.forEach(p => {
+                const stock = getStock(p.productName, p.batchNo);
+                const opt = document.createElement('option');
+                opt.value = p.batchNo;
+                opt.textContent = `${p.batchNo}  |  Exp: ${p.expireDate || '-'}  |  Stock: ${stock}`;
+                batchSelect.appendChild(opt);
+            });
+
+            // If only one batch, auto-select it
+            if (batches.length === 1) {
+                batchSelect.value = batches[0].batchNo;
+                selectBatch(id);
+            } else {
+                batchSelect.focus();
+            }
+        }
+
+        /* -- Called when user picks a batch from the dropdown -- */
+        function selectBatch(id) {
+            const productInput = document.getElementById('product_' + id);
+            const batchSelect  = document.getElementById('batch_' + id);
+            if (!productInput || !batchSelect) return;
+
+            const productVal = productInput.value.trim();
+            const batchVal   = batchSelect.value.trim();
+            if (!productVal || !batchVal) return;
+
+            // Check if this medicine+batch is already in another row
             let isDuplicate = false;
             document.querySelectorAll('[id^="product_"]').forEach(el => {
                 if (el.id !== 'product_' + id) {
                     const rowId = el.id.split('_')[1];
-                    const batchInput = document.getElementById('batch_' + rowId);
-                    if (el.value.trim().toLowerCase() === match.productName.trim().toLowerCase() &&
-                        batchInput && batchInput.value.trim().toLowerCase() === (match.batchNo || '').trim().toLowerCase()) {
+                    const otherBatch = document.getElementById('batch_' + rowId);
+                    if (el.value.trim().toLowerCase() === productVal.toLowerCase() &&
+                        otherBatch && otherBatch.value.trim().toLowerCase() === batchVal.toLowerCase()) {
                         isDuplicate = true;
                     }
                 }
             });
-
             if (isDuplicate) {
-                alert('This medicine (with this batch) is already added to the bill.');
-                productInput.value = '';
+                alert('This medicine with this batch is already in the bill.');
+                batchSelect.value = '';
                 return;
             }
 
-            // Clean product name back to base name
-            productInput.value = match.productName;
+            // Find the purchase record for this product+batch
+            const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+            const match = purchases.find(p =>
+                (p.productName || '').trim().toLowerCase() === productVal.toLowerCase() &&
+                (p.batchNo     || '').trim().toLowerCase() === batchVal.toLowerCase()
+            );
+            if (!match) return;
 
             const purchaseMrp  = parseFloat(match.mrp)  || 0;
             const purchasePack = parseFloat(match.pack) || 1;
@@ -937,14 +992,12 @@
                 : purchaseMrp;
 
             const fields = [
-                { el: document.getElementById('batch_' + id),    val: match.batchNo      || '' },
-                { el: document.getElementById('exp_'   + id),    val: match.expireDate    || '' },
-                { el: document.getElementById('pack_'  + id),    val: match.pack          || '' },
-                { el: document.getElementById('mrp_'   + id),    val: salesMrp > 0 ? salesMrp : '' },
-                { el: document.getElementById('rate_'  + id),    val: match.rate          || '' },
-                { el: document.getElementById('gst_'   + id),    val: match.gst           || '' },
+                { el: document.getElementById('exp_'  + id), val: match.expireDate || '' },
+                { el: document.getElementById('pack_' + id), val: match.pack        || '' },
+                { el: document.getElementById('mrp_'  + id), val: salesMrp > 0 ? salesMrp : '' },
+                { el: document.getElementById('rate_' + id), val: match.rate        || '' },
+                { el: document.getElementById('gst_'  + id), val: match.gst         || '' },
             ];
-
             fields.forEach(({ el, val }) => {
                 if (!el) return;
                 el.value = val;
@@ -957,8 +1010,6 @@
                 flashCell(stockEl);
                 checkStockOnQtyChange(id);
             }
-
-            // Recalc total with the newly filled rate/gst
             calcRowTotal(id);
         }
 
@@ -1059,7 +1110,7 @@
                         autocomplete="off" style="min-width:150px;"
                         onchange="autoFillRow(${id})">
                 </td>
-                <td><input class="t-input" id="batch_${id}" type="text" placeholder="Batch No" style="min-width:90px;"></td>
+                <td><select class="t-input" id="batch_${id}" style="min-width:120px;" onchange="selectBatch(${id})"><option value="">— Select Batch —</option></select></td>
                 <td><input class="t-input" id="exp_${id}"   type="month" style="min-width:120px;"></td>
                 <td><input class="t-input" id="pack_${id}"  type="number" placeholder="-" min="1" step="1" style="min-width:60px;" title="Units per pack"></td>
                 <td><input class="t-input" id="stock_${id}" type="number" readonly placeholder="0" style="min-width:60px; color:#059669; font-weight:bold;" title="Available Stock"></td>
@@ -1133,19 +1184,36 @@
                     if (!targetId) return; // max rows reached
                 }
 
-                // Fill the row fields
-                const fields = {
-                    ['product_' + targetId]: entry.drugName || '',
-                    ['batch_' + targetId]:   entry.batchNo || '',
-                    ['exp_' + targetId]:     entry.expireDate || '',
-                    ['pack_' + targetId]:    entry.pack || '',
-                    ['qty_' + targetId]:     entry.qty || '',
-                    ['mrp_' + targetId]:     entry.mrp || '',
-                    ['rate_' + targetId]:    entry.rate || '',
-                    ['gst_' + targetId]:     entry.gst || '',
-                };
+                // Set product name and populate the batch dropdown
+                const productEl = document.getElementById('product_' + targetId);
+                if (productEl) {
+                    productEl.value = entry.drugName || '';
+                    flashCell(productEl);
+                }
 
-                Object.entries(fields).forEach(([elId, val]) => {
+                // Build batch dropdown options for this drug
+                const batchSelect = document.getElementById('batch_' + targetId);
+                if (batchSelect && entry.batchNo) {
+                    batchSelect.innerHTML = '<option value="">— Select Batch —</option>';
+                    const opt = document.createElement('option');
+                    opt.value = entry.batchNo;
+                    const stock = getStock(entry.drugName, entry.batchNo);
+                    opt.textContent = `${entry.batchNo}  |  Exp: ${entry.expireDate || '-'}  |  Stock: ${stock}`;
+                    batchSelect.appendChild(opt);
+                    batchSelect.value = entry.batchNo;
+                    flashCell(batchSelect);
+                }
+
+                // Fill remaining fields
+                const otherFields = {
+                    ['exp_' + targetId]:  entry.expireDate || '',
+                    ['pack_' + targetId]: entry.pack || '',
+                    ['qty_' + targetId]:  entry.qty || '',
+                    ['mrp_' + targetId]:  entry.mrp || '',
+                    ['rate_' + targetId]: entry.rate || '',
+                    ['gst_' + targetId]:  entry.gst || '',
+                };
+                Object.entries(otherFields).forEach(([elId, val]) => {
                     const el = document.getElementById(elId);
                     if (el) {
                         el.value = val;
