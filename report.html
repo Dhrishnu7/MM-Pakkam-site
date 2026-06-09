@@ -292,6 +292,68 @@
         }
         .btn-print-report:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,0.4); }
 
+        .btn-backup {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 0.72rem 1.4rem; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 700; font-family: 'Inter', sans-serif;
+            cursor: pointer; border: none;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white; box-shadow: 0 4px 14px rgba(2,132,199,0.3);
+            transition: all 0.25s ease; white-space: nowrap;
+        }
+        .btn-backup:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(2,132,199,0.4); }
+        .btn-restore {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 0.72rem 1.4rem; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 700; font-family: 'Inter', sans-serif;
+            cursor: pointer; border: none;
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white; box-shadow: 0 4px 14px rgba(5,150,105,0.3);
+            transition: all 0.25s ease; white-space: nowrap;
+        }
+        .btn-restore:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(5,150,105,0.4); }
+
+        /* Restore modal */
+        .restore-overlay {
+            position: fixed; inset: 0;
+            background: rgba(15,23,42,0.55); backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .restore-overlay.open { opacity: 1; pointer-events: auto; }
+        .restore-box {
+            background: white; border-radius: 20px; padding: 2rem;
+            width: 92%; max-width: 480px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+            transform: translateY(20px); transition: transform 0.3s;
+        }
+        .restore-overlay.open .restore-box { transform: translateY(0); }
+        .restore-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem; }
+        .restore-sub   { font-size: 0.85rem; color: #64748b; margin-bottom: 1.4rem; }
+        .restore-log {
+            background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px;
+            padding: 1rem; font-family: monospace; font-size: 0.8rem;
+            min-height: 100px; max-height: 220px; overflow-y: auto;
+            color: #334155; margin-bottom: 1.2rem; white-space: pre-wrap;
+        }
+        .restore-log .rlog-ok  { color: #059669; }
+        .restore-log .rlog-err { color: #dc2626; }
+        .restore-log .rlog-info{ color: #64748b; }
+        .restore-actions { display: flex; gap: 0.8rem; justify-content: flex-end; }
+        .btn-restore-confirm {
+            padding: 0.65rem 1.4rem; border-radius: 10px; border: none;
+            background: linear-gradient(135deg,#059669,#047857); color: white;
+            font-weight: 700; font-family:'Inter',sans-serif; cursor: pointer;
+            font-size: 0.9rem; transition: opacity 0.2s;
+        }
+        .btn-restore-confirm:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-restore-cancel {
+            padding: 0.65rem 1.4rem; border-radius: 10px;
+            border: 1.5px solid #e2e8f0; background: white;
+            font-weight: 700; font-family:'Inter',sans-serif; cursor: pointer;
+            font-size: 0.9rem; color: #64748b;
+        }
+
         /* ── Expiry Checker ── */
         .expiry-section {
             width: 100%; max-width: 860px;
@@ -692,6 +754,32 @@
                     </svg>
                     Print Report
                 </button>
+                <button class="btn-backup" onclick="backupData()" title="Download all your data as a backup file">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    Backup
+                </button>
+                <button class="btn-restore" onclick="document.getElementById('restoreFileInput').click()" title="Restore data from a backup file">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    Restore
+                </button>
+                <input type="file" id="restoreFileInput" accept=".json" style="display:none" onchange="loadRestoreFile(event)">
+            </div>
+        </div>
+
+        <!-- Restore Modal -->
+        <div class="restore-overlay" id="restoreOverlay">
+            <div class="restore-box">
+                <div class="restore-title">🔄 Restore Backup</div>
+                <div class="restore-sub" id="restoreSub">Review the backup data below, then click Restore to push it back to the database.</div>
+                <div class="restore-log" id="restoreLog">Loading backup file...</div>
+                <div class="restore-actions">
+                    <button class="btn-restore-cancel" onclick="closeRestoreModal()">Cancel</button>
+                    <button class="btn-restore-confirm" id="restoreConfirmBtn" onclick="confirmRestore()" disabled>Restore Data</button>
+                </div>
             </div>
         </div>
 
@@ -2047,7 +2135,165 @@
             `);
             printWindow.document.close();
         }
+
+        // ══════════════════════════════════════
+        // BACKUP & RESTORE
+        // ══════════════════════════════════════
+        let _restorePayload = null;
+
+        async function backupData() {
+            const btn = document.querySelector('.btn-backup');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Backing up...';
+
+            try {
+                // Fetch ALL data (no date filter) for this user
+                const [bills, purchases] = await Promise.all([
+                    dbGetBills(),
+                    dbGetPurchases()
+                ]);
+
+                const session = mmCurrentUser();
+                const backup = {
+                    version:   '1.0',
+                    createdAt: new Date().toISOString(),
+                    user:      session ? session.username : 'unknown',
+                    bills:     bills     || [],
+                    purchases: purchases || []
+                };
+
+                const json = JSON.stringify(backup, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                const dateStr = new Date().toISOString().slice(0, 10);
+                a.href     = url;
+                a.download = `mm-backup-${dateStr}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                btn.innerHTML = '✅ Saved!';
+                setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+            } catch (e) {
+                alert('❌ Backup failed: ' + e.message);
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }
+        }
+
+        function loadRestoreFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            // Reset input so same file can be picked again
+            event.target.value = '';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (!data.bills || !data.purchases) throw new Error('Invalid backup file format.');
+
+                    _restorePayload = data;
+
+                    // Show modal with summary
+                    const log = document.getElementById('restoreLog');
+                    log.innerHTML = '';
+                    addRLog(`📅 Backup created: ${new Date(data.createdAt).toLocaleString('en-IN')}`, 'info');
+                    addRLog(`👤 User: ${data.user || 'unknown'}`, 'info');
+                    addRLog(``, 'info');
+                    addRLog(`📦 Purchases: ${data.purchases.length} records`, 'ok');
+                    addRLog(`🧾 Sales Bills: ${data.bills.length} records`, 'ok');
+                    addRLog(``, 'info');
+                    addRLog(`⚠️  This will ADD these records back to the database.`, 'info');
+                    addRLog(`   Existing data will NOT be deleted.`, 'info');
+
+                    document.getElementById('restoreConfirmBtn').disabled = false;
+                    document.getElementById('restoreOverlay').classList.add('open');
+                } catch(err) {
+                    alert('❌ Could not read backup file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function addRLog(msg, type) {
+            const log = document.getElementById('restoreLog');
+            const div = document.createElement('div');
+            div.className = 'rlog-' + type;
+            div.textContent = msg;
+            log.appendChild(div);
+        }
+
+        function closeRestoreModal() {
+            document.getElementById('restoreOverlay').classList.remove('open');
+            _restorePayload = null;
+        }
+
+        async function confirmRestore() {
+            if (!_restorePayload) return;
+            const btn = document.getElementById('restoreConfirmBtn');
+            btn.disabled = true;
+            btn.textContent = 'Restoring...';
+
+            const { bills, purchases } = _restorePayload;
+            let okP = 0, failP = 0, okB = 0, failB = 0;
+
+            // Restore purchases
+            addRLog(`\n⏳ Restoring ${purchases.length} purchases...`, 'info');
+            for (const p of purchases) {
+                const res = await dbAddPurchase({
+                    billNo:      p.bill_no      || '',
+                    firm:        p.firm         || '',
+                    date:        p.date         || '',
+                    productName: p.product_name || '',
+                    batchNo:     p.batch_no     || '',
+                    expireDate:  p.expire_date  || '',
+                    quantity:    p.quantity     || 0,
+                    mrp:         p.mrp          || 0,
+                    rate:        p.rate         || 0,
+                    gst:         p.gst          || 0,
+                });
+                if (res && res.success) okP++; else failP++;
+            }
+            addRLog(`  ✅ ${okP} purchases restored${failP ? ', ❌ ' + failP + ' failed' : ''}`, okP > 0 ? 'ok' : 'err');
+
+            // Restore bills
+            addRLog(`⏳ Restoring ${bills.length} sales bills...`, 'info');
+            for (const b of bills) {
+                const res = await dbSaveBill({
+                    billNo:       b.bill_no       || '',
+                    date:         b.date          || '',
+                    customerName: b.customer_name || '',
+                    doctorName:   b.doctor_name   || '',
+                    grandTotal:   b.grand_total   || 0,
+                    medicines:    (b.bill_items || []).map(m => ({
+                        product:  m.product  || '',
+                        batch:    m.batch    || '',
+                        exp:      m.exp      || '',
+                        qty:      m.qty      || 0,
+                        mrp:      m.mrp      || 0,
+                        rate:     m.rate     || 0,
+                        gst:      m.gst      || 0,
+                        discount: m.discount || 0,
+                        total:    m.total    || 0,
+                    }))
+                });
+                if (res && res.success) okB++; else failB++;
+            }
+            addRLog(`  ✅ ${okB} bills restored${failB ? ', ❌ ' + failB + ' failed' : ''}`, okB > 0 ? 'ok' : 'err');
+
+            addRLog(`\n🎉 Restore complete! Reloading report...`, 'ok');
+            btn.textContent = '✅ Done!';
+
+            // Reload data
+            setTimeout(async () => {
+                closeRestoreModal();
+                await loadData();
+            }, 1800);
+        }
     </script>
+
 
     <script>
         if ('serviceWorker' in navigator) {
