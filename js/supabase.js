@@ -54,9 +54,21 @@ async function dbGetCustomers() {
 }
 async function dbAddCustomer(name, phone, address) {
     const user = _currentUser();
+    const cName = name.trim();
+    const cPhone = phone.trim();
+    
+    // Check for existing
+    const { data: existing } = await _supabase.from('customers')
+        .select('*')
+        .eq('name', cName)
+        .eq('phone', cPhone)
+        .eq('user_id', user)
+        .maybeSingle();
+        
+    if (existing) return { success: true, data: existing };
+
     const { data, error } = await _supabase.from('customers')
-        .upsert({ name: name.trim(), phone: phone.trim(), address: address?.trim() || '', user_id: user },
-                 { onConflict: 'name,phone,user_id', ignoreDuplicates: true })
+        .insert({ name: cName, phone: cPhone, address: address?.trim() || '', user_id: user })
         .select();
     if (error) { console.error('customer add:', error); return { success: false, message: error.message }; }
     return { success: true, data: data?.[0] || null };
@@ -82,9 +94,21 @@ async function dbGetDoctors() {
 }
 async function dbAddDoctor(name, phone, clinic, address) {
     const user = _currentUser();
+    const dName = name.trim();
+    const dPhone = phone.trim();
+
+    // Check for existing
+    const { data: existing } = await _supabase.from('doctors')
+        .select('*')
+        .eq('name', dName)
+        .eq('phone', dPhone)
+        .eq('user_id', user)
+        .maybeSingle();
+
+    if (existing) return { success: true, data: existing };
+
     const { data, error } = await _supabase.from('doctors')
-        .upsert({ name: name.trim(), phone: phone.trim(), clinic: clinic?.trim() || '', address: address?.trim() || '', user_id: user },
-                 { onConflict: 'name,phone,user_id', ignoreDuplicates: true })
+        .insert({ name: dName, phone: dPhone, clinic: clinic?.trim() || '', address: address?.trim() || '', user_id: user })
         .select();
     if (error) { console.error('doctor add:', error); return { success: false, message: error.message }; }
     return { success: true, data: data?.[0] || null };
@@ -110,10 +134,21 @@ async function dbGetMedicines() {
 }
 async function dbImportMedicines(nameArray) {
     const user = _currentUser();
-    const rows = [...new Set(nameArray.map(n => n.trim()).filter(Boolean))].map(name => ({ name, user_id: user }));
-    const { error } = await _supabase.from('medicines').upsert(rows, { onConflict: 'name,user_id', ignoreDuplicates: true });
-    if (error) console.error('medicine import:', error);
-    return !error;
+    const cleanNames = [...new Set(nameArray.map(n => n.trim()).filter(Boolean))];
+    
+    // Fetch existing to avoid duplicates
+    const { data: existing } = await _supabase.from('medicines').select('name').eq('user_id', user);
+    const existingSet = new Set((existing || []).map(m => m.name.toLowerCase()));
+    
+    const toInsert = cleanNames
+        .filter(n => !existingSet.has(n.toLowerCase()))
+        .map(name => ({ name, user_id: user }));
+
+    if (toInsert.length > 0) {
+        const { error } = await _supabase.from('medicines').insert(toInsert);
+        if (error) { console.error('medicine import:', error); return false; }
+    }
+    return true;
 }
 
 /* ─────────────────────────────────────────────────────
