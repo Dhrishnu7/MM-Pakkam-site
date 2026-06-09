@@ -1630,12 +1630,25 @@
                 try {
                     if (item.type === 'purchase') {
                         const d = item.data;
+                        const pName = d.product_name || d.productName || '';
+                        const bName = d.batch_no || d.batchNo || '';
+                        const isDup = Object.values(_rawPurchasesMap).some(p => 
+                            (p.bill_no || p.billNo) === (d.bill_no || d.billNo) &&
+                            (p.product_name || p.productName) === pName &&
+                            (p.batch_no || p.batchNo) === bName
+                        );
+                        if (isDup) {
+                            const currentBin = getBin();
+                            saveBin(currentBin.filter(x => x.binId !== item.binId));
+                            continue;
+                        }
+
                         const res = await dbAddPurchase({
                             billNo:      d.bill_no      || d.billNo      || '',
                             firm:        d.firm         || '',
                             date:        d.date         || '',
-                            productName: d.product_name || d.productName || '',
-                            batchNo:     d.batch_no     || d.batchNo     || '',
+                            productName: pName,
+                            batchNo:     bName,
                             expireDate:  d.expire_date  || d.expireDate  || '',
                             pack:        d.pack         || 0,
                             quantity:    d.quantity     || 0,
@@ -1646,6 +1659,17 @@
                         ok = res && res.success;
                     } else {
                         const d = item.data;
+                        const isDup = Object.values(_rawBillsMap).some(b => 
+                            b.date === d.date &&
+                            (b.customer_name || b.customerName) === (d.customer_name || d.customerName) &&
+                            (b.grand_total || b.grandTotal) === (d.grand_total || d.grandTotal)
+                        );
+                        if (isDup) {
+                            const currentBin = getBin();
+                            saveBin(currentBin.filter(x => x.binId !== item.binId));
+                            continue;
+                        }
+
                         const payload = {
                             billNo:       d.bill_no       || d.billNo       || '',
                             date:         d.date          || '',
@@ -1693,12 +1717,26 @@
             try {
                 if (item.type === 'purchase') {
                     const d = item.data;
+                    const pName = d.product_name || d.productName || '';
+                    const bName = d.batch_no || d.batchNo || '';
+                    const isDup = Object.values(_rawPurchasesMap).some(p => 
+                        (p.bill_no || p.billNo) === (d.bill_no || d.billNo) &&
+                        (p.product_name || p.productName) === pName &&
+                        (p.batch_no || p.batchNo) === bName
+                    );
+                    if (isDup) {
+                        saveBin(bin.filter(x => x.binId !== binId));
+                        showToast('✅ Already restored!', 'success');
+                        renderBin();
+                        return;
+                    }
+
                     const res = await dbAddPurchase({
                         billNo:      d.bill_no      || d.billNo      || '',
                         firm:        d.firm         || '',
                         date:        d.date         || '',
-                        productName: d.product_name || d.productName || '',
-                        batchNo:     d.batch_no     || d.batchNo     || '',
+                        productName: pName,
+                        batchNo:     bName,
                         expireDate:  d.expire_date  || d.expireDate  || '',
                         quantity:    d.quantity     || 0,
                         mrp:         d.mrp          || 0,
@@ -1708,6 +1746,18 @@
                     ok = res && res.success;
                 } else {
                     const d = item.data;
+                    const isDup = Object.values(_rawBillsMap).some(b => 
+                        b.date === d.date &&
+                        (b.customer_name || b.customerName) === (d.customer_name || d.customerName) &&
+                        (b.grand_total || b.grandTotal) === (d.grand_total || d.grandTotal)
+                    );
+                    if (isDup) {
+                        saveBin(bin.filter(x => x.binId !== binId));
+                        showToast('✅ Already restored!', 'success');
+                        renderBin();
+                        return;
+                    }
+
                     const payload = {
                         billNo:       d.bill_no       || d.billNo       || '',
                         date:         d.date          || '',
