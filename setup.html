@@ -591,6 +591,41 @@
                     <span id="btnText">Create New Account</span>
                 </button>
 
+                <!-- ── RESTORED: START FRESH OPTION ── -->
+                <div class="or-divider"><span>OR</span></div>
+                
+                <div class="mode-badge" style="background:linear-gradient(135deg, rgba(239,68,68,0.18), rgba(239,68,68,0.08));border:1px solid rgba(239,68,68,0.35);color:#f87171;">
+                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    New Store Setup
+                </div>
+                
+                <div class="card-heading" style="margin-top:0.8rem;">
+                    <h1>Start Fresh for New Store</h1>
+                    <p style="color:rgba(148,163,184,0.9);">To set up this app for a completely new store, you can wipe the existing data and start over.</p>
+                </div>
+                
+                <div class="danger-box">
+                    <svg width="18" height="18" fill="none" stroke="#fca5a5" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:2px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <p><strong>Warning:</strong> This cannot be undone. All accounts, purchase records, sales bills, and customer data on this device will be <strong>permanently deleted</strong>.</p>
+                </div>
+                
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <label for="resetConfirm">Type RESET to confirm wipe</label>
+                    <input type="text" id="resetConfirm" class="confirm-input" placeholder="Type RESET" autocomplete="off" spellcheck="false" oninput="document.getElementById('resetBtn').disabled = (this.value !== 'RESET');">
+                </div>
+                
+                <button class="submit-btn danger-btn" id="resetBtn" disabled onclick="handleResetApp()" style="background:linear-gradient(135deg,#ef4444,#b91c1c);margin-bottom:0;">
+                    <svg id="resetBtnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    <span id="resetBtnText">Wipe All Data</span>
+                </button>
+                <!-- ── END RESTORED SECTION ── -->
+
                 <div class="back-login">
                     <span>Back to login?</span>
                     <a href="login.html">Sign in</a>
@@ -677,6 +712,31 @@
                 showError('Error creating account. Try again.');
                 resetBtn('Create New Account', false);
             }
+        }
+
+        async function handleResetApp() {
+            const confirmVal = document.getElementById('resetConfirm').value;
+            if (confirmVal !== 'RESET') return;
+            
+            const btn = document.getElementById('resetBtn');
+            const icon = document.getElementById('resetBtnIcon');
+            const text = document.getElementById('resetBtnText');
+            btn.disabled = true;
+            icon.outerHTML = `<svg id="resetBtnIcon" class="spinner" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>`;
+            text.textContent = 'Wiping...';
+
+            // Wait a split second for animation
+            await new Promise(r => setTimeout(r, 600));
+
+            // Execute Factory Reset
+            mmFactoryReset();
+            
+            icon.outerHTML = `<svg id="resetBtnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+            text.textContent = 'App Reset! Reloading...';
+            
+            setTimeout(() => {
+                window.location.replace('setup.html');
+            }, 800);
         }
 
         // ── Init ──
