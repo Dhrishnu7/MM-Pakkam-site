@@ -1733,6 +1733,28 @@
             }
 
             try {
+                // Save everything to Bin before clearing
+                const bin = getBin();
+                const nowStr = new Date().toISOString();
+                let binUpdated = false;
+
+                Object.values(_rawPurchasesMap).forEach(p => {
+                    bin.push({
+                        binId: Date.now() + '_' + Math.random().toString(36).substr(2,5),
+                        type: 'purchase', id: p.id, deletedAt: nowStr, data: p
+                    });
+                    binUpdated = true;
+                });
+                Object.values(_rawBillsMap).forEach(b => {
+                    bin.push({
+                        binId: Date.now() + '_' + Math.random().toString(36).substr(2,5),
+                        type: 'sales', id: b.id, deletedAt: nowStr, data: b
+                    });
+                    binUpdated = true;
+                });
+                
+                if (binUpdated) saveBin(bin);
+
                 const [billsRes, purchasesRes] = await Promise.all([
                     dbDeleteAllBills(),
                     dbDeleteAllPurchases()
