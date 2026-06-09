@@ -194,8 +194,7 @@
         .login-panel {
             flex: 1;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
             background: #0f172a;
             padding: 2rem;
             overflow-y: auto;
@@ -204,6 +203,8 @@
         .login-box {
             width: 100%;
             max-width: 420px;
+            margin: auto;
+            flex-shrink: 0;
             animation: boxIn 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         @keyframes boxIn {
