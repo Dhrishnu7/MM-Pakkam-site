@@ -876,6 +876,9 @@
             </div>
 
             <div style="overflow-x:auto;">
+                <!-- Record count + quick totals badge -->
+                <div id="reportCountBadge" style="display:none; font-size:0.82rem; font-weight:600; color:#475569; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:0.5rem 1rem; margin-bottom:0.8rem; line-height:1.8;"></div>
+
                 <table class="report-table" id="reportTable">
                     <thead>
                         <tr>
@@ -892,6 +895,7 @@
                     <tbody id="reportBody">
                         <!-- Rows injected by JS -->
                     </tbody>
+                    <tfoot id="reportFoot"></tfoot>
                 </table>
             </div>
 
@@ -902,6 +906,7 @@
                 <p>No records found for the selected period.</p>
             </div>
         </div>
+
 
     </div>
 
@@ -1145,9 +1150,13 @@
             const filtered = tab === 'all' ? currentData : currentData.filter(r => r.type === tab);
             const tbody = document.getElementById('reportBody');
             const empty = document.getElementById('emptyState');
+            const tfoot = document.getElementById('reportFoot');
+            const countBadge = document.getElementById('reportCountBadge');
 
             if (filtered.length === 0) {
                 tbody.innerHTML = '';
+                if (tfoot) tfoot.innerHTML = '';
+                if (countBadge) countBadge.style.display = 'none';
                 empty.style.display = 'block';
                 return;
             }
@@ -1166,6 +1175,47 @@
                         ${r.type === 'sales' ? '+' : '-'}₹ ${r.total.toFixed(2)}
                     </td>
                 </tr>`).join('');
+
+            // ── Totals footer ──
+            const totalQty    = filtered.reduce((s, r) => s + r.qty,   0);
+            const salesTotal  = filtered.filter(r => r.type === 'sales')   .reduce((s, r) => s + r.total, 0);
+            const purchTotal  = filtered.filter(r => r.type === 'purchase').reduce((s, r) => s + r.total, 0);
+            const netTotal    = salesTotal - purchTotal;
+            const showNet     = tab === 'all';
+
+            if (tfoot) {
+                tfoot.innerHTML = `
+                    <tr style="background: linear-gradient(135deg, #1e293b, #0f172a); color: white;">
+                        <td colspan="4" style="padding: 0.9rem 1rem; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.7);">
+                            ${filtered.length} Record${filtered.length !== 1 ? 's' : ''} Total
+                        </td>
+                        <td style="padding: 0.9rem 1rem; font-size: 1rem; font-weight: 800; color: #a5f3fc;">${totalQty}</td>
+                        <td style="padding: 0.9rem 1rem;"></td>
+                        <td style="padding: 0.9rem 1rem;"></td>
+                        <td style="padding: 0.9rem 1rem; font-size: 1rem; font-weight: 800; white-space: nowrap;">
+                            ${showNet
+                                ? `<span style="color:${netTotal >= 0 ? '#4ade80' : '#f87171'}">${netTotal >= 0 ? '+' : ''}₹ ${netTotal.toFixed(2)}</span>
+                                   <div style="font-size:0.72rem; font-weight:600; margin-top:3px; color:rgba(255,255,255,0.55);">
+                                       <span style="color:#4ade80;">▲ ₹${salesTotal.toFixed(2)}</span>
+                                       &nbsp;·&nbsp;
+                                       <span style="color:#f87171;">▼ ₹${purchTotal.toFixed(2)}</span>
+                                   </div>`
+                                : `<span style="color:${tab === 'sales' ? '#4ade80' : '#f87171'}">
+                                       ${tab === 'sales' ? '+' : '-'}₹ ${(tab === 'sales' ? salesTotal : purchTotal).toFixed(2)}
+                                   </span>`
+                            }
+                        </td>
+                    </tr>`;
+            }
+
+            // ── Record count badge above table ──
+            if (countBadge) {
+                const badgeText = tab === 'all'
+                    ? `${filtered.length} records &nbsp;·&nbsp; Sales: <span style="color:#059669;font-weight:800;">₹${salesTotal.toFixed(2)}</span> &nbsp;·&nbsp; Purchase: <span style="color:#dc2626;font-weight:800;">₹${purchTotal.toFixed(2)}</span> &nbsp;·&nbsp; Net: <span style="color:${netTotal>=0?'#059669':'#dc2626'};font-weight:800;">${netTotal>=0?'+':''}₹${netTotal.toFixed(2)}</span>`
+                    : `${filtered.length} records &nbsp;·&nbsp; Total: <span style="color:${tab==='sales'?'#059669':'#dc2626'};font-weight:800;">${tab==='sales'?'+':'-'}₹${(tab==='sales'?salesTotal:purchTotal).toFixed(2)}</span>`;
+                countBadge.innerHTML = badgeText;
+                countBadge.style.display = 'block';
+            }
         }
 
         function updateSummary(data) {
