@@ -664,18 +664,12 @@
             setBtnLoading('Creating account…');
 
             try {
-                // Get existing users and check for duplicates
-                const users = mmGetUsers();
-                if (users.find(u => u.username.toLowerCase() === newUser.toLowerCase())) {
-                    showError('Username already exists.');
+                const result = await mmAddOwner(newUser, newPw);
+                if (!result.success) {
+                    showError(result.message);
                     resetBtn('Create New Account', false);
                     return;
                 }
-
-                // Create and append the new account
-                const hash = await mmHashPassword(newPw);
-                users.push({ username: newUser, passwordHash: hash, role: 'owner', createdAt: Date.now() });
-                mmSaveUsers(users);
 
                 setBtnDone('Account created! Redirecting…', true);
                 setTimeout(() => window.location.replace('login.html'), 1200);
