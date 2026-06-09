@@ -1686,8 +1686,12 @@
                         };
                         let res = await dbSaveBill(payload);
                         if (!res || !res.success) {
-                            payload.billNo = ''; // Retry with a newly generated bill number
+                            payload.billNo = ''; // auto-generate
                             res = await dbSaveBill(payload);
+                            if (!res || !res.success) {
+                                payload.billNo = 'MM-' + Date.now().toString().slice(-6); // Guarantee uniqueness
+                                res = await dbSaveBill(payload);
+                            }
                         }
                         ok = res && res.success;
                     }
@@ -1776,6 +1780,10 @@
                     if (!res || !res.success) {
                         payload.billNo = ''; // Retry with new bill no
                         res = await dbSaveBill(payload);
+                        if (!res || !res.success) {
+                            payload.billNo = 'MM-' + Date.now().toString().slice(-6); // Guarantee uniqueness
+                            res = await dbSaveBill(payload);
+                        }
                     }
                     ok = res && res.success;
                 }
@@ -2837,11 +2845,11 @@
                 const payload = {
                     billNo:       b.bill_no       || '',
                     date:         b.date          || '',
-                    customerName: b.customer_name || '',
-                    doctorName:   b.doctor_name   || '',
-                    grandTotal:   b.grand_total   || 0,
-                    medicines:    (b.bill_items || []).map(m => ({
-                        product:  m.product  || '',
+                    customerName: b.customer_name || b.customerName || '',
+                    doctorName:   b.doctor_name   || b.doctorName || '',
+                    grandTotal:   b.grand_total   || b.grandTotal || 0,
+                    medicines:    (b.bill_items || b.medicines || []).map(m => ({
+                        product:  m.product  || m.productName || '',
                         batch:    m.batch    || '',
                         exp:      m.exp      || '',
                         pack:     m.pack     || 0,
@@ -2856,11 +2864,18 @@
                 
                 let res = await dbSaveBill(payload);
                 if (!res || !res.success) {
-                    payload.billNo = ''; // Retry with new bill no
+                    payload.billNo = ''; // Retry with new auto-generated bill no
                     res = await dbSaveBill(payload);
+                    if (!res || !res.success) {
+                        payload.billNo = 'MM-' + Date.now().toString().slice(-6); // Guarantee uniqueness
+                        res = await dbSaveBill(payload);
+                    }
                 }
                 
-                if (res && res.success) okB++; else failB++;
+                if (res && res.success) okB++; else {
+                    console.error("Failed to restore bill:", b, res);
+                    failB++;
+                }
             }
             addRLog(`  ✅ ${okB} bills restored${failB ? ', ❌ ' + failB + ' failed' : ''}`, okB > 0 ? 'ok' : 'err');
 
