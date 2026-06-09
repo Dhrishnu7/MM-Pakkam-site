@@ -216,7 +216,7 @@ async function dbSaveBill(bill) {
     const user = _currentUser();
     const billNo = bill.billNo || await dbNextBillNo();
 
-    const { data: billRow, error: billErr } = await _supabase.from('bills').insert({
+    let { data: billRow, error: billErr } = await _supabase.from('bills').insert({
         bill_no:       billNo,
         date:          bill.date,
         customer_name: bill.customerName || '',
@@ -225,7 +225,25 @@ async function dbSaveBill(bill) {
         user_id:       user,
     }).select().single();
 
-    if (billErr) { console.error('bill save:', billErr); return { success: false, message: billErr.message }; }
+    if (billErr) {
+        // Fallback: If there's a unique constraint violation, auto-generate a fallback ID
+        billNo = 'MM-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random()*1000);
+        let retry = await _supabase.from('bills').insert({
+            bill_no:       billNo,
+            date:          bill.date,
+            customer_name: bill.customerName || '',
+            doctor_name:   bill.doctorName   || '',
+            grand_total:   parseFloat(String(bill.grandTotal).replace(/[^0-9.]/g,'')) || 0,
+            user_id:       user,
+        }).select().single();
+        
+        if (retry.error) {
+            console.error('bill save retry failed:', retry.error);
+            return { success: false, message: retry.error.message };
+        }
+        billRow = retry.data;
+        billErr = null;
+    }
 
     // Insert medicine line items
     const items = (bill.medicines || []).map(m => ({
@@ -298,3 +316,112 @@ async function dbDeleteAllPurchases() {
         return { ok: true };
     } catch(e) { return { ok: false, msg: e.message }; }
 }
+
+/* ─────────────────────────────────────────────────────
+   OFFLINE DATA MIGRATION
+───────────────────────────────────────────────────── */
+// Automatically migrate legacy offline data to Supabase if Supabase is empty
+(async function autoMigrateOfflineData() {
+    // Only run if user is logged in
+    const user = _currentUser();
+    if (!user) return;
+
+    const migratedKey = 'mm_offline_migrated_' + user;
+    if (localStorage.getItem(migratedKey) === 'true') return;
+
+    // Check if there is anything to migrate
+    const rawSales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+    const rawPurchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+
+    if (rawSales.length === 0 && rawPurchases.length === 0) {
+        localStorage.setItem(migratedKey, 'true');
+        return;
+    }
+
+    try {
+        // Check if Supabase has data
+        const { count: billsCount } = await _supabase.from('bills').select('*', { count: 'exact', head: true }).eq('user_id', user);
+        const { count: purchasesCount } = await _supabase.from('purchases').select('*', { count: 'exact', head: true }).eq('user_id', user);
+
+        if ((billsCount || 0) === 0 && (purchasesCount || 0) === 0) {
+            console.log("[Migration] Found legacy offline data and empty cloud. Migrating now...");
+            // Migrate Purchases
+            for (const p of rawPurchases) {
+                // Ensure field mappings are compatible
+                await dbAddPurchase({
+                    billNo: p.billNo || p.bill_no,
+                    firm: p.firm,
+                    date: p.date,
+                    productName: p.productName || p.product_name || p.product,
+                    batchNo: p.batchNo || p.batch_no || p.batch,
+                    expireDate: p.expireDate || p.expire_date || p.exp,
+                    quantity: p.quantity || p.qty,
+                    mrp: p.mrp,
+                    rate: p.rate,
+                    gst: p.gst
+                });
+            }
+            // Migrate Sales
+            for (const b of rawSales) {
+                await dbSaveBill({
+                    billNo: b.billNo || b.bill_no,
+                    date: b.date,
+                    customerName: b.customerName || b.customer_name,
+                    doctorName: b.doctorName || b.doctor_name,
+                    grandTotal: b.grandTotal || b.grand_total,
+                    medicines: b.medicines || b.bill_items || []
+                });
+            }
+            console.log("[Migration] Legacy offline data successfully synced to Supabase.");
+        }
+        localStorage.setItem(migratedKey, 'true');
+    } catch(e) {
+        console.error("[Migration] Auto migration failed:", e);
+    }
+})();
+
+// Automatically sync any failed/offline saves from the pending queue
+(async function syncPendingOfflineData() {
+    const user = _currentUser();
+    if (!user) return;
+
+    // Sync pending sales
+    try {
+        const pendingSales = JSON.parse(localStorage.getItem('mm_pending_sales') || '[]');
+        if (pendingSales.length > 0) {
+            console.log(`[Offline Sync] Attempting to sync ${pendingSales.length} pending sales...`);
+            let remaining = [];
+            for (const bill of pendingSales) {
+                const res = await dbSaveBill(bill);
+                if (!res.success) {
+                    console.error("[Offline Sync] Failed to sync bill:", bill.billNo, res.message);
+                    remaining.push(bill); // Keep in queue
+                }
+            }
+            localStorage.setItem('mm_pending_sales', JSON.stringify(remaining));
+            if (remaining.length < pendingSales.length) {
+                console.log(`[Offline Sync] Successfully synced ${pendingSales.length - remaining.length} sales.`);
+            }
+        }
+    } catch(e) { console.error("[Offline Sync] Sales sync failed:", e); }
+
+    // Sync pending purchases
+    try {
+        const pendingPurchases = JSON.parse(localStorage.getItem('mm_pending_purchases') || '[]');
+        if (pendingPurchases.length > 0) {
+            console.log(`[Offline Sync] Attempting to sync ${pendingPurchases.length} pending purchases...`);
+            let remaining = [];
+            for (const p of pendingPurchases) {
+                const res = await dbAddPurchase(p);
+                if (!res.success) {
+                    console.error("[Offline Sync] Failed to sync purchase:", p.productName, res.message);
+                    remaining.push(p); // Keep in queue
+                }
+            }
+            localStorage.setItem('mm_pending_purchases', JSON.stringify(remaining));
+            if (remaining.length < pendingPurchases.length) {
+                console.log(`[Offline Sync] Successfully synced ${pendingPurchases.length - remaining.length} purchases.`);
+            }
+        }
+    } catch(e) { console.error("[Offline Sync] Purchases sync failed:", e); }
+})();

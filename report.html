@@ -1196,8 +1196,9 @@
                     _rawBillsMap = {};
                     dbBills.forEach(b => { _rawBillsMap[b.id] = b; });
 
-                    // Sync back to localStorage so that Expiry Checker and other page features work
-                    const localPurchases = dbPurchases.map(p => ({
+                    // Merge offline pending queues so they don't vanish from the UI before sync completes
+                    const pendingPurchases = JSON.parse(localStorage.getItem('mm_pending_purchases') || '[]');
+                    const localPurchases = [...dbPurchases.map(p => ({
                         billNo: p.bill_no,
                         firm: p.firm,
                         date: p.date,
@@ -1209,10 +1210,11 @@
                         rate: p.rate,
                         gst: p.gst,
                         savedAt: p.saved_at
-                    }));
+                    })), ...pendingPurchases];
                     localStorage.setItem('mm_purchases', JSON.stringify(localPurchases));
 
-                    const localSales = dbBills.map(b => ({
+                    const pendingSales = JSON.parse(localStorage.getItem('mm_pending_sales') || '[]');
+                    const localSales = [...dbBills.map(b => ({
                         billNo: b.bill_no,
                         date: b.date,
                         customerName: b.customer_name,
@@ -1230,7 +1232,7 @@
                             total: m.total
                         })),
                         savedAt: b.saved_at
-                    }));
+                    })), ...pendingSales];
                     localStorage.setItem('mm_sales', JSON.stringify(localSales));
                 }
             } catch (err) {
@@ -1255,6 +1257,26 @@
                         gst: gst,
                         total: total
                     };
+                });
+                
+                // Also map pending purchases for UI
+                const pendingPurchases = JSON.parse(localStorage.getItem('mm_pending_purchases') || '[]');
+                pendingPurchases.forEach(p => {
+                    const qty = parseFloat(p.quantity) || 0;
+                    const rate = parseFloat(p.rate) || 0;
+                    const gst = parseFloat(p.gst) || 0;
+                    const total = (qty * rate) * (1 + (gst / 100));
+                    mappedPurchases.push({
+                        id:     'pending_' + Math.random(),
+                        billNo: (p.billNo || '-') + ' 🔄', // Indicate pending sync
+                        date:   p.date || '',
+                        type:   'purchase',
+                        product: p.productName || '-',
+                        qty: qty,
+                        rate: rate,
+                        gst: gst,
+                        total: total
+                    });
                 });
             } else {
                 const rawPurchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
@@ -1284,6 +1306,26 @@
                             mappedSales.push({
                                 id:     bill.id,
                                 billNo: bill.bill_no || '-',
+                                date:   bill.date || '',
+                                type:   'sales',
+                                product: m.product || '-',
+                                qty:   parseFloat(m.qty)   || 0,
+                                rate:  parseFloat(m.rate)  || 0,
+                                gst:   parseFloat(m.gst)   || 0,
+                                total: parseFloat(m.total) || 0
+                            });
+                        });
+                    }
+                });
+                
+                // Also map pending sales for UI
+                const pendingSales = JSON.parse(localStorage.getItem('mm_pending_sales') || '[]');
+                pendingSales.forEach(bill => {
+                    if (Array.isArray(bill.medicines)) {
+                        bill.medicines.forEach(m => {
+                            mappedSales.push({
+                                id:     'pending_' + Math.random(),
+                                billNo: (bill.billNo || '-') + ' 🔄', // Indicate pending sync
                                 date:   bill.date || '',
                                 type:   'sales',
                                 product: m.product || '-',

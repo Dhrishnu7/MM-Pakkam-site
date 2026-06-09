@@ -798,6 +798,9 @@
                 } else {
                     failCount++;
                     console.error('Failed to save:', record, result.message);
+                    const pending = JSON.parse(localStorage.getItem('mm_pending_purchases') || '[]');
+                    pending.push(record);
+                    localStorage.setItem('mm_pending_purchases', JSON.stringify(pending));
                 }
 
                 // Also keep localStorage as offline fallback
@@ -813,11 +816,12 @@
                 );
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
             } else {
+                // For any failures, we save them to the pending queue to sync later
                 showToast(
-                    `Partial Save`,
-                    `${successCount} saved, ${failCount} failed. Check console.`
+                    `Saved Offline`,
+                    `${failCount} item(s) saved offline and will sync automatically when online.`
                 );
-                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> ${failCount} Error(s)`;
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> Saved Offline (Pending Sync)`;
             }
 
             setTimeout(() => {

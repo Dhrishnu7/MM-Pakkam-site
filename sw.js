@@ -1,6 +1,6 @@
 // ── MM Pakkam Service Worker ──
 // IMPORTANT: Change CACHE_NAME on every deploy so installed apps get the latest version
-const CACHE_NAME = 'mm-pakkam-v40';
+const CACHE_NAME = 'mm-pakkam-v41';
 
 // Pages and assets to cache for offline use
 const PRECACHE_URLS = [
@@ -18,7 +18,8 @@ const PRECACHE_URLS = [
     '/js/supabase.js',
     '/icon-192.png',
     '/icon-512.png',
-    '/manifest.json'
+    '/manifest.json',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 
 // ── Install: pre-cache all core files ──
@@ -59,8 +60,8 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
-    // Always network-first for Supabase API & CDNs
-    if (url.hostname.includes('supabase') || url.hostname.includes('googleapis') || url.hostname.includes('jsdelivr') || url.hostname.includes('cdnjs')) {
+    // Always network-first for Supabase API endpoints (but NOT the library CDN)
+    if (url.hostname.includes('supabase.co')) {
         event.respondWith(
             fetch(event.request).catch(() =>
                 new Response(JSON.stringify({ error: 'offline' }), {

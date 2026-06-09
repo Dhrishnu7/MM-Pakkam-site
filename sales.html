@@ -1339,7 +1339,11 @@
             if (result.success) {
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
             } else {
-                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> Error: ${result.message || 'Try again'}`;
+                // If failed, push to pending queue to be synced later
+                const pending = JSON.parse(localStorage.getItem('mm_pending_sales') || '[]');
+                pending.push(bill);
+                localStorage.setItem('mm_pending_sales', JSON.stringify(pending));
+                btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> Saved Offline (Pending Sync)`;
             }
 
             setTimeout(() => {
