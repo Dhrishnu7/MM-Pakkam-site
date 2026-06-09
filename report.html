@@ -866,7 +866,7 @@
         <div class="restore-overlay" id="restoreOverlay">
             <div class="restore-box">
                 <div class="restore-title">🔄 Restore Backup</div>
-                <div class="restore-sub" id="restoreSub">Review the backup data below, then click Restore to push it back to the database.</div>
+                <div class="restore-sub" id="restoreSub">This will <strong>ADD</strong> the backup records alongside your existing data — nothing currently in the database will be deleted. Old + New data will both be available.</div>
                 <div class="restore-log" id="restoreLog">Loading backup file...</div>
                 <div class="restore-actions">
                     <button class="btn-restore-cancel" onclick="closeRestoreModal()">Cancel</button>
@@ -1714,9 +1714,17 @@
         }
 
         async function clearAllData() {
-            if (!confirm("Are you sure you want to completely clear ALL Sales and Purchases from the database? This cannot be undone.")) return;
+            if (!confirm(
+                "⚠️ Clear ALL Sales & Purchases?\n\n" +
+                "This will delete:\n" +
+                "  ✗ All purchase records\n" +
+                "  ✗ All sales bills\n\n" +
+                "This will NOT delete:\n" +
+                "  ✓ Medicine list (preserved)\n" +
+                "  ✓ Customers & Doctors\n\n" +
+                "Tip: Take a Backup first!\n\nContinue?"
+            )) return;
 
-            // Disable button and show loading state
             const btn = document.querySelector('.btn-clear-data');
             const origHTML = btn ? btn.innerHTML : '';
             if (btn) {
@@ -1725,7 +1733,6 @@
             }
 
             try {
-                // Delete from Supabase (bill_items cascade from bills)
                 const [billsRes, purchasesRes] = await Promise.all([
                     dbDeleteAllBills(),
                     dbDeleteAllPurchases()
@@ -1739,15 +1746,29 @@
                     return;
                 }
 
-                // Clear localStorage too
-                localStorage.removeItem('mm_sales');
-                localStorage.removeItem('mm_purchases');
+                // Clear only sales & purchases from localStorage
+                // Preserve: mm_medicines, mm_customers, mm_doctors, mm_schedule_h_drugs
+                const keysToRemove = ['mm_sales', 'mm_purchases'];
+                keysToRemove.forEach(k => {
+                    // Also remove user-scoped versions
+                    localStorage.removeItem(k);
+                    // Try scoped key if mmLsGet is available
+                    try {
+                        const session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
+                        if (session) {
+                            localStorage.removeItem(`mm_${session.username}_sales`);
+                            localStorage.removeItem(`mm_${session.username}_purchases`);
+                        }
+                    } catch {}
+                });
 
-                // Reload report
                 allData = [];
                 currentData = [];
+                _rawPurchasesMap = {};
+                _rawBillsMap = {};
                 renderTable(activeTab);
                 updateSummary([]);
+                showToast('✅ Sales & Purchases cleared. Medicine list preserved!', 'success');
                 loadData();
 
             } catch (err) {
