@@ -354,6 +354,19 @@
             font-size: 0.9rem; color: #64748b;
         }
 
+        .btn-row-delete {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 8px;
+            border: 1.5px solid #fecaca; background: #fff5f5;
+            color: #ef4444; cursor: pointer; transition: all 0.2s;
+            padding: 0;
+        }
+        .btn-row-delete:hover {
+            background: #ef4444; color: white; border-color: #ef4444;
+            transform: scale(1.1);
+        }
+        .btn-row-delete:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
         /* ── Expiry Checker ── */
         .expiry-section {
             width: 100%; max-width: 860px;
@@ -978,6 +991,7 @@
                             <th>Rate (₹)</th>
                             <th>GST %</th>
                             <th>Total (₹)</th>
+                            <th style="width:44px;"></th>
                         </tr>
                     </thead>
                     <tbody id="reportBody">
@@ -1124,9 +1138,10 @@
                     const gst = parseFloat(p.gst) || 0;
                     const total = (qty * rate) * (1 + (gst / 100));
                     return {
+                        id:     p.id,
                         billNo: p.bill_no || '-',
-                        date: p.date || '',
-                        type: 'purchase',
+                        date:   p.date || '',
+                        type:   'purchase',
                         product: p.product_name || '-',
                         qty: qty,
                         rate: rate,
@@ -1160,13 +1175,14 @@
                     if (Array.isArray(bill.bill_items)) {
                         bill.bill_items.forEach(m => {
                             mappedSales.push({
+                                id:     bill.id,
                                 billNo: bill.bill_no || '-',
-                                date: bill.date || '',
-                                type: 'sales',
+                                date:   bill.date || '',
+                                type:   'sales',
                                 product: m.product || '-',
-                                qty: parseFloat(m.qty) || 0,
-                                rate: parseFloat(m.rate) || 0,
-                                gst: parseFloat(m.gst) || 0,
+                                qty:   parseFloat(m.qty)   || 0,
+                                rate:  parseFloat(m.rate)  || 0,
+                                gst:   parseFloat(m.gst)   || 0,
                                 total: parseFloat(m.total) || 0
                             });
                         });
@@ -1251,7 +1267,7 @@
             empty.style.display = 'none';
 
             tbody.innerHTML = filtered.map(r => `
-                <tr>
+                <tr id="row-${r.type}-${r.id || r.billNo}">
                     <td><strong>${r.billNo}</strong></td>
                     <td>${formatDate(r.date)}</td>
                     <td><span class="badge-pill ${r.type === 'sales' ? 'badge-sale' : 'badge-purchase'}">${r.type === 'sales' ? 'Sale' : 'Purchase'}</span></td>
@@ -1261,6 +1277,11 @@
                     <td>${r.gst}%</td>
                     <td class="${r.type === 'sales' ? 'amount-positive' : 'amount-negative'}">
                         ${r.type === 'sales' ? '+' : '-'}₹ ${r.total.toFixed(2)}
+                    </td>
+                    <td>
+                        ${r.id ? `<button class="btn-row-delete" onclick="deleteRecord('${r.type}','${r.id}', this)" title="Delete this record">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>` : '<span style="color:#cbd5e1;font-size:0.75rem;">—</span>'}
                     </td>
                 </tr>`).join('');
 
@@ -1304,6 +1325,63 @@
                 countBadge.innerHTML = badgeText;
                 countBadge.style.display = 'block';
             }
+        }
+
+        async function deleteRecord(type, id, btn) {
+            if (!confirm(`Delete this ${type === 'sales' ? 'sale' : 'purchase'} record? This cannot be undone.`)) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '⏳';
+
+            let ok = false;
+            try {
+                if (type === 'sales') {
+                    ok = await dbDeleteBill(id);
+                } else {
+                    ok = await dbDeletePurchase(id);
+                }
+            } catch(e) {
+                console.error('Delete error:', e);
+            }
+
+            if (ok) {
+                // Remove from in-memory arrays
+                allData     = allData.filter(r => !(r.id == id && r.type === type));
+                currentData = currentData.filter(r => !(r.id == id && r.type === type));
+                // Fade out the row
+                const row = btn.closest('tr');
+                if (row) {
+                    row.style.transition = 'opacity 0.35s, transform 0.35s';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(20px)';
+                    setTimeout(() => {
+                        renderTable(activeTab);
+                        updateSummary(currentData);
+                    }, 360);
+                }
+                // Show toast
+                showToast(`✅ ${type === 'sales' ? 'Sale' : 'Purchase'} record deleted.`, 'success');
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+                showToast('❌ Delete failed. Try again.', 'error');
+            }
+        }
+
+        function showToast(msg, type) {
+            let t = document.getElementById('reportToast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'reportToast';
+                t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:0.7rem 1.4rem;border-radius:12px;font-family:Inter,sans-serif;font-size:0.9rem;font-weight:700;z-index:9999;transition:opacity 0.4s;box-shadow:0 8px 24px rgba(0,0,0,0.18);';
+                document.body.appendChild(t);
+            }
+            t.textContent = msg;
+            t.style.background = type === 'success' ? '#059669' : '#dc2626';
+            t.style.color = 'white';
+            t.style.opacity = '1';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.style.opacity = '0', 2800);
         }
 
         function updateSummary(data) {
