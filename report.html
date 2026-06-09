@@ -1646,7 +1646,7 @@
                         ok = res && res.success;
                     } else {
                         const d = item.data;
-                        const res = await dbSaveBill({
+                        const payload = {
                             billNo:       d.bill_no       || d.billNo       || '',
                             date:         d.date          || '',
                             customerName: d.customer_name || d.customerName || '',
@@ -1659,7 +1659,12 @@
                                 gst:      Number(m.gst) || 0, discount: Number(m.discount) || 0,
                                 total:    Number(m.total) || 0
                             }))
-                        });
+                        };
+                        let res = await dbSaveBill(payload);
+                        if (!res || !res.success) {
+                            payload.billNo = ''; // Retry with a newly generated bill number
+                            res = await dbSaveBill(payload);
+                        }
                         ok = res && res.success;
                     }
                 } catch(e) {}
@@ -1703,7 +1708,7 @@
                     ok = res && res.success;
                 } else {
                     const d = item.data;
-                    const res = await dbSaveBill({
+                    const payload = {
                         billNo:       d.bill_no       || d.billNo       || '',
                         date:         d.date          || '',
                         customerName: d.customer_name || d.customerName || '',
@@ -1711,12 +1716,17 @@
                         grandTotal:   d.grand_total   || d.grandTotal   || 0,
                         medicines:    (d.bill_items || d.medicines || []).map(m => ({
                             product:  m.product  || '', batch:    m.batch    || '',
-                            exp:      m.exp      || '', qty:      m.qty      || 0,
-                            mrp:      m.mrp      || 0, rate:     m.rate     || 0,
-                            gst:      m.gst      || 0, discount: m.discount || 0,
-                            total:    m.total    || 0,
+                            exp:      m.exp      || '', pack: m.pack || 0, qty:      Number(m.qty) || 0,
+                            mrp:      Number(m.mrp) || 0, rate:     Number(m.rate) || 0,
+                            gst:      Number(m.gst) || 0, discount: Number(m.discount) || 0,
+                            total:    Number(m.total) || 0
                         }))
-                    });
+                    };
+                    let res = await dbSaveBill(payload);
+                    if (!res || !res.success) {
+                        payload.billNo = ''; // Retry with new bill no
+                        res = await dbSaveBill(payload);
+                    }
                     ok = res && res.success;
                 }
             } catch(e) { console.error('Restore error:', e); }
