@@ -1608,9 +1608,72 @@
                     </tbody>
                 </table>
                 </div>
-                <div style="margin-top:0.8rem;text-align:right;">
+                <div style="margin-top:0.8rem; display:flex; justify-content:flex-end; gap: 1rem;">
+                    <button id="restoreAllBtn" onclick="restoreAllFromBin()" style="font-size:0.8rem;color:#059669;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;">↩ Restore All</button>
                     <button onclick="emptyBin()" style="font-size:0.8rem;color:#dc2626;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;">🗑️ Empty Bin</button>
                 </div>`;
+        }
+
+        async function restoreAllFromBin() {
+            const bin = purgeBin();
+            if (bin.length === 0) return;
+            if (!confirm(`Restore all ${bin.length} items? This might take a moment.`)) return;
+
+            const restoreAllBtn = document.getElementById('restoreAllBtn');
+            if(restoreAllBtn) { restoreAllBtn.disabled = true; restoreAllBtn.textContent = '⏳ Restoring...'; }
+
+            let successCount = 0;
+            const itemsToRestore = [...bin];
+            
+            for (const item of itemsToRestore) {
+                let ok = false;
+                try {
+                    if (item.type === 'purchase') {
+                        const d = item.data;
+                        const res = await dbAddPurchase({
+                            billNo:      d.bill_no      || d.billNo      || '',
+                            firm:        d.firm         || '',
+                            date:        d.date         || '',
+                            productName: d.product_name || d.productName || '',
+                            batchNo:     d.batch_no     || d.batchNo     || '',
+                            expireDate:  d.expire_date  || d.expireDate  || '',
+                            pack:        d.pack         || 0,
+                            quantity:    d.quantity     || 0,
+                            mrp:         d.mrp          || 0,
+                            rate:        d.rate         || 0,
+                            gst:         d.gst          || 0,
+                        });
+                        ok = res && res.success;
+                    } else {
+                        const d = item.data;
+                        const res = await dbSaveBill({
+                            billNo:       d.bill_no       || d.billNo       || '',
+                            date:         d.date          || '',
+                            customerName: d.customer_name || d.customerName || '',
+                            doctorName:   d.doctor_name   || d.doctorName   || '',
+                            grandTotal:   d.grand_total   || d.grandTotal   || 0,
+                            medicines:    (d.bill_items || d.medicines || []).map(m => ({
+                                product:  m.product  || '', batch:    m.batch    || '',
+                                exp:      m.exp      || '', pack: m.pack || 0, qty:      Number(m.qty) || 0,
+                                mrp:      Number(m.mrp) || 0, rate:     Number(m.rate) || 0,
+                                gst:      Number(m.gst) || 0, discount: Number(m.discount) || 0,
+                                total:    Number(m.total) || 0
+                            }))
+                        });
+                        ok = res && res.success;
+                    }
+                } catch(e) {}
+
+                if (ok) {
+                    const currentBin = getBin();
+                    saveBin(currentBin.filter(x => x.binId !== item.binId));
+                    successCount++;
+                }
+            }
+            
+            showToast(`Restored ${successCount} out of ${itemsToRestore.length} items.`, 'success');
+            renderBin();
+            fetchAndRenderSales();
         }
 
         async function restoreFromBin(binId, btn) {
