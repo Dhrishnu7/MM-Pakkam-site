@@ -765,7 +765,14 @@
         let globalRowCounter = 0;
 
         /* -- Auto Bill No -- */
-        function generateBillNo() {
+        async function generateBillNo() {
+            try {
+                if (typeof dbNextBillNo === 'function') {
+                    const nextNo = await dbNextBillNo();
+                    document.getElementById('billNo').value = nextNo;
+                    return;
+                }
+            } catch(e) {}
             const counter = parseInt(localStorage.getItem('mm_bill_counter') || '0') + 1;
             document.getElementById('billNo').value = 'MM-' + String(counter).padStart(3, '0');
         }
@@ -1298,8 +1305,16 @@
 
             const grandTotal = document.getElementById('grandTotal').textContent;
 
+            const billInput = document.getElementById('billNo').value;
+            let finalBillNo = billInput;
+            try {
+                if (typeof dbNextBillNo === 'function' && billInput.startsWith('MM-')) {
+                    finalBillNo = await dbNextBillNo();
+                }
+            } catch(e) {}
+
             const bill = {
-                billNo:       document.getElementById('billNo').value,
+                billNo:       finalBillNo,
                 date:         document.getElementById('saleDate').value,
                 customerName: document.getElementById('customerName').value.trim(),
                 doctorName:   document.getElementById('doctorName').value.trim(),
