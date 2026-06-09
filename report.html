@@ -2790,13 +2790,27 @@
             // Restore purchases
             addRLog(`\n⏳ Restoring ${purchases.length} purchases...`, 'info');
             for (const p of purchases) {
+                const pName = p.product_name || '';
+                const bName = p.batch_no || '';
+                const isDup = Object.values(_rawPurchasesMap).some(existing => 
+                    (existing.bill_no || existing.billNo) === (p.bill_no || '') &&
+                    (existing.product_name || existing.productName) === pName &&
+                    (existing.batch_no || existing.batchNo) === bName
+                );
+                
+                if (isDup) {
+                    okP++;
+                    continue;
+                }
+
                 const res = await dbAddPurchase({
                     billNo:      p.bill_no      || '',
                     firm:        p.firm         || '',
                     date:        p.date         || '',
-                    productName: p.product_name || '',
-                    batchNo:     p.batch_no     || '',
+                    productName: pName,
+                    batchNo:     bName,
                     expireDate:  p.expire_date  || '',
+                    pack:        p.pack         || 0,
                     quantity:    p.quantity     || 0,
                     mrp:         p.mrp          || 0,
                     rate:        p.rate         || 0,
@@ -2809,7 +2823,18 @@
             // Restore bills
             addRLog(`⏳ Restoring ${bills.length} sales bills...`, 'info');
             for (const b of bills) {
-                const res = await dbSaveBill({
+                const isDup = Object.values(_rawBillsMap).some(existing => 
+                    existing.date === b.date &&
+                    (existing.customer_name || existing.customerName) === (b.customer_name || '') &&
+                    (existing.grand_total || existing.grandTotal) === (b.grand_total || 0)
+                );
+                
+                if (isDup) {
+                    okB++;
+                    continue;
+                }
+
+                const payload = {
                     billNo:       b.bill_no       || '',
                     date:         b.date          || '',
                     customerName: b.customer_name || '',
@@ -2819,14 +2844,22 @@
                         product:  m.product  || '',
                         batch:    m.batch    || '',
                         exp:      m.exp      || '',
-                        qty:      m.qty      || 0,
-                        mrp:      m.mrp      || 0,
-                        rate:     m.rate     || 0,
-                        gst:      m.gst      || 0,
-                        discount: m.discount || 0,
-                        total:    m.total    || 0,
+                        pack:     m.pack     || 0,
+                        qty:      Number(m.qty)      || 0,
+                        mrp:      Number(m.mrp)      || 0,
+                        rate:     Number(m.rate)     || 0,
+                        gst:      Number(m.gst)      || 0,
+                        discount: Number(m.discount) || 0,
+                        total:    Number(m.total)    || 0,
                     }))
-                });
+                };
+                
+                let res = await dbSaveBill(payload);
+                if (!res || !res.success) {
+                    payload.billNo = ''; // Retry with new bill no
+                    res = await dbSaveBill(payload);
+                }
+                
                 if (res && res.success) okB++; else failB++;
             }
             addRLog(`  ✅ ${okB} bills restored${failB ? ', ❌ ' + failB + ' failed' : ''}`, okB > 0 ? 'ok' : 'err');
