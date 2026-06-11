@@ -173,7 +173,13 @@ function mmGetSession() {
 }
 
 function mmSaveSession(user, remember) {
-    const session = { username: user.username, role: user.role, loginTime: Date.now() };
+    // tenant_id: for owners it's their own username; for workers it's their owner's username
+    const session = {
+        username:  user.username,
+        role:      user.role,
+        tenant_id: user.tenant_id || user.username,  // owners are their own tenant
+        loginTime: Date.now()
+    };
     if (remember) {
         localStorage.setItem(MM_REMEMBER_KEY, 'true');
         localStorage.setItem(MM_SESSION_KEY, JSON.stringify(session));
@@ -255,38 +261,61 @@ function mmLogout() {
     window.location.replace('login.html');
 }
 
+/**
+ * Get all users belonging to the current store (tenant).
+ * Owner accounts = global. Workers = scoped per owner (tenant_id).
+ */
+async function mmGetTenantUsers() {
+    const session  = mmGetSession();
+    const tenantId = session ? (session.tenant_id || session.username) : null;
+    const all = await mmGetUsers();
+    if (!tenantId) return all;
+    // Return users whose tenant_id matches, OR legacy users with no tenant_id that match username
+    return all.filter(u =>
+        u.tenant_id === tenantId ||
+        (!u.tenant_id && u.username === tenantId) // legacy owner record
+    );
+}
+
 /** Create a new store owner account. Every account is fully isolated. Returns { success, message } */
 async function mmCreateOwner(username, password) {
-    // Check if this username is already taken
+    // Owner usernames must be globally unique (needed for unambiguous login)
     const users = await mmGetUsers();
     if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
         return { success: false, message: 'This username is already taken. Please choose a different one.' };
     }
     const hash = await mmHashPassword(password);
-    const user = { username: username.trim(), passwordHash: hash, role: 'owner', createdAt: Date.now() };
+    // tenant_id for an owner = their own username (they ARE the tenant root)
+    const user = { username: username.trim(), passwordHash: hash, role: 'owner', tenant_id: username.trim(), createdAt: Date.now() };
     await _saveUser(user);
     return { success: true };
 }
 
-/** Add a worker (owner function). Returns { success, message } */
+/** Add a worker to the current owner's store. Username unique within this store only. */
 async function mmAddWorker(username, password) {
-    const users = await mmGetUsers();
-    if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
-        return { success: false, message: 'Username already exists.' };
+    const session  = mmGetSession();
+    const tenantId = session ? (session.tenant_id || session.username) : null;
+    // Only check uniqueness within THIS store's users, not globally
+    const tenantUsers = await mmGetTenantUsers();
+    if (tenantUsers.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
+        return { success: false, message: 'This username already exists in your store.' };
     }
     const hash = await mmHashPassword(password);
-    await _saveUser({ username: username.trim(), passwordHash: hash, role: 'worker', createdAt: Date.now() });
+    await _saveUser({ username: username.trim(), passwordHash: hash, role: 'worker', tenant_id: tenantId, createdAt: Date.now() });
     return { success: true };
 }
 
-/** Add a new owner (owner function). Returns { success, message } */
+/** Add an additional owner-role user within the current store. */
 async function mmAddOwner(username, password) {
-    const users = await mmGetUsers();
-    if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
-        return { success: false, message: 'Username already exists.' };
+    const session  = mmGetSession();
+    const tenantId = session ? (session.tenant_id || session.username) : null;
+    // Check uniqueness within THIS store only
+    const tenantUsers = await mmGetTenantUsers();
+    if (tenantUsers.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
+        return { success: false, message: 'This username already exists in your store.' };
     }
     const hash = await mmHashPassword(password);
-    await _saveUser({ username: username.trim(), passwordHash: hash, role: 'owner', createdAt: Date.now() });
+    await _saveUser({ username: username.trim(), passwordHash: hash, role: 'owner', tenant_id: tenantId, createdAt: Date.now() });
     return { success: true };
 }
 

@@ -18,7 +18,11 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 ───────────────────────────────────────────────────── */
 function _currentUser() {
     const session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
-    return session ? session.username : null;
+    if (!session) return null;
+    // Always use tenant_id for data scoping.
+    // For owners: tenant_id = their own username.
+    // For workers: tenant_id = their owner's username → they see the owner's data.
+    return session.tenant_id || session.username;
 }
 
 /* ─────────────────────────────────────────────────────
