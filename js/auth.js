@@ -255,10 +255,13 @@ function mmLogout() {
     window.location.replace('login.html');
 }
 
-/** Create first owner account. Returns { success, message } */
+/** Create a new store owner account. Every account is fully isolated. Returns { success, message } */
 async function mmCreateOwner(username, password) {
-    const already = await mmHasUsers();
-    if (already) return { success: false, message: 'Owner already exists.' };
+    // Check if this username is already taken
+    const users = await mmGetUsers();
+    if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
+        return { success: false, message: 'This username is already taken. Please choose a different one.' };
+    }
     const hash = await mmHashPassword(password);
     const user = { username: username.trim(), passwordHash: hash, role: 'owner', createdAt: Date.now() };
     await _saveUser(user);

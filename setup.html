@@ -54,7 +54,7 @@
             background-size: 44px 44px; pointer-events: none;
         }
 
-        /* ── Wrap & Card ── */
+        /* â”€â”€ Wrap & Card â”€â”€ */
         .setup-wrap {
             position: relative; z-index: 10;
             width: 100%; max-width: 480px;
@@ -79,7 +79,7 @@
             to   { opacity:1; transform:translateY(0) scale(1); }
         }
 
-        /* ── Logo ── */
+        /* â”€â”€ Logo â”€â”€ */
         .logo-row {
             display: flex; align-items: center; gap: 13px;
             margin-bottom: 2rem;
@@ -102,7 +102,7 @@
         .logo-name  { font-size: 0.95rem; font-weight: 800; color: white; line-height: 1.3; }
         .logo-sub   { font-size: 0.72rem; color: rgba(148,163,184,0.8); font-weight: 500; }
 
-        /* ── Mode Badge ── */
+        /* â”€â”€ Mode Badge â”€â”€ */
         .mode-badge {
             display: inline-flex; align-items: center; gap: 6px;
             border-radius: 50px; padding: 5px 14px;
@@ -118,7 +118,7 @@
             border: 1px solid rgba(139,92,246,0.35); color: #a78bfa;
         }
 
-        /* ── Heading ── */
+        /* â”€â”€ Heading â”€â”€ */
         .card-heading { margin-bottom: 1.6rem; }
         .card-heading h1 {
             font-size: 1.55rem; font-weight: 900; color: white;
@@ -126,14 +126,14 @@
         }
         .card-heading p { font-size: 0.84rem; color: rgba(100,116,139,0.9); line-height: 1.6; }
 
-        /* ── Divider ── */
+        /* â”€â”€ Divider â”€â”€ */
         .divider {
             height: 1px;
             background: linear-gradient(90deg, rgba(255,255,255,0.1), transparent);
             margin-bottom: 1.5rem;
         }
 
-        /* ── Info box ── */
+        /* â”€â”€ Info box â”€â”€ */
         .info-box {
             background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.2);
             border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1.5rem;
@@ -143,7 +143,7 @@
         .info-box p { font-size: 0.8rem; color: rgba(148,163,184,0.9); line-height: 1.6; }
         .info-box strong { color: #7dd3fc; }
 
-        /* ── Section label ── */
+        /* â”€â”€ Section label â”€â”€ */
         .section-label {
             font-size: 0.68rem; font-weight: 800; letter-spacing: 0.09em;
             text-transform: uppercase; color: rgba(100,116,139,0.7);
@@ -156,7 +156,7 @@
         }
         .section-label:first-of-type { margin-top: 0; }
 
-        /* ── Form ── */
+        /* â”€â”€ Form â”€â”€ */
         .form-group { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1.1rem; }
         .form-group label {
             font-size: 0.72rem; font-weight: 800; letter-spacing: 0.07em;
@@ -206,7 +206,7 @@
         .strength-seg.strong { background: #10b981; }
         .strength-lbl { font-size: 0.7rem; color: rgba(100,116,139,0.7); margin-top: 4px; }
 
-        /* ── Error box ── */
+        /* â”€â”€ Error box â”€â”€ */
         .error-box {
             display: flex; align-items: flex-start; gap: 10px;
             background: rgba(239,68,68,0.1); border: 1.5px solid rgba(239,68,68,0.25);
@@ -225,7 +225,7 @@
         }
         .error-text { font-size: 0.83rem; font-weight: 600; color: #fca5a5; line-height: 1.5; }
 
-        /* ── Submit button ── */
+        /* â”€â”€ Submit button â”€â”€ */
         .submit-btn {
             width: 100%; padding: 0.9rem 1.5rem; border-radius: 12px; border: none; cursor: pointer;
             font-family: 'Inter', sans-serif; font-size: 0.97rem; font-weight: 800;
@@ -286,7 +286,7 @@
         }
         .or-divider span { font-size: 0.72rem; color: rgba(100,116,139,0.6); font-weight: 700; letter-spacing: 0.06em; }
 
-        /* ── Back to login link ── */
+        /* â”€â”€ Back to login link â”€â”€ */
         .back-login {
             margin-top: 1.5rem; text-align: center;
             display: flex; align-items: center; justify-content: center; gap: 7px;
@@ -340,9 +340,6 @@
     </div>
 
     <script>
-        // ── Determine mode: first-time owner setup OR add worker ──
-        const hasOwner = mmHasUsers();
-
         function showError(msg) {
             const box = document.getElementById('errBox');
             if (!box) return;
@@ -380,37 +377,26 @@
             if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
             if (/[0-9]/.test(pw) || /[^A-Za-z0-9]/.test(pw)) score++;
             const levels = ['weak','weak','medium','strong'];
-            const labels = ['Too short','Weak','Moderate','Strong 💪'];
+            const labels = ['Too short','Weak','Moderate','Strong ðŸ’ª'];
             for (let i = 0; i < score; i++) segs[i] && segs[i].classList.add(levels[score - 1]);
             lbl.textContent = labels[score - 1] || 'Too short';
         }
 
-        /* ═══════════════════════════════════════
-           MODE A — First-time Owner Setup
-        ═══════════════════════════════════════ */
-        function renderOwnerSetup() {
+        // â”€â”€ Render the single unified Create Account form â”€â”€
+        function renderSetup() {
             document.getElementById('pageContent').innerHTML = `
                 <div class="mode-badge badge-owner">
                     <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
-                    First-Time Setup
+                    New Store Account
                 </div>
 
                 <div class="card-heading">
-                    <h1>Create Owner Account</h1>
-                    <p>Set up the primary owner account. This only needs to be done once. The owner can add workers later.</p>
+                    <h1>Create Account</h1>
+                    <p>Each account is a completely independent store. Your data is private and isolated from all other accounts.</p>
                 </div>
                 <div class="divider"></div>
-
-                <div class="info-box">
-                    <span class="info-box-icon">
-                        <svg width="15" height="15" fill="none" stroke="#38bdf8" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </span>
-                    <p>The <strong>Owner</strong> has full access — billing, reports, stock, and managing worker accounts.</p>
-                </div>
 
                 <div class="error-box" id="errBox">
                     <svg width="15" height="15" fill="none" stroke="#f87171" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:2px">
@@ -427,7 +413,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
                         </span>
-                        <input type="text" id="ownerUser" class="no-right-pad" placeholder="e.g. admin or your name" autocomplete="username" spellcheck="false">
+                        <input type="text" id="ownerUser" class="no-right-pad" placeholder="e.g. store_name or your name" autocomplete="username" spellcheck="false">
                     </div>
                 </div>
 
@@ -481,11 +467,11 @@
                     </div>
                 </div>
 
-                <button class="submit-btn owner-btn" id="submitBtn" onclick="handleOwnerSetup()">
+                <button class="submit-btn owner-btn" id="submitBtn" onclick="handleCreateAccount()">
                     <svg id="btnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                     </svg>
-                    <span id="btnText">Create Owner Account</span>
+                    <span id="btnText">Create Account</span>
                 </button>
 
                 <div class="back-login">
@@ -496,147 +482,9 @@
             `;
         }
 
-        /* ═══════════════════════════════════════
-           MODE B — Additional Account
-           (shown when users already exist)
-        ═══════════════════════════════════════ */
-        function renderWorkerSetup() {
-            document.getElementById('pageContent').innerHTML = `
-                <div class="mode-badge" style="background:linear-gradient(135deg, rgba(14,165,233,0.18), rgba(14,165,233,0.08));border:1px solid rgba(14,165,233,0.35);color:#38bdf8;">
-                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    New Account
-                </div>
-
-                <div class="card-heading">
-                    <h1>Create Additional Account</h1>
-                    <p>Create a new account on this device. Your existing accounts and data are safe and will not be erased.</p>
-                </div>
-                <div class="divider"></div>
-
-                <div class="info-box" style="margin-bottom:1.5rem;">
-                    <span class="info-box-icon">
-                        <svg width="15" height="15" fill="none" stroke="#38bdf8" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </span>
-                    <p>Each account gets its own isolated data workspace. You can switch between accounts at the login screen.</p>
-                </div>
-
-                <div class="error-box" id="errBox">
-                    <svg width="15" height="15" fill="none" stroke="#f87171" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:2px">
-                        <circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"/>
-                    </svg>
-                    <span class="error-text"></span>
-                </div>
-
-                <div class="form-group">
-                    <label for="newUser">Username</label>
-                    <div class="input-wrap">
-                        <span class="input-icon">
-                            <svg width="15" height="15" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                        </span>
-                        <input type="text" id="newUser" class="no-right-pad" placeholder="e.g. name" autocomplete="off" spellcheck="false">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="newPw">Password</label>
-                    <div class="input-wrap">
-                        <span class="input-icon">
-                            <svg width="15" height="15" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
-                                <rect x="3" y="11" width="18" height="11" rx="2"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 11V7a5 5 0 0110 0v4"/>
-                            </svg>
-                        </span>
-                        <input type="password" id="newPw" placeholder="Create a strong password" autocomplete="new-password" oninput="updateStrength('newPw')">
-                        <button type="button" class="pw-toggle" onclick="togglePw('newPw','oe4','oc4')">
-                            <svg id="oe4" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                            <svg id="oc4" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="strength-wrap">
-                        <div class="strength-seg" id="s1"></div>
-                        <div class="strength-seg" id="s2"></div>
-                        <div class="strength-seg" id="s3"></div>
-                        <div class="strength-seg" id="s4"></div>
-                    </div>
-                    <div class="strength-lbl" id="strengthLbl">Enter a password</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="newConfirm">Confirm Password</label>
-                    <div class="input-wrap">
-                        <span class="input-icon">
-                            <svg width="15" height="15" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                            </svg>
-                        </span>
-                        <input type="password" id="newConfirm" class="no-right-pad" placeholder="Re-enter your password" autocomplete="new-password">
-                    </div>
-                </div>
-
-                <button class="submit-btn" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);box-shadow:0 4px 24px rgba(14,165,233,0.4);" id="submitBtn" onclick="handleAddAccount()">
-                    <svg id="btnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
-                    <span id="btnText">Create New Account</span>
-                </button>
-
-                <!-- ── RESTORED: START FRESH OPTION ── -->
-                <div class="or-divider"><span>OR</span></div>
-                
-                <div class="mode-badge" style="background:linear-gradient(135deg, rgba(239,68,68,0.18), rgba(239,68,68,0.08));border:1px solid rgba(239,68,68,0.35);color:#f87171;">
-                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    New Store Setup
-                </div>
-                
-                <div class="card-heading" style="margin-top:0.8rem;">
-                    <h1>Start Fresh for New Store</h1>
-                    <p style="color:rgba(148,163,184,0.9);">To set up this app for a completely new store, you can wipe the existing data and start over.</p>
-                </div>
-                
-                <div class="danger-box">
-                    <svg width="18" height="18" fill="none" stroke="#fca5a5" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:2px;">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    <p><strong>Warning:</strong> This cannot be undone. All accounts, purchase records, sales bills, and customer data on this device will be <strong>permanently deleted</strong>.</p>
-                </div>
-                
-                <div class="form-group" style="margin-bottom:1rem;">
-                    <label for="resetConfirm">Type RESET to confirm wipe</label>
-                    <input type="text" id="resetConfirm" class="confirm-input" placeholder="Type RESET" autocomplete="off" spellcheck="false" oninput="document.getElementById('resetBtn').disabled = (this.value !== 'RESET');">
-                </div>
-                
-                <button class="submit-btn danger-btn" id="resetBtn" disabled onclick="handleResetApp()" style="background:linear-gradient(135deg,#ef4444,#b91c1c);margin-bottom:0;">
-                    <svg id="resetBtnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    <span id="resetBtnText">Wipe All Data</span>
-                </button>
-                <!-- ── END RESTORED SECTION ── -->
-
-                <div class="back-login">
-                    <span>Back to login?</span>
-                    <a href="login.html">Sign in</a>
-                </div>
-                <p class="footer-txt">&copy; 2026 Mudhalvar Marundhagam Pakkam</p>
-            `;
-        }
-
-        /* ═══════════════════════════════════════
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
            HANDLERS
-        ═══════════════════════════════════════ */
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
         function setBtnLoading(msg) {
             const btn  = document.getElementById('submitBtn');
             const text = document.getElementById('btnText');
@@ -645,29 +493,25 @@
             icon.outerHTML = `<svg id="btnIcon" class="spinner" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>`;
             text.textContent = msg;
         }
-        function setBtnDone(msg, isSuccess) {
+        function setBtnDone(msg) {
             const btn  = document.getElementById('submitBtn');
             const text = document.getElementById('btnText');
             const icon = document.getElementById('btnIcon');
             btn.disabled = true;
             icon.outerHTML = `<svg id="btnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
             text.textContent = msg;
-            if (isSuccess) {
-                btn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
-                btn.style.boxShadow  = '0 4px 20px rgba(16,185,129,0.45)';
-            }
+            btn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+            btn.style.boxShadow  = '0 4px 20px rgba(16,185,129,0.45)';
         }
-        function resetBtn(label, isOwner) {
+        function resetBtn() {
             const btn  = document.getElementById('submitBtn');
             const text = document.getElementById('btnText');
             btn.disabled = false;
-            document.getElementById('btnIcon').outerHTML = isOwner
-                ? `<svg id="btnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>`
-                : `<svg id="btnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>`;
-            text.textContent = label;
+            document.getElementById('btnIcon').outerHTML = `<svg id="btnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>`;
+            text.textContent = 'Create Account';
         }
 
-        async function handleOwnerSetup() {
+        async function handleCreateAccount() {
             hideError();
             const username = document.getElementById('ownerUser').value.trim();
             const password = document.getElementById('ownerPw').value;
@@ -675,76 +519,21 @@
             if (username.length < 3) return showError('Username must be at least 3 characters.');
             if (password.length < 6) return showError('Password must be at least 6 characters.');
             if (password !== confirm) return showError('Passwords do not match.');
-            setBtnLoading('Creating account…');
+            setBtnLoading('Creating accountâ€¦');
             const result = await mmCreateOwner(username, password);
             if (result.success) {
-                setBtnDone('Account created! Redirecting…', true);
-                setTimeout(() => window.location.replace('login.html'), 900);
+                setBtnDone('Account created! Signing inâ€¦');
+                // Auto login after creating account
+                await mmLogin(username, password, false);
+                setTimeout(() => window.location.replace('index.html'), 900);
             } else {
                 showError(result.message);
-                resetBtn('Create Owner Account', true);
+                resetBtn();
             }
         }
 
-        async function handleAddAccount() {
-            hideError();
-            const newUser  = (document.getElementById('newUser')?.value || '').trim();
-            const newPw    = (document.getElementById('newPw')?.value || '');
-            const newConf  = (document.getElementById('newConfirm')?.value || '');
-
-            if (newUser.length < 3)  return showError('Username must be at least 3 characters.');
-            if (newPw.length < 6)    return showError('Password must be at least 6 characters.');
-            if (newPw !== newConf)   return showError('Passwords do not match.');
-
-            setBtnLoading('Creating account…');
-
-            try {
-                const result = await mmAddOwner(newUser, newPw);
-                if (!result.success) {
-                    showError(result.message);
-                    resetBtn('Create New Account', false);
-                    return;
-                }
-
-                setBtnDone('Account created! Redirecting…', true);
-                setTimeout(() => window.location.replace('login.html'), 1200);
-            } catch (err) {
-                showError('Error creating account. Try again.');
-                resetBtn('Create New Account', false);
-            }
-        }
-
-        async function handleResetApp() {
-            const confirmVal = document.getElementById('resetConfirm').value;
-            if (confirmVal !== 'RESET') return;
-            
-            const btn = document.getElementById('resetBtn');
-            const icon = document.getElementById('resetBtnIcon');
-            const text = document.getElementById('resetBtnText');
-            btn.disabled = true;
-            icon.outerHTML = `<svg id="resetBtnIcon" class="spinner" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>`;
-            text.textContent = 'Wiping...';
-
-            // Wait a split second for animation
-            await new Promise(r => setTimeout(r, 600));
-
-            // Execute Factory Reset
-            mmFactoryReset();
-            
-            icon.outerHTML = `<svg id="resetBtnIcon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
-            text.textContent = 'App Reset! Reloading...';
-            
-            setTimeout(() => {
-                window.location.replace('setup.html');
-            }, 800);
-        }
-
-        // ── Init ──
-        if (hasOwner) {
-            renderWorkerSetup();
-        } else {
-            renderOwnerSetup();
-        }
+        // â”€â”€ Init: always show the create account form â”€â”€
+        renderSetup();
     </script>
     <script>
         if ('serviceWorker' in navigator) {
