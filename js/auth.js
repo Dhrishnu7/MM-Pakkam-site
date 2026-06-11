@@ -324,6 +324,71 @@ async function mmDeleteUser(username) {
     await _deleteUser(username);
 }
 
+/**
+ * Permanently delete the entire account:
+ * - Wipes ALL Supabase data for this tenant (bills, purchases, medicines, customers, doctors)
+ * - Deletes all user records (owner + workers) for this tenant from mm_users
+ * - Clears all tenant-scoped localStorage keys
+ * - Logs out and redirects to setup page
+ * Returns { success, message }
+ */
+async function mmDeleteAccountPermanently() {
+    const session  = mmGetSession();
+    if (!session || session.role !== 'owner') return { success: false, message: 'Only the owner can delete an account.' };
+    const tenantId = session.tenant_id || session.username;
+
+    try {
+        // ── 1. Delete all Supabase data for this tenant ──
+        // We use direct _supabase calls (not the helper fns) to avoid re-checking user
+        const db = (typeof _supabase !== 'undefined') ? _supabase : null;
+        if (db) {
+            // Delete bill_items first (foreign key child of bills)
+            const { data: bills } = await db.from('bills').select('id').eq('user_id', tenantId);
+            if (bills && bills.length > 0) {
+                const billIds = bills.map(b => b.id);
+                for (let i = 0; i < billIds.length; i += 100) {
+                    await db.from('bill_items').delete().in('bill_id', billIds.slice(i, i+100));
+                }
+            }
+            // Delete bills
+            await db.from('bills').delete().eq('user_id', tenantId);
+            // Delete purchases
+            await db.from('purchases').delete().eq('user_id', tenantId);
+            // Delete medicines
+            await db.from('medicines').delete().eq('user_id', tenantId);
+            // Delete customers
+            await db.from('customers').delete().eq('user_id', tenantId);
+            // Delete doctors
+            await db.from('doctors').delete().eq('user_id', tenantId);
+        }
+
+        // ── 2. Delete all user accounts for this tenant ──
+        const allUsers = await mmGetUsers();
+        const tenantUsers = allUsers.filter(u =>
+            u.tenant_id === tenantId ||
+            u.username  === tenantId  // owner record (old format)
+        );
+        for (const u of tenantUsers) {
+            await _deleteUser(u.username);
+        }
+
+        // ── 3. Clear all localStorage keys for this tenant ──
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.includes(`_${tenantId}_`)) keysToRemove.push(k);
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+
+        // ── 4. Clear session and redirect ──
+        mmClearSession();
+        return { success: true };
+    } catch (err) {
+        console.error('[auth] mmDeleteAccountPermanently error:', err);
+        return { success: false, message: 'Something went wrong: ' + err.message };
+    }
+}
+
 /** Reset a user's password. Returns { success, message } */
 async function mmResetPassword(username, newPassword) {
     const users = await mmGetUsers();
