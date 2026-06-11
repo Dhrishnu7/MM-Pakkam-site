@@ -1,7 +1,7 @@
 /**
  * supabase.js — Supabase Client for MM Pakkam
- * DATA ISOLATION: Every read/write is scoped to the current logged-in user's username.
- * Plain HTML/JS — loaded via CDN (no build step needed)
+ * DATA ISOLATION: Every read/write is HARD-SCOPED to the current user's username.
+ * If user is not logged in, ALL functions return empty immediately — never expose other users' data.
  */
 
 const SUPABASE_URL  = 'https://jwyyjdwlbgjijmwillow.supabase.co';
@@ -13,7 +13,8 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ─────────────────────────────────────────────────────
    CURRENT USER HELPER
    Returns the username of the currently logged-in user.
-   All DB reads/writes are scoped to this username.
+   CRITICAL: Returns null if not logged in. All DB functions
+   must HARD-STOP and return empty if this is null.
 ───────────────────────────────────────────────────── */
 function _currentUser() {
     const session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
@@ -46,17 +47,18 @@ function mmLsRemove(key) {
 ───────────────────────────────────────────────────── */
 async function dbGetCustomers() {
     const user = _currentUser();
-    let query = _supabase.from('customers').select('*').order('name');
-    if (user) query = query.eq('user_id', user);
-    const { data, error } = await query;
+    // HARD GUARD: Never return data if user unknown
+    if (!user) { console.warn('[db] dbGetCustomers: no user, aborting.'); return []; }
+    const { data, error } = await _supabase.from('customers').select('*').eq('user_id', user).order('name');
     if (error) { console.error('customers fetch:', error); return []; }
     return data;
 }
 async function dbAddCustomer(name, phone, address) {
     const user = _currentUser();
+    if (!user) { console.warn('[db] dbAddCustomer: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
     const cName = name.trim();
     const cPhone = phone.trim();
-    
+
     // Check for existing
     const { data: existing } = await _supabase.from('customers')
         .select('*')
@@ -64,7 +66,7 @@ async function dbAddCustomer(name, phone, address) {
         .eq('phone', cPhone)
         .eq('user_id', user)
         .maybeSingle();
-        
+
     if (existing) return { success: true, data: existing };
 
     const { data, error } = await _supabase.from('customers')
@@ -75,9 +77,8 @@ async function dbAddCustomer(name, phone, address) {
 }
 async function dbDeleteCustomer(id) {
     const user = _currentUser();
-    let query = _supabase.from('customers').delete().eq('id', id);
-    if (user) query = query.eq('user_id', user);
-    const { error } = await query;
+    if (!user) { console.warn('[db] dbDeleteCustomer: no user, aborting.'); return false; }
+    const { error } = await _supabase.from('customers').delete().eq('id', id).eq('user_id', user);
     return !error;
 }
 
@@ -86,14 +87,14 @@ async function dbDeleteCustomer(id) {
 ───────────────────────────────────────────────────── */
 async function dbGetDoctors() {
     const user = _currentUser();
-    let query = _supabase.from('doctors').select('*').order('name');
-    if (user) query = query.eq('user_id', user);
-    const { data, error } = await query;
+    if (!user) { console.warn('[db] dbGetDoctors: no user, aborting.'); return []; }
+    const { data, error } = await _supabase.from('doctors').select('*').eq('user_id', user).order('name');
     if (error) { console.error('doctors fetch:', error); return []; }
     return data;
 }
 async function dbAddDoctor(name, phone, clinic, address) {
     const user = _currentUser();
+    if (!user) { console.warn('[db] dbAddDoctor: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
     const dName = name.trim();
     const dPhone = phone.trim();
 
@@ -115,31 +116,30 @@ async function dbAddDoctor(name, phone, clinic, address) {
 }
 async function dbDeleteDoctor(id) {
     const user = _currentUser();
-    let query = _supabase.from('doctors').delete().eq('id', id);
-    if (user) query = query.eq('user_id', user);
-    const { error } = await query;
+    if (!user) { console.warn('[db] dbDeleteDoctor: no user, aborting.'); return false; }
+    const { error } = await _supabase.from('doctors').delete().eq('id', id).eq('user_id', user);
     return !error;
 }
 
 /* ─────────────────────────────────────────────────────
-   MEDICINES  (catalogue — shared across all users of same pharmacy)
+   MEDICINES  (catalogue — scoped per account)
 ───────────────────────────────────────────────────── */
 async function dbGetMedicines() {
     const user = _currentUser();
-    let query = _supabase.from('medicines').select('name').order('name');
-    if (user) query = query.eq('user_id', user);
-    const { data, error } = await query;
+    if (!user) { console.warn('[db] dbGetMedicines: no user, aborting.'); return []; }
+    const { data, error } = await _supabase.from('medicines').select('name').eq('user_id', user).order('name');
     if (error) { console.error('medicines fetch:', error); return []; }
     return data.map(m => m.name);
 }
 async function dbImportMedicines(nameArray) {
     const user = _currentUser();
+    if (!user) { console.warn('[db] dbImportMedicines: no user, aborting.'); return false; }
     const cleanNames = [...new Set(nameArray.map(n => n.trim()).filter(Boolean))];
-    
+
     // Fetch existing to avoid duplicates
     const { data: existing } = await _supabase.from('medicines').select('name').eq('user_id', user);
     const existingSet = new Set((existing || []).map(m => m.name.toLowerCase()));
-    
+
     const toInsert = cleanNames
         .filter(n => !existingSet.has(n.toLowerCase()))
         .map(name => ({ name, user_id: user }));
@@ -156,8 +156,8 @@ async function dbImportMedicines(nameArray) {
 ───────────────────────────────────────────────────── */
 async function dbGetPurchases(fromDate, toDate) {
     const user = _currentUser();
-    let query = _supabase.from('purchases').select('*').order('date', { ascending: false });
-    if (user)     query = query.eq('user_id', user);
+    if (!user) { console.warn('[db] dbGetPurchases: no user, aborting.'); return []; }
+    let query = _supabase.from('purchases').select('*').eq('user_id', user).order('date', { ascending: false });
     if (fromDate) query = query.gte('date', fromDate);
     if (toDate)   query = query.lte('date', toDate);
     const { data, error } = await query;
@@ -166,6 +166,7 @@ async function dbGetPurchases(fromDate, toDate) {
 }
 async function dbAddPurchase(row) {
     const user = _currentUser();
+    if (!user) { console.warn('[db] dbAddPurchase: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
     const { data, error } = await _supabase.from('purchases').insert({
         bill_no:      row.billNo     || '',
         firm:         row.firm       || '',
@@ -184,9 +185,8 @@ async function dbAddPurchase(row) {
 }
 async function dbDeletePurchase(id) {
     const user = _currentUser();
-    let query = _supabase.from('purchases').delete().eq('id', id);
-    if (user) query = query.eq('user_id', user);
-    const { error } = await query;
+    if (!user) { console.warn('[db] dbDeletePurchase: no user, aborting.'); return false; }
+    const { error } = await _supabase.from('purchases').delete().eq('id', id).eq('user_id', user);
     return !error;
 }
 
@@ -195,17 +195,18 @@ async function dbDeletePurchase(id) {
 ───────────────────────────────────────────────────── */
 async function dbNextBillNo() {
     const user = _currentUser();
+    if (!user) return 'MM-001';
     // Count this user's existing bills to generate next number
     const { count } = await _supabase
         .from('bills')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user || '');
+        .eq('user_id', user);
     return 'MM-' + String((count || 0) + 1).padStart(3, '0');
 }
 async function dbGetBills(fromDate, toDate) {
     const user = _currentUser();
-    let query = _supabase.from('bills').select('*, bill_items(*)').order('date', { ascending: false });
-    if (user)     query = query.eq('user_id', user);
+    if (!user) { console.warn('[db] dbGetBills: no user, aborting.'); return []; }
+    let query = _supabase.from('bills').select('*, bill_items(*)').eq('user_id', user).order('date', { ascending: false });
     if (fromDate) query = query.gte('date', fromDate);
     if (toDate)   query = query.lte('date', toDate);
     const { data, error } = await query;
@@ -214,7 +215,8 @@ async function dbGetBills(fromDate, toDate) {
 }
 async function dbSaveBill(bill) {
     const user = _currentUser();
-    const billNo = bill.billNo || await dbNextBillNo();
+    if (!user) { console.warn('[db] dbSaveBill: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
+    let billNo = bill.billNo || await dbNextBillNo();
 
     let { data: billRow, error: billErr } = await _supabase.from('bills').insert({
         bill_no:       billNo,
@@ -236,7 +238,7 @@ async function dbSaveBill(bill) {
             grand_total:   parseFloat(String(bill.grandTotal).replace(/[^0-9.]/g,'')) || 0,
             user_id:       user,
         }).select().single();
-        
+
         if (retry.error) {
             console.error('bill save retry failed:', retry.error);
             return { success: false, message: retry.error.message };
@@ -268,9 +270,8 @@ async function dbSaveBill(bill) {
 }
 async function dbDeleteBill(id) {
     const user = _currentUser();
-    let query = _supabase.from('bills').delete().eq('id', id);
-    if (user) query = query.eq('user_id', user);
-    const { error } = await query;
+    if (!user) { console.warn('[db] dbDeleteBill: no user, aborting.'); return false; }
+    const { error } = await _supabase.from('bills').delete().eq('id', id).eq('user_id', user);
     return !error;
 }
 
@@ -288,7 +289,8 @@ async function dbGetReportData(fromDate, toDate) {
 async function dbDeleteAllBills() {
     try {
         const user = _currentUser();
-        const { data: rows, error: fetchErr } = await _supabase.from('bills').select('id').eq('user_id', user || '');
+        if (!user) return { ok: false, msg: 'Not logged in.' };
+        const { data: rows, error: fetchErr } = await _supabase.from('bills').select('id').eq('user_id', user);
         if (fetchErr) return { ok: false, msg: 'Fetch IDs failed: ' + fetchErr.message };
         if (!rows || rows.length === 0) return { ok: true };
         const ids = rows.map(r => r.id);
@@ -304,8 +306,9 @@ async function dbDeleteAllBills() {
 async function dbDeleteAllPurchases() {
     try {
         const user = _currentUser();
-        const { data: rows, error: fetchErr } = await _supabase.from('purchases').select('id').eq('user_id', user || '');
-        if (fetchErr) return { ok: false, msg: 'Fetch IDs failed: ' + fetchErr.message };
+        if (!user) return { ok: false, msg: 'Not logged in.' };
+        const { data: rows, error: fetchErr } = await _supabase.from('purchases').select('id').eq('user_id', user);
+        if (fetchErr) return { ok: false, msg: 'Fetch IDs failed: ' + fetchErr.message }; 
         if (!rows || rows.length === 0) return { ok: true };
         const ids = rows.map(r => r.id);
         for (let i = 0; i < ids.length; i += 100) {
@@ -319,24 +322,20 @@ async function dbDeleteAllPurchases() {
 
 /* ─────────────────────────────────────────────────────
    OFFLINE DATA MIGRATION
+   Only migrates data scoped to the current user.
+   Uses SCOPED keys (mm_{user}_sales) — never global keys.
 ───────────────────────────────────────────────────── */
-// Automatically migrate legacy offline data to Supabase if Supabase is empty
 (async function autoMigrateOfflineData() {
-    // Only run if user is logged in
     const user = _currentUser();
     if (!user) return;
 
     const migratedKey = 'mm_offline_migrated_' + user;
     if (localStorage.getItem(migratedKey) === 'true') return;
 
-    // ── FIX: Only read data scoped to THIS user. ──
-    // Old unscoped keys (mm_sales, mm_purchases) belong to the very first ever
-    // account on this device before scoping was introduced.
-    // Reading them for a NEW account would bleed another user's data in.
-    const scopedSalesKey     = `mm_${user}_sales`;
-    const scopedPurchasesKey = `mm_${user}_purchases`;
-    const rawSales     = JSON.parse(localStorage.getItem(scopedSalesKey)     || '[]');
-    const rawPurchases = JSON.parse(localStorage.getItem(scopedPurchasesKey) || '[]');
+    // CRITICAL: Only read from THIS user's scoped keys.
+    // Never read global keys like 'mm_sales' — those could belong to any account.
+    const rawSales     = JSON.parse(localStorage.getItem(`mm_${user}_sales`)     || '[]');
+    const rawPurchases = JSON.parse(localStorage.getItem(`mm_${user}_purchases`) || '[]');
 
     if (rawSales.length === 0 && rawPurchases.length === 0) {
         localStorage.setItem(migratedKey, 'true');
@@ -344,15 +343,12 @@ async function dbDeleteAllPurchases() {
     }
 
     try {
-        // Check if Supabase has data
-        const { count: billsCount } = await _supabase.from('bills').select('*', { count: 'exact', head: true }).eq('user_id', user);
+        const { count: billsCount }     = await _supabase.from('bills').select('*', { count: 'exact', head: true }).eq('user_id', user);
         const { count: purchasesCount } = await _supabase.from('purchases').select('*', { count: 'exact', head: true }).eq('user_id', user);
 
         if ((billsCount || 0) === 0 && (purchasesCount || 0) === 0) {
-            console.log("[Migration] Found legacy offline data and empty cloud. Migrating now...");
-            // Migrate Purchases
+            console.log("[Migration] Found scoped offline data. Migrating to Supabase...");
             for (const p of rawPurchases) {
-                // Ensure field mappings are compatible
                 await dbAddPurchase({
                     billNo: p.billNo || p.bill_no,
                     firm: p.firm,
@@ -366,7 +362,6 @@ async function dbDeleteAllPurchases() {
                     gst: p.gst
                 });
             }
-            // Migrate Sales
             for (const b of rawSales) {
                 await dbSaveBill({
                     billNo: b.billNo || b.bill_no,
@@ -377,56 +372,57 @@ async function dbDeleteAllPurchases() {
                     medicines: b.medicines || b.bill_items || []
                 });
             }
-            console.log("[Migration] Legacy offline data successfully synced to Supabase.");
+            console.log("[Migration] Done.");
         }
         localStorage.setItem(migratedKey, 'true');
     } catch(e) {
-        console.error("[Migration] Auto migration failed:", e);
+        console.error("[Migration] Failed:", e);
     }
 })();
 
-// Automatically sync any failed/offline saves from the pending queue
+/* ─────────────────────────────────────────────────────
+   OFFLINE PENDING SYNC
+   Syncs queued offline saves — uses SCOPED keys only.
+───────────────────────────────────────────────────── */
 (async function syncPendingOfflineData() {
     const user = _currentUser();
     if (!user) return;
 
+    // CRITICAL: Use scoped keys — never global 'mm_pending_sales'
+    const pendingSalesKey     = `mm_${user}_pending_sales`;
+    const pendingPurchasesKey = `mm_${user}_pending_purchases`;
+
     // Sync pending sales
     try {
-        const pendingSales = JSON.parse(localStorage.getItem('mm_pending_sales') || '[]');
+        const pendingSales = JSON.parse(localStorage.getItem(pendingSalesKey) || '[]');
         if (pendingSales.length > 0) {
-            console.log(`[Offline Sync] Attempting to sync ${pendingSales.length} pending sales...`);
+            console.log(`[Offline Sync] Syncing ${pendingSales.length} pending sales...`);
             let remaining = [];
             for (const bill of pendingSales) {
                 const res = await dbSaveBill(bill);
                 if (!res.success) {
                     console.error("[Offline Sync] Failed to sync bill:", bill.billNo, res.message);
-                    remaining.push(bill); // Keep in queue
+                    remaining.push(bill);
                 }
             }
-            localStorage.setItem('mm_pending_sales', JSON.stringify(remaining));
-            if (remaining.length < pendingSales.length) {
-                console.log(`[Offline Sync] Successfully synced ${pendingSales.length - remaining.length} sales.`);
-            }
+            localStorage.setItem(pendingSalesKey, JSON.stringify(remaining));
         }
     } catch(e) { console.error("[Offline Sync] Sales sync failed:", e); }
 
     // Sync pending purchases
     try {
-        const pendingPurchases = JSON.parse(localStorage.getItem('mm_pending_purchases') || '[]');
+        const pendingPurchases = JSON.parse(localStorage.getItem(pendingPurchasesKey) || '[]');
         if (pendingPurchases.length > 0) {
-            console.log(`[Offline Sync] Attempting to sync ${pendingPurchases.length} pending purchases...`);
+            console.log(`[Offline Sync] Syncing ${pendingPurchases.length} pending purchases...`);
             let remaining = [];
             for (const p of pendingPurchases) {
                 const res = await dbAddPurchase(p);
                 if (!res.success) {
                     console.error("[Offline Sync] Failed to sync purchase:", p.productName, res.message);
-                    remaining.push(p); // Keep in queue
+                    remaining.push(p);
                 }
             }
-            localStorage.setItem('mm_pending_purchases', JSON.stringify(remaining));
-            if (remaining.length < pendingPurchases.length) {
-                console.log(`[Offline Sync] Successfully synced ${pendingPurchases.length - remaining.length} purchases.`);
-            }
+            localStorage.setItem(pendingPurchasesKey, JSON.stringify(remaining));
         }
     } catch(e) { console.error("[Offline Sync] Purchases sync failed:", e); }
 })();
