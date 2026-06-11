@@ -329,9 +329,14 @@ async function dbDeleteAllPurchases() {
     const migratedKey = 'mm_offline_migrated_' + user;
     if (localStorage.getItem(migratedKey) === 'true') return;
 
-    // Check if there is anything to migrate
-    const rawSales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
-    const rawPurchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+    // ── FIX: Only read data scoped to THIS user. ──
+    // Old unscoped keys (mm_sales, mm_purchases) belong to the very first ever
+    // account on this device before scoping was introduced.
+    // Reading them for a NEW account would bleed another user's data in.
+    const scopedSalesKey     = `mm_${user}_sales`;
+    const scopedPurchasesKey = `mm_${user}_purchases`;
+    const rawSales     = JSON.parse(localStorage.getItem(scopedSalesKey)     || '[]');
+    const rawPurchases = JSON.parse(localStorage.getItem(scopedPurchasesKey) || '[]');
 
     if (rawSales.length === 0 && rawPurchases.length === 0) {
         localStorage.setItem(migratedKey, 'true');
