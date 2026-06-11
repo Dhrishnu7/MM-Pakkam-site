@@ -371,20 +371,24 @@
 
     <script>
         // Owner-only gate
-        const _session = mmRequireOwner();
+        mmRequireOwner();
         mmInjectUserBar();
 
+        let _session      = mmGetSession();
         let _resetTarget  = null;
         let _renameTarget = null;
+        let _deleteTarget = null;
 
-        function renderUsers() {
-            const users = mmGetUsers();
+        async function renderUsers() {
+            const users = await mmGetTenantUsers();
             const list  = document.getElementById('userList');
             const count = document.getElementById('userCount');
             count.textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
 
             if (!users.length) {
-                list.innerHTML = '<div class="empty-state"><p>No users found.</p></div>';
+                list.innerHTML = `<div class="empty-state">
+                    <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.356-3.712M9 20H4v-2a4 4 0 015.356-3.712M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 4a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <p>No users found. Add your first user below.</p></div>`;
                 return;
             }
 
@@ -397,7 +401,11 @@
                 <div class="user-row">
                     <div class="user-avatar ${isOwner ? 'owner' : ''}">${initials}</div>
                     <div class="user-info">
-                        <div class="user-name">${u.username} ${isMe ? '<span style="font-size:0.7rem;color:#94a3b8;">(you)</span>' : ''}</div>
+                        <div class="user-name">
+                            ${u.username}
+                            ${isMe ? '<span style="font-size:0.7rem;color:#94a3b8;">(you)</span>' : ''}
+                            <span class="active-dot" title="Active"></span>
+                        </div>
                         <div class="user-meta">Added ${dateStr}</div>
                     </div>
                     <span class="role-pill ${isOwner ? 'role-owner' : 'role-worker'}">${u.role}</span>
@@ -408,12 +416,12 @@
                         </button>
                         <button class="action-btn btn-reset" onclick="openResetModal('${u.username}')">
                             <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                            Reset
+                            Reset Pw
                         </button>
-                        ${!isOwner && !isMe ? `
-                        <button class="action-btn btn-delete" onclick="deleteUser('${u.username}')">
+                        ${!isMe ? `
+                        <button class="action-btn btn-delete" onclick="openDeleteModal('${u.username}')">
                             <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            Delete
+                            Remove
                         </button>` : ''}
                     </div>
                 </div>`;
@@ -454,8 +462,8 @@
                 document.getElementById('newUsername').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('newRole').value = 'worker';
-                renderUsers();
-                showToast(`${role === 'owner' ? '👑 Owner' : '👷 Worker'} Added! ✓`, `"${username}" can now log in as ${role}.`);
+                await renderUsers();
+                showToast(`${role === 'owner' ? '👑 Owner' : '👷 Worker'} Added! ✓`, `"${username}" can now log in.`);
             } else {
                 errDiv.textContent = result.message;
                 errDiv.classList.add('show');
@@ -465,11 +473,27 @@
             btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg> Add User`;
         }
 
-        function deleteUser(username) {
-            if (!confirm(`Delete worker "${username}"?\nThey will no longer be able to log in.`)) return;
-            mmDeleteUser(username);
-            renderUsers();
-            showToast('User Removed', `"${username}" has been deleted.`);
+        /* ── Delete Modal ── */
+        function openDeleteModal(username) {
+            _deleteTarget = username;
+            document.getElementById('deleteForUser').textContent = username;
+            document.getElementById('deleteModal').classList.add('open');
+        }
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('open');
+            _deleteTarget = null;
+        }
+        async function confirmDelete() {
+            if (!_deleteTarget) return;
+            const btn = document.getElementById('deleteConfirmBtn');
+            btn.disabled = true;
+            btn.textContent = 'Removing…';
+            await mmDeleteUser(_deleteTarget);
+            closeDeleteModal();
+            await renderUsers();
+            showToast('User Removed 🗑️', `"${_deleteTarget}" has been removed from your store.`);
+            btn.disabled = false;
+            btn.textContent = 'Yes, Remove';
         }
 
         function openRenameModal(username) {
@@ -480,8 +504,7 @@
             document.getElementById('renameModal').classList.add('open');
             setTimeout(() => {
                 const inp = document.getElementById('renameNewUsername');
-                inp.focus();
-                inp.select();
+                inp.focus(); inp.select();
             }, 200);
         }
         function closeRenameModal() { document.getElementById('renameModal').classList.remove('open'); }
@@ -490,19 +513,12 @@
             const errDiv  = document.getElementById('renameError');
             const newName = document.getElementById('renameNewUsername').value.trim();
             errDiv.classList.remove('show');
-
-            if (newName.length < 3) {
-                errDiv.textContent = 'Username must be at least 3 characters.';
-                errDiv.classList.add('show');
-                return;
-            }
-
+            if (newName.length < 3) { errDiv.textContent='Username must be at least 3 characters.'; return errDiv.classList.add('show'); }
             try {
                 const result = mmRenameUser(_renameTarget, newName);
                 if (result.success) {
                     closeRenameModal();
                     renderUsers();
-                    // Refresh navbar user pill if renaming self
                     const bar = document.querySelector('.mm-user-bar');
                     if (bar) bar.remove();
                     mmInjectUserBar();
@@ -514,7 +530,6 @@
             } catch (e) {
                 errDiv.textContent = 'Something went wrong. Please try again.';
                 errDiv.classList.add('show');
-                console.error('Rename error:', e);
             }
         }
 
@@ -534,13 +549,9 @@
             const pw = document.getElementById('resetNewPw').value;
             errDiv.classList.remove('show');
             if (pw.length < 6) { errDiv.textContent='Password must be 6+ characters.'; return errDiv.classList.add('show'); }
-
-            btn.disabled = true;
-            btn.textContent = 'Resetting…';
+            btn.disabled = true; btn.textContent = 'Resetting…';
             const result = await mmResetPassword(_resetTarget, pw);
-            btn.disabled = false;
-            btn.textContent = 'Reset Password';
-
+            btn.disabled = false; btn.textContent = 'Reset Password';
             if (result.success) {
                 closeResetModal();
                 showToast('Password Reset ✓', `Password updated for "${_resetTarget}".`);
@@ -552,10 +563,8 @@
 
         function showToast(title, sub) {
             const t  = document.getElementById('toast');
-            const ti = document.getElementById('toastTitle');
-            const ts = document.getElementById('toastSub');
-            if (ti) ti.textContent = title;
-            if (ts) ts.textContent = sub;
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastSub').textContent   = sub;
             t.classList.add('show');
             setTimeout(() => t.classList.remove('show'), 3500);
         }
@@ -563,11 +572,14 @@
         // Close modals on overlay click / Escape
         document.getElementById('resetModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeResetModal(); });
         document.getElementById('renameModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeRenameModal(); });
-        document.addEventListener('keydown', e => { if(e.key==='Escape') { closeResetModal(); closeRenameModal(); } });
+        document.getElementById('deleteModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeDeleteModal(); });
+        document.addEventListener('keydown', e => { if(e.key==='Escape') { closeResetModal(); closeRenameModal(); closeDeleteModal(); } });
 
         // Init
         renderUsers();
     </script>
+
+
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
