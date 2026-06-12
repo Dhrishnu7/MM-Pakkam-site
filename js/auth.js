@@ -236,7 +236,8 @@ function mmClearSession() {
  * Returns the current session object if logged in.
  */
 async function mmRequireAuth() {
-    if (!mmGetSession()) {
+    const session = mmGetSession();
+    if (!session) {
         if (!window.location.pathname.endsWith('login.html') &&
             !window.location.pathname.endsWith('setup.html')) {
             // Check if any users exist; if not, send to setup
@@ -245,7 +246,34 @@ async function mmRequireAuth() {
         }
         return null;
     }
-    return mmGetSession();
+
+    // Validate the token on page load
+    await _validateSession(session);
+    
+    // Start background monitor (every 10s)
+    if (!window._mmSessionMonitor) {
+        window._mmSessionMonitor = setInterval(async () => {
+            const currentSession = mmGetSession();
+            if (currentSession) await _validateSession(currentSession);
+        }, 10000);
+    }
+
+    return session;
+}
+
+// Helper to check DB and force logout if token changed
+async function _validateSession(session) {
+    try {
+        const users = await mmGetUsers();
+        const dbUser = users.find(u => u.username === session.username && u.tenant_id === session.tenant_id);
+        if (dbUser && dbUser.active_session_token && dbUser.active_session_token !== session.token) {
+            mmClearSession();
+            alert("You have been logged out because this account was just signed in from another device.");
+            window.location.replace('login.html');
+        }
+    } catch(e) {
+        // Ignore network errors so we don't accidentally log out offline users
+    }
 }
 
 /**
