@@ -707,6 +707,22 @@
                 if (result.success) {
                     setBtnSuccess(result.user.username);
                     setTimeout(() => window.location.replace('index.html'), 700);
+                } else if (result.forceRequired) {
+                    setBtnDefault();
+                    // Prompt the user to force login
+                    if (confirm(result.message + '\n\nDo you want to forcefully log out the other device and log in here?')) {
+                        setBtnLoading();
+                        const forceResult = await mmLogin(username, password, remember, true);
+                        if (forceResult.success) {
+                            setBtnSuccess(forceResult.user.username);
+                            setTimeout(() => window.location.replace('index.html'), 700);
+                        } else {
+                            setBtnDefault();
+                            showError(forceResult.message);
+                        }
+                    } else {
+                        showError('Login aborted to preserve the other device\'s session.');
+                    }
                 } else {
                     setBtnDefault();
                     showError(result.message || 'Invalid username or password.');

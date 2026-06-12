@@ -209,6 +209,7 @@ function mmSaveSession(user, remember) {
         username:  user.username,
         role:      user.role,
         tenant_id: user.tenant_id || user.username,  // owners are their own tenant
+        token:     user.token, // Store active session token
         loginTime: Date.now()
     };
     if (remember) {
@@ -268,14 +269,12 @@ function mmCurrentUser() {
     return mmGetSession();
 }
 
-/** Login. Returns { success, message } */
-async function mmLogin(username, password, remember) {
+/** Login. Returns { success, message, forceRequired } */
+async function mmLogin(username, password, remember, force = false) {
     try {
         const users = await mmGetUsers();
         const hash  = await mmHashPassword(password);
         // Match by username (case-insensitive) and password hash
-        // For workers with same username across stores, pick the first match —
-        // they must use their store owner's username to distinguish (future: login form can ask)
         const user  = users.find(u =>
             u.username.toLowerCase() === username.trim().toLowerCase() &&
             u.passwordHash === hash
@@ -283,6 +282,26 @@ async function mmLogin(username, password, remember) {
         if (!user) return { success: false, message: 'Invalid username or password.' };
         // Ensure tenant_id is always set (migrate old records on the fly)
         if (!user.tenant_id) user.tenant_id = user.username;
+
+        // --- Single Device Lockout Logic ---
+        if (user.active_session_token && !force) {
+            // Check if the token belongs to the CURRENT device. If yes, allow.
+            const existingSession = mmGetSession();
+            if (!existingSession || existingSession.token !== user.active_session_token) {
+                return { 
+                    success: false, 
+                    message: 'Account already logged in on another device.',
+                    forceRequired: true 
+                };
+            }
+        }
+
+        // Generate new session token and save to DB
+        const newToken = Date.now().toString(36) + Math.random().toString(36).substr(2);
+        user.active_session_token = newToken;
+        await _saveUser(user);
+
+        user.token = newToken; // attach token to session
         mmSaveSession(user, remember);
         return { success: true, user };
     } catch (err) {
@@ -292,7 +311,17 @@ async function mmLogin(username, password, remember) {
 }
 
 /** Logout */
-function mmLogout() {
+async function mmLogout() {
+    const session = mmGetSession();
+    if (session) {
+        // Clear active session from DB
+        const users = await mmGetUsers();
+        const user = users.find(u => u.username === session.username && u.tenant_id === session.tenant_id);
+        if (user && user.active_session_token === session.token) {
+            user.active_session_token = null;
+            await _saveUser(user);
+        }
+    }
     mmClearSession();
     window.location.replace('login.html');
 }
