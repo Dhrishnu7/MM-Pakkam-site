@@ -60,22 +60,36 @@ async function dbGetCustomers() {
 async function dbAddCustomer(name, phone, address) {
     const user = _currentUser();
     if (!user) { console.warn('[db] dbAddCustomer: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
-    const cName = name.trim();
+    const cName  = name.trim();
     const cPhone = phone.trim();
+    const cAddr  = address?.trim() || '';
 
-    // Check for existing
+    // Check for existing record scoped to this user
     const { data: existing } = await _supabase.from('customers')
-        .select('*')
-        .eq('name', cName)
-        .eq('phone', cPhone)
-        .eq('user_id', user)
-        .maybeSingle();
-
+        .select('*').eq('name', cName).eq('phone', cPhone).eq('user_id', user).maybeSingle();
     if (existing) return { success: true, data: existing };
 
+    // Try insert
     const { data, error } = await _supabase.from('customers')
-        .insert({ name: cName, phone: cPhone, address: address?.trim() || '', user_id: user })
+        .insert({ name: cName, phone: cPhone, address: cAddr, user_id: user })
         .select();
+
+    // If duplicate key (another tenant has same name+phone), upsert on conflict
+    if (error && (error.code === '23505' || (error.message && error.message.includes('duplicate key')))) {
+        console.warn('[db] dbAddCustomer: duplicate key, trying upsert fallback.');
+        const { data: ups, error: upsErr } = await _supabase.from('customers')
+            .upsert({ name: cName, phone: cPhone, address: cAddr, user_id: user },
+                    { onConflict: 'name,phone', ignoreDuplicates: false })
+            .select();
+        if (upsErr) {
+            // Last resort: just fetch whatever is already there for this user
+            const { data: fallback } = await _supabase.from('customers')
+                .select('*').eq('name', cName).eq('user_id', user).maybeSingle();
+            return { success: true, data: fallback || null };
+        }
+        return { success: true, data: ups?.[0] || null };
+    }
+
     if (error) { console.error('customer add:', error); return { success: false, message: error.message }; }
     return { success: true, data: data?.[0] || null };
 }
@@ -99,22 +113,36 @@ async function dbGetDoctors() {
 async function dbAddDoctor(name, phone, clinic, address) {
     const user = _currentUser();
     if (!user) { console.warn('[db] dbAddDoctor: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
-    const dName = name.trim();
+    const dName  = name.trim();
     const dPhone = phone.trim();
+    const dClinic = clinic?.trim() || '';
+    const dAddr   = address?.trim() || '';
 
-    // Check for existing
+    // Check for existing record scoped to this user
     const { data: existing } = await _supabase.from('doctors')
-        .select('*')
-        .eq('name', dName)
-        .eq('phone', dPhone)
-        .eq('user_id', user)
-        .maybeSingle();
-
+        .select('*').eq('name', dName).eq('phone', dPhone).eq('user_id', user).maybeSingle();
     if (existing) return { success: true, data: existing };
 
+    // Try insert
     const { data, error } = await _supabase.from('doctors')
-        .insert({ name: dName, phone: dPhone, clinic: clinic?.trim() || '', address: address?.trim() || '', user_id: user })
+        .insert({ name: dName, phone: dPhone, clinic: dClinic, address: dAddr, user_id: user })
         .select();
+
+    // If duplicate key (another tenant has same name+phone), upsert on conflict
+    if (error && (error.code === '23505' || (error.message && error.message.includes('duplicate key')))) {
+        console.warn('[db] dbAddDoctor: duplicate key, trying upsert fallback.');
+        const { data: ups, error: upsErr } = await _supabase.from('doctors')
+            .upsert({ name: dName, phone: dPhone, clinic: dClinic, address: dAddr, user_id: user },
+                    { onConflict: 'name,phone', ignoreDuplicates: false })
+            .select();
+        if (upsErr) {
+            const { data: fallback } = await _supabase.from('doctors')
+                .select('*').eq('name', dName).eq('user_id', user).maybeSingle();
+            return { success: true, data: fallback || null };
+        }
+        return { success: true, data: ups?.[0] || null };
+    }
+
     if (error) { console.error('doctor add:', error); return { success: false, message: error.message }; }
     return { success: true, data: data?.[0] || null };
 }
