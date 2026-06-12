@@ -123,7 +123,7 @@ async function mmHasUsers() {
 
 // Upsert a single user record to Supabase (and localStorage as backup)
 async function _saveUser(userObj) {
-    // Build a stable, unique id: "tenant_id:username" so two stores can have same username
+    // Build a stable composite id so two stores can have the same username
     if (!userObj.id) {
         const tid = userObj.tenant_id || userObj.username;
         userObj.id = tid + ':' + userObj.username;
@@ -131,40 +131,47 @@ async function _saveUser(userObj) {
     const db = _authDB();
     if (db) {
         try {
-            // Try upsert on 'id' column first (new schema)
-            const { error } = await db.from('mm_users')
+            // Strategy 1: upsert on composite 'id' (preferred)
+            const { error: e1 } = await db.from('mm_users')
                 .upsert({ ...userObj }, { onConflict: 'id' });
-            if (!error) {
-                const local = _localGetUsers();
-                const idx = local.findIndex(u => u.id === userObj.id);
-                if (idx >= 0) local[idx] = userObj; else local.push(userObj);
-                _localSaveUsers(local);
+            if (!e1) {
+                _syncLocal(userObj);
                 return true;
             }
-            // If id column doesn't exist yet, fall back to select+update or insert
-            console.warn('[auth] upsert on id failed, trying insert fallback:', error.message);
-            const { data: existing } = await db.from('mm_users')
-                .select('id').eq('id', userObj.id).maybeSingle();
-            if (existing) {
-                await db.from('mm_users').update({ ...userObj }).eq('id', userObj.id);
-            } else {
-                await db.from('mm_users').insert({ ...userObj });
+            console.warn('[auth] upsert(id) failed:', e1.message, '— trying upsert(username)');
+
+            // Strategy 2: upsert on 'username' (old DB schema)
+            const { error: e2 } = await db.from('mm_users')
+                .upsert({ ...userObj }, { onConflict: 'username' });
+            if (!e2) {
+                _syncLocal(userObj);
+                return true;
             }
-            const local = _localGetUsers();
-            const idx = local.findIndex(u => u.id === userObj.id);
-            if (idx >= 0) local[idx] = userObj; else local.push(userObj);
-            _localSaveUsers(local);
-            return true;
+            console.warn('[auth] upsert(username) failed:', e2.message, '— trying insert');
+
+            // Strategy 3: plain insert (handles case where row doesn't exist yet)
+            const { error: e3 } = await db.from('mm_users').insert({ ...userObj });
+            if (!e3) {
+                _syncLocal(userObj);
+                return true;
+            }
+            console.warn('[auth] insert failed:', e3.message, '— saving to localStorage only');
         } catch (e) {
-            console.warn('[auth] Supabase upsert failed:', e.message);
+            console.warn('[auth] Supabase save error:', e.message);
         }
     }
     // localStorage fallback
+    _syncLocal(userObj);
+    return false;
+}
+
+function _syncLocal(userObj) {
     const local = _localGetUsers();
-    const idx = local.findIndex(u => u.id === userObj.id);
+    const idx = local.findIndex(u => u.id === userObj.id ||
+        u.username.toLowerCase() === userObj.username.toLowerCase() &&
+        (u.tenant_id || u.username) === (userObj.tenant_id || userObj.username));
     if (idx >= 0) local[idx] = userObj; else local.push(userObj);
     _localSaveUsers(local);
-    return false;
 }
 
 async function _deleteUser(username, tenantId) {
