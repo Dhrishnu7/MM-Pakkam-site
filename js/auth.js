@@ -265,11 +265,17 @@ async function mmRequireAuth() {
 async function _validateSession(session) {
     try {
         const users = await mmGetUsers();
-        const dbUser = users.find(u => u.username === session.username && u.tenant_id === session.tenant_id);
-        if (dbUser && dbUser.active_session_token && dbUser.active_session_token !== session.token) {
-            mmClearSession();
-            alert("You have been logged out because this account was just signed in from another device.");
-            window.location.replace('login.html');
+        // Fallback for old sessions that lack tenant_id
+        const tenantId = session.tenant_id || session.username;
+        const dbUser = users.find(u => u.username === session.username && (u.tenant_id === tenantId || u.username === tenantId));
+        
+        if (dbUser && dbUser.active_session_token) {
+            // If the session has no token (old session), or the token doesn't match, log them out
+            if (!session.token || dbUser.active_session_token !== session.token) {
+                mmClearSession();
+                alert("You have been logged out because this account was just signed in from another device.");
+                window.location.replace('login.html');
+            }
         }
     } catch(e) {
         // Ignore network errors so we don't accidentally log out offline users
