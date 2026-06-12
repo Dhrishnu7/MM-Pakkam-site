@@ -943,7 +943,8 @@
                 const stock = getStock(p.productName, p.batchNo);
                 const opt = document.createElement('option');
                 opt.value = p.batchNo;
-                opt.textContent = `${p.batchNo}  |  Exp: ${p.expireDate || '-'}  |  Stock: ${stock}`;
+                opt.textContent = p.batchNo;
+                opt.title = `Exp: ${p.expireDate || '-'}  |  Stock: ${stock}`;
                 batchSelect.appendChild(opt);
             });
 
