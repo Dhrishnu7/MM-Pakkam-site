@@ -535,7 +535,11 @@
                 const initials = u.username.slice(0,2).toUpperCase();
                 const isOwner  = u.role === 'owner';
                 const isMe     = _session && u.username.toLowerCase() === _session.username.toLowerCase();
-                const dateStr  = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN') : '—';
+                let dateStr = '—';
+                if (u.createdAt && u.createdAt !== 'undefined') {
+                    const d = new Date(u.createdAt);
+                    if (!isNaN(d)) dateStr = d.toLocaleDateString('en-IN');
+                }
                 return `
                 <div class="user-row">
                     <div class="user-avatar ${isOwner ? 'owner' : ''}">${initials}</div>
