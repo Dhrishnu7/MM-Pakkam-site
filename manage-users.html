@@ -535,11 +535,6 @@
                 const initials = u.username.slice(0,2).toUpperCase();
                 const isOwner  = u.role === 'owner';
                 const isMe     = _session && u.username.toLowerCase() === _session.username.toLowerCase();
-                let dateStr = '—';
-                if (u.createdAt && u.createdAt !== 'undefined') {
-                    const d = new Date(u.createdAt);
-                    if (!isNaN(d)) dateStr = d.toLocaleDateString('en-IN');
-                }
                 return `
                 <div class="user-row">
                     <div class="user-avatar ${isOwner ? 'owner' : ''}">${initials}</div>
@@ -549,7 +544,6 @@
                             ${isMe ? '<span style="font-size:0.7rem;color:#94a3b8;">(you)</span>' : ''}
                             <span class="active-dot" title="Active"></span>
                         </div>
-                        <div class="user-meta">Added ${dateStr}</div>
                     </div>
                     <span class="role-pill ${isOwner ? 'role-owner' : 'role-worker'}">${u.role}</span>
                     <div class="user-actions">
