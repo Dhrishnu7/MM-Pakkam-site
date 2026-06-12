@@ -123,40 +123,64 @@ async function mmHasUsers() {
 
 // Upsert a single user record to Supabase (and localStorage as backup)
 async function _saveUser(userObj) {
+    // Build a stable, unique id: "tenant_id:username" so two stores can have same username
+    if (!userObj.id) {
+        const tid = userObj.tenant_id || userObj.username;
+        userObj.id = tid + ':' + userObj.username;
+    }
     const db = _authDB();
     if (db) {
         try {
+            // Try upsert on 'id' column first (new schema)
             const { error } = await db.from('mm_users')
-                .upsert({ ...userObj }, { onConflict: 'username' });
+                .upsert({ ...userObj }, { onConflict: 'id' });
             if (!error) {
-                // Keep localStorage in sync as backup
                 const local = _localGetUsers();
-                const idx = local.findIndex(u => u.username.toLowerCase() === userObj.username.toLowerCase());
+                const idx = local.findIndex(u => u.id === userObj.id);
                 if (idx >= 0) local[idx] = userObj; else local.push(userObj);
                 _localSaveUsers(local);
                 return true;
             }
-            console.warn('[auth] Supabase upsert failed:', error.message);
+            // If id column doesn't exist yet, fall back to select+update or insert
+            console.warn('[auth] upsert on id failed, trying insert fallback:', error.message);
+            const { data: existing } = await db.from('mm_users')
+                .select('id').eq('id', userObj.id).maybeSingle();
+            if (existing) {
+                await db.from('mm_users').update({ ...userObj }).eq('id', userObj.id);
+            } else {
+                await db.from('mm_users').insert({ ...userObj });
+            }
+            const local = _localGetUsers();
+            const idx = local.findIndex(u => u.id === userObj.id);
+            if (idx >= 0) local[idx] = userObj; else local.push(userObj);
+            _localSaveUsers(local);
+            return true;
         } catch (e) {
             console.warn('[auth] Supabase upsert failed:', e.message);
         }
     }
     // localStorage fallback
     const local = _localGetUsers();
-    const idx = local.findIndex(u => u.username.toLowerCase() === userObj.username.toLowerCase());
+    const idx = local.findIndex(u => u.id === userObj.id);
     if (idx >= 0) local[idx] = userObj; else local.push(userObj);
     _localSaveUsers(local);
-    return false; // indicates we fell back to localStorage
+    return false;
 }
 
-async function _deleteUser(username) {
+async function _deleteUser(username, tenantId) {
+    // Build the stable id to target the exact record
+    const tid = tenantId || username;
+    const id  = tid + ':' + username;
     const db = _authDB();
     if (db) {
         try {
-            await db.from('mm_users').delete().ilike('username', username);
+            // Try to delete by id first (new format)
+            await db.from('mm_users').delete().eq('id', id);
+            // Also delete any old-format record matching just username (migration cleanup)
+            await db.from('mm_users').delete().eq('username', username).eq('tenant_id', tid);
         } catch {}
     }
-    _localSaveUsers(_localGetUsers().filter(u => u.username.toLowerCase() !== username.toLowerCase()));
+    _localSaveUsers(_localGetUsers().filter(u => u.id !== id && u.username.toLowerCase() !== username.toLowerCase()));
 }
 
 /* ─────────────────────────────────────────
@@ -242,11 +266,16 @@ async function mmLogin(username, password, remember) {
     try {
         const users = await mmGetUsers();
         const hash  = await mmHashPassword(password);
+        // Match by username (case-insensitive) and password hash
+        // For workers with same username across stores, pick the first match —
+        // they must use their store owner's username to distinguish (future: login form can ask)
         const user  = users.find(u =>
             u.username.toLowerCase() === username.trim().toLowerCase() &&
             u.passwordHash === hash
         );
         if (!user) return { success: false, message: 'Invalid username or password.' };
+        // Ensure tenant_id is always set (migrate old records on the fly)
+        if (!user.tenant_id) user.tenant_id = user.username;
         mmSaveSession(user, remember);
         return { success: true, user };
     } catch (err) {
@@ -321,7 +350,9 @@ async function mmAddOwner(username, password) {
 
 /** Delete a user by username (owner function) */
 async function mmDeleteUser(username) {
-    await _deleteUser(username);
+    const session  = mmGetSession();
+    const tenantId = session ? (session.tenant_id || session.username) : username;
+    await _deleteUser(username, tenantId);
 }
 
 /**
@@ -402,22 +433,27 @@ async function mmResetPassword(username, newPassword) {
 /** Rename a user. Returns { success, message } */
 async function mmRenameUser(oldUsername, newUsername) {
     const users  = await mmGetUsers();
+    const session = mmGetSession();
+    const tenantId = session ? (session.tenant_id || session.username) : null;
     const trimmed = newUsername.trim();
     if (trimmed.length < 3) return { success: false, message: 'Username must be at least 3 characters.' };
-    if (users.find(u => u.username.toLowerCase() === trimmed.toLowerCase() &&
-                        u.username.toLowerCase() !== oldUsername.toLowerCase())) {
-        return { success: false, message: 'Username already taken.' };
+    // Check uniqueness within the same tenant
+    const tenantUsers = await mmGetTenantUsers();
+    if (tenantUsers.find(u => u.username.toLowerCase() === trimmed.toLowerCase() &&
+                              u.username.toLowerCase() !== oldUsername.toLowerCase())) {
+        return { success: false, message: 'Username already taken in this store.' };
     }
-    const user = users.find(u => u.username.toLowerCase() === oldUsername.toLowerCase());
+    const user = users.find(u => u.username.toLowerCase() === oldUsername.toLowerCase() &&
+                                  (u.tenant_id === tenantId || u.username === tenantId));
     if (!user) return { success: false, message: 'User not found.' };
 
-    // Delete old record, save with new name
-    await _deleteUser(oldUsername);
+    // Delete old record (by old id), save with new name
+    await _deleteUser(oldUsername, tenantId);
     user.username = trimmed;
+    user.id = (user.tenant_id || tenantId) + ':' + trimmed;  // recalc id
     await _saveUser(user);
 
     // Update session if renaming the currently logged-in user
-    const session = mmGetSession();
     if (session && session.username.toLowerCase() === oldUsername.toLowerCase()) {
         session.username = trimmed;
         const remember = localStorage.getItem(MM_REMEMBER_KEY) === 'true';
