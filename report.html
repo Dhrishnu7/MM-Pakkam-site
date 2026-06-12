@@ -916,7 +916,6 @@
                             <th>Date</th>
                             <th>Customer</th>
                             <th>Medicines</th>
-                            <th>Total (₹)</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -2507,7 +2506,6 @@
                     <td>${d}</td>
                     <td>${bill.customerName || 'Walk-in'}<br><small style="color:#64748b">${dispPhone}</small></td>
                     <td><small>${medsList}</small></td>
-                    <td style="font-weight:700">₹${parseFloat(bill.total||0).toFixed(2)}</td>
                     <td>
                         <button class="action-btn btn-preview" onclick='previewBill("${bill.id || bill.billNo}")'>Preview</button>
                         <button class="action-btn btn-print" onclick='printBill("${bill.id || bill.billNo}")'>Print</button>
