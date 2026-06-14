@@ -275,6 +275,9 @@ async function mmRequireAuth() {
     // Validate the token on page load
     await _validateSession(session);
     
+    // Auto-migrate legacy data in background
+    _autoMigrateLocalDataToSupabase(session);
+    
     // Start background monitor (every 10s)
     if (!window._mmSessionMonitor) {
         window._mmSessionMonitor = setInterval(async () => {
@@ -362,6 +365,10 @@ async function mmLogin(username, password, remember, force = false) {
 
         user.token = newToken; // attach token to session
         mmSaveSession(user, remember);
+        
+        // Auto-migrate legacy data in background without blocking login
+        _autoMigrateLocalDataToSupabase(user);
+        
         return { success: true, user };
     } catch (err) {
         console.error('[auth] mmLogin error:', err);
@@ -640,4 +647,70 @@ function mmInjectUserBar() {
 
     const header = document.querySelector('header');
     if (header) header.appendChild(bar);
+}
+
+// =========================================================
+// DATA AUTO-MIGRATION (LOCAL -> SUPABASE)
+// Runs once per user device to push legacy offline data to the cloud.
+// =========================================================
+async function _autoMigrateLocalDataToSupabase(session) {
+    if (!session) return;
+    const user = session.tenant_id || session.username;
+    if (!user) return;
+    
+    const flagKey = `mm_${user}_migrated_data`;
+    if (localStorage.getItem(flagKey)) return; // Already migrated
+
+    console.log(`[auth] Starting auto-migration for ${user}...`);
+    
+    try {
+        // 1. Customers
+        const custStr = localStorage.getItem(`mm_${user}_customers`) || localStorage.getItem('mm_customers');
+        if (custStr) {
+            const customers = JSON.parse(custStr) || [];
+            for (const c of customers) {
+                if (typeof dbAddCustomer === 'function') await dbAddCustomer(c.name, c.phone || '', c.address || '');
+            }
+        }
+
+        // 2. Doctors
+        const docStr = localStorage.getItem(`mm_${user}_doctors`) || localStorage.getItem('mm_doctors');
+        if (docStr) {
+            const doctors = JSON.parse(docStr) || [];
+            for (const d of doctors) {
+                if (typeof dbAddDoctor === 'function') await dbAddDoctor(d.name, d.phone || '', d.clinic || '', d.address || '');
+            }
+        }
+
+        // 3. Medicines
+        const medStr = localStorage.getItem(`mm_${user}_medicines`) || localStorage.getItem('mm_medicines');
+        if (medStr) {
+            const meds = JSON.parse(medStr) || [];
+            if (meds.length && typeof dbImportMedicines === 'function') await dbImportMedicines(meds);
+        }
+
+        // 4. Purchases
+        const purStr = localStorage.getItem(`mm_${user}_purchases`) || localStorage.getItem('mm_purchases');
+        if (purStr) {
+            const purchases = JSON.parse(purStr) || [];
+            for (const p of purchases) {
+                if (typeof dbAddPurchase === 'function') await dbAddPurchase(p);
+            }
+        }
+
+        // 5. Bills
+        const billStr = localStorage.getItem(`mm_${user}_bills`) || localStorage.getItem('mm_bills');
+        if (billStr) {
+            const bills = JSON.parse(billStr) || [];
+            for (const b of bills) {
+                if (typeof dbSaveBill === 'function') await dbSaveBill(b);
+            }
+        }
+
+        localStorage.setItem(flagKey, 'true');
+        console.log(`[auth] Auto-migration complete for ${user}.`);
+        
+    } catch (e) {
+        console.error('[auth] Auto-migration failed:', e);
+    }
 }
