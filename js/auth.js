@@ -102,18 +102,43 @@ function _localSaveUsers(users) {
 }
 
 async function mmGetUsers() {
+    const localUsers = _localGetUsers();
     const db = _authDB();
     if (db) {
         try {
             const { data, error } = await db.from('mm_users').select('*');
-            if (!error && data) return data;
-            // If error is "table not found", fall through to localStorage
+            if (!error && data) {
+                // Merge local users that aren't in Supabase yet
+                const merged = [...data];
+                let uploadedAny = false;
+                
+                for (const lUser of localUsers) {
+                    const existsInDb = data.find(d => 
+                        (d.id && d.id === lUser.id) || 
+                        (d.username.toLowerCase() === lUser.username.toLowerCase() && 
+                         (d.tenant_id || d.username) === (lUser.tenant_id || lUser.username))
+                    );
+                    
+                    if (!existsInDb) {
+                        merged.push(lUser);
+                        // Auto-migrate to Supabase in background
+                        _saveUser(lUser);
+                        uploadedAny = true;
+                    }
+                }
+                
+                if (!uploadedAny) {
+                    // Keep local cache fresh with DB truth
+                    _localSaveUsers(data);
+                }
+                return merged;
+            }
             console.warn('[auth] Supabase mm_users fetch failed:', error?.message || error);
         } catch (e) {
             console.warn('[auth] Supabase unreachable, using localStorage:', e.message);
         }
     }
-    return _localGetUsers();
+    return localUsers;
 }
 
 async function mmHasUsers() {
