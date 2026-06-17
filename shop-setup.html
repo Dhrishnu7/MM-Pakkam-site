@@ -392,8 +392,17 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // Get tenant from URL (passed from setup.html after account creation)
 const params = new URLSearchParams(location.search);
-const tenantId = params.get('tenant') || '';
-const isEditMode = params.get('edit') === '1'; // for editing existing profile when logged in
+let tenantId = params.get('tenant') || '';
+let isEditMode = params.get('edit') === '1'; // for editing existing profile when logged in
+
+// Auto-detect if user came from a direct link but is logged in
+if (!tenantId && !isEditMode) {
+    const session = JSON.parse(localStorage.getItem('mm_session') || sessionStorage.getItem('mm_session') || 'null');
+    if (session) {
+        isEditMode = true;
+        tenantId = session.tenant_id || session.username;
+    }
+}
 
 // If edit mode (logged in owner updating their profile), load existing data
 if (isEditMode) {
