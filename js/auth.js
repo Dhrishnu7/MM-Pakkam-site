@@ -357,14 +357,44 @@ function mmCurrentUser() {
 /** Login. Returns { success, message, forceRequired } */
 async function mmLogin(username, password, remember, force = false) {
     try {
-        const users = await mmGetUsers();
-        const hash  = await mmHashPassword(password);
-        // Match by username (case-insensitive) and password hash
-        const user  = users.find(u =>
-            u.username.toLowerCase() === username.trim().toLowerCase() &&
-            u.passwordHash === hash
-        );
-        if (!user) return { success: false, message: 'Invalid username or password.' };
+        const hash = await mmHashPassword(password);
+        
+        // --- STEP 1: Always check Supabase first (source of truth) ---
+        const db = _authDB();
+        let user = null;
+        let supabaseReachable = false;
+
+        if (db) {
+            try {
+                const { data, error } = await db.from('mm_users').select('*');
+                if (!error && data) {
+                    supabaseReachable = true;
+                    // Update local cache with latest DB state
+                    _localSaveUsers(data);
+                    user = data.find(u =>
+                        u.username.toLowerCase() === username.trim().toLowerCase() &&
+                        u.passwordHash === hash
+                    );
+                    // If Supabase is reachable but user not found → credentials invalid or account deleted
+                    if (!user) {
+                        return { success: false, message: 'Invalid username or password.' };
+                    }
+                }
+            } catch(e) {
+                console.warn('[auth] Supabase unreachable during login, falling back to localStorage');
+            }
+        }
+
+        // --- STEP 2: Fallback to localStorage only if Supabase is unreachable (offline) ---
+        if (!supabaseReachable) {
+            const localUsers = _localGetUsers();
+            user = localUsers.find(u =>
+                u.username.toLowerCase() === username.trim().toLowerCase() &&
+                u.passwordHash === hash
+            );
+            if (!user) return { success: false, message: 'Invalid username or password.' };
+        }
+
         // Check approval status
         if (user.approval_status === 'pending') {
             return { success: false, message: '⏳ Your account is pending approval. Please wait for admin confirmation before signing in.' };
@@ -374,6 +404,7 @@ async function mmLogin(username, password, remember, force = false) {
         }
         // Ensure tenant_id is always set (migrate old records on the fly)
         if (!user.tenant_id) user.tenant_id = user.username;
+
 
         // --- Single Device Lockout Logic ---
         if (user.active_session_token && !force) {
