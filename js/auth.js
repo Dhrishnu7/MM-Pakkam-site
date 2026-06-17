@@ -102,43 +102,24 @@ function _localSaveUsers(users) {
 }
 
 async function mmGetUsers() {
-    const localUsers = _localGetUsers();
     const db = _authDB();
     if (db) {
         try {
             const { data, error } = await db.from('mm_users').select('*');
             if (!error && data) {
-                // Merge local users that aren't in Supabase yet
-                const merged = [...data];
-                let uploadedAny = false;
-                
-                for (const lUser of localUsers) {
-                    const existsInDb = data.find(d => 
-                        (d.id && d.id === lUser.id) || 
-                        (d.username.toLowerCase() === lUser.username.toLowerCase() && 
-                         (d.tenant_id || d.username) === (lUser.tenant_id || lUser.username))
-                    );
-                    
-                    if (!existsInDb) {
-                        merged.push(lUser);
-                        // Auto-migrate to Supabase in background
-                        _saveUser(lUser);
-                        uploadedAny = true;
-                    }
-                }
-                
-                if (!uploadedAny) {
-                    // Keep local cache fresh with DB truth
-                    _localSaveUsers(data);
-                }
-                return merged;
+                // ⚠️ IMPORTANT: Supabase is the ONLY source of truth when reachable.
+                // DO NOT merge local users — deleted accounts must stay deleted.
+                // Simply update local cache to match the DB exactly.
+                _localSaveUsers(data);
+                return data;
             }
             console.warn('[auth] Supabase mm_users fetch failed:', error?.message || error);
         } catch (e) {
             console.warn('[auth] Supabase unreachable, using localStorage:', e.message);
         }
     }
-    return localUsers;
+    // Only use localStorage when Supabase is completely unreachable (offline)
+    return _localGetUsers();
 }
 
 async function mmHasUsers() {
