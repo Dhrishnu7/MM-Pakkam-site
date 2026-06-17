@@ -185,14 +185,21 @@
         .skip-link {
             display: block;
             text-align: center;
-            margin-top: 12px;
-            font-size: .8rem;
+            margin: 15px auto 0 auto;
+            width: fit-content;
+            font-size: .85rem;
             color: var(--text3);
             cursor: pointer;
-            text-decoration: underline;
-            text-underline-offset: 3px;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
         }
-        .skip-link:hover { color: var(--text2); }
+        .skip-link:hover { 
+            color: var(--text);
+            background: rgba(0,0,0,0.04);
+        }
 
         /* ERROR */
         .err-box {
