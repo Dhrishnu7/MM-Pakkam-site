@@ -258,6 +258,14 @@ async function mmRequireAuth() {
     
     // Auto-migrate legacy data in background
     _autoMigrateLocalDataToSupabase(session);
+
+    // Load shop profile for dynamic branding (non-blocking)
+    window.mmShopProfile = null;
+    if (typeof dbGetShopProfile === 'function') {
+        try { window.mmShopProfile = await dbGetShopProfile(); } catch(e) {}
+    }
+    // Apply shop branding to this page
+    mmInjectShopBranding();
     
     // Start background monitor (every 10s)
     if (!window._mmSessionMonitor) {
@@ -268,6 +276,34 @@ async function mmRequireAuth() {
     }
 
     return session;
+}
+
+/**
+ * Dynamically update the navbar logo and page title with the shop's own branding.
+ * Falls back to 'MM Pakkam' for accounts without a shop profile.
+ */
+function mmInjectShopBranding() {
+    const profile = window.mmShopProfile;
+    const shopName = profile?.shop_name || 'MM Pakkam';
+    // Build initials from first 2 words
+    const initials = shopName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'MM';
+
+    // Update navbar logo icon (the short 2-letter badge)
+    const logoIcon = document.querySelector('.logo-icon');
+    if (logoIcon) logoIcon.textContent = initials;
+
+    // Update navbar logo full name
+    const logoText = document.querySelector('.logo-text');
+    if (logoText) logoText.textContent = shopName;
+
+    // Update browser tab title
+    const currentTitle = document.title;
+    if (currentTitle.includes('|')) {
+        const pageSection = currentTitle.split('|')[0].trim();
+        document.title = pageSection + ' | ' + shopName;
+    } else {
+        document.title = shopName;
+    }
 }
 
 // Helper to check DB and force logout if account was deleted, rejected, or token changed
@@ -665,10 +701,18 @@ function mmInjectUserBar() {
 
     const initials = session.username.slice(0, 2).toUpperCase();
     const isOwner  = session.role === 'owner';
+    const shopName = window.mmShopProfile?.shop_name || session.username;
+    const shopInitials = shopName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase() || initials;
     const bar = document.createElement('div');
     bar.className = 'mm-user-bar';
     bar.innerHTML = `
         ${isOwner ? `
+        <a class="mm-manage-btn" href="shop-setup.html" title="Shop Settings" style="border-color:rgba(16,185,129,0.35);background:rgba(209,250,229,0.8);color:#065f46;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            Shop
+        </a>
         <a class="mm-manage-btn" href="manage-users.html" title="Manage Users">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.356-3.712M9 20H4v-2a4 4 0 015.356-3.712M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 4a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -676,8 +720,8 @@ function mmInjectUserBar() {
             Users
         </a>` : ''}
         <div class="mm-user-pill">
-            <div class="mm-avatar">${initials}</div>
-            <span class="mm-user-name">${session.username}</span>
+            <div class="mm-avatar">${shopInitials}</div>
+            <span class="mm-user-name">${shopName}</span>
             <span class="mm-role-badge ${isOwner ? 'mm-role-owner' : 'mm-role-worker'}">${session.role}</span>
         </div>
         <button class="mm-logout-btn" onclick="mmLogout()" title="Logout">

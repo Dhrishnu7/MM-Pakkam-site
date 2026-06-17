@@ -233,7 +233,9 @@ async function dbNextBillNo() {
         .from('bills')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user);
-    return 'MM-' + String((count || 0) + 1).padStart(3, '0');
+    // Use shop profile invoice prefix if available, fallback to 'MM'
+    const prefix = window.mmShopProfile?.invoice_prefix || 'MM';
+    return prefix + '-' + String((count || 0) + 1).padStart(3, '0');
 }
 async function dbGetBills(fromDate, toDate) {
     const user = _currentUser();
@@ -458,3 +460,40 @@ async function dbDeleteAllPurchases() {
         }
     } catch(e) { console.error("[Offline Sync] Purchases sync failed:", e); }
 })();
+
+/* ─────────────────────────────────────────────────────
+   SHOP PROFILE  (per-user store details for invoices)
+───────────────────────────────────────────────────── */
+async function dbGetShopProfile() {
+    const user = _currentUser();
+    if (!user) return null;
+    const { data, error } = await _supabase
+        .from('shop_profiles')
+        .select('*')
+        .eq('user_id', user)
+        .maybeSingle();
+    if (error) { console.error('shop profile fetch:', error); return null; }
+    return data;
+}
+
+async function dbSaveShopProfile(profile) {
+    const user = _currentUser();
+    if (!user) return { success: false, message: 'Not logged in.' };
+    const { error } = await _supabase
+        .from('shop_profiles')
+        .upsert({
+            user_id:        user,
+            shop_name:      profile.shopName      || '',
+            address_line1:  profile.addressLine1  || '',
+            address_line2:  profile.addressLine2  || '',
+            phone:          profile.phone         || '',
+            dl_no:          profile.dlNo          || '',
+            gstin:          profile.gstin         || '',
+            invoice_prefix: profile.invoicePrefix || 'MM',
+            terms:          profile.terms         || '',
+            footer_msg:     profile.footerMsg     || '',
+            updated_at:     new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+    if (error) { console.error('shop profile save:', error); return { success: false, message: error.message }; }
+    return { success: true };
+}

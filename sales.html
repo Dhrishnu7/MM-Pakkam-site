@@ -1590,6 +1590,18 @@
             const fmtTime = new Date(bill.savedAt || Date.now()).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
             const fmtDate = new Date(bill.savedAt || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
+            // Shop profile — use stored values or fall back to defaults
+            const sp = window.mmShopProfile || {};
+            const invShopName  = sp.shop_name      || 'MM Pakkam';
+            const invAddr1     = sp.address_line1  || '';
+            const invAddr2     = sp.address_line2  || '';
+            const invPhone     = sp.phone          || '';
+            const invDlNo      = sp.dl_no          || '';
+            const invGstin     = sp.gstin          || '';
+            const invFooter    = sp.footer_msg     || '"Wishing you a speedy recovery!"';
+            const invTermsRaw  = sp.terms || 'Goods once sold cannot be taken back or exchanged.\nMedicines should be stored as per manufacturer guidelines.\nSubject to local jurisdiction only.';
+            const invTermsHtml = invTermsRaw.split('\n').filter(Boolean).map(t => `<li>${t}</li>`).join('');
+
             // Correct calculations: base = qty × MRP
             let totalValue = 0, totalCGST = 0, totalSGST = 0, totalDiscount = 0;
             const rows = (bill.medicines || []).map((m, i) => {
@@ -1650,10 +1662,10 @@
                         <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 25px;">
                             <tr>
                                 <td valign="top">
-                                    <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">Mudhalvar Marundhagam Pakkam</h1>
-                                    <p style="margin: 0 0 4px; color: #475569;">Shop No-01, Krishna Complex, KTP Road</p>
-                                    <p style="margin: 0 0 4px; color: #475569;">Pakkam, THIRUVALLUR - 602024</p>
-                                    <p style="margin: 0; color: #475569;">Phone: <strong style="color: #0f172a;">9551561821</strong></p>
+                                    <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">${invShopName}</h1>
+                                    ${invAddr1 ? `<p style="margin: 0 0 4px; color: #475569;">${invAddr1}</p>` : ''}
+                                    ${invAddr2 ? `<p style="margin: 0 0 4px; color: #475569;">${invAddr2}</p>` : ''}
+                                    ${invPhone ? `<p style="margin: 0; color: #475569;">Phone: <strong style="color: #0f172a;">${invPhone}</strong></p>` : ''}
                                 </td>
                                 <td valign="top" align="right">
                                     <h2 style="margin: 0 0 10px; font-size: 28px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 2px;">Invoice</h2>
@@ -1671,11 +1683,11 @@
                             <tr>
                                 <td style="padding: 12px 15px; width: 50%;">
                                     <span style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">D.L.No</span><br>
-                                    <strong style="font-size: 13px;">TN-12-123456</strong>
+                                    <strong style="font-size: 13px;">${invDlNo || '—'}</strong>
                                 </td>
                                 <td style="padding: 12px 15px; width: 50%; text-align: right;">
                                     <span style="color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">GSTIN</span><br>
-                                    <strong style="font-size: 13px;">33ABCDE1234F1Z5</strong>
+                                    <strong style="font-size: 13px;">${invGstin || '—'}</strong>
                                 </td>
                             </tr>
                         </table>
@@ -1721,12 +1733,10 @@
                                 <td valign="top" width="55%" style="padding-right: 30px;">
                                     <h4 style="margin: 0 0 8px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Terms & Conditions</h4>
                                     <ol style="margin: 0; padding-left: 15px; color: #64748b; font-size: 11px; line-height: 1.6;">
-                                        <li>Goods once sold cannot be taken back or exchanged.</li>
-                                        <li>Medicines should be stored as per manufacturer guidelines.</li>
-                                        <li>Subject to local jurisdiction only.</li>
+                                        ${invTermsHtml}
                                     </ol>
                                     <div style="margin-top: 25px; padding: 12px; background: #f8fafc; border-left: 3px solid #cbd5e1; border-radius: 4px;">
-                                        <p style="margin: 0; font-size: 13px; color: #334155; font-weight: 500; font-style: italic;">"Wishing you a speedy recovery!"</p>
+                                        <p style="margin: 0; font-size: 13px; color: #334155; font-weight: 500; font-style: italic;">${invFooter}</p>
                                     </div>
                                 </td>
                                 
