@@ -284,9 +284,9 @@ async function mmRequireAuth() {
  */
 function mmInjectShopBranding() {
     const profile = window.mmShopProfile;
-    const shopName = profile?.shop_name || 'MM Pakkam';
+    const shopName = profile?.shop_name || 'Billware';
     // Build initials from first 2 words
-    const initials = shopName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'MM';
+    const initials = shopName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'BW';
 
     // Update navbar logo icon (the short 2-letter badge)
     const logoIcon = document.querySelector('.logo-icon');
@@ -701,8 +701,8 @@ function mmInjectUserBar() {
 
     const initials = session.username.slice(0, 2).toUpperCase();
     const isOwner  = session.role === 'owner';
-    const shopName = window.mmShopProfile?.shop_name || session.username;
-    const shopInitials = shopName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase() || initials;
+    const shopName = window.mmShopProfile?.shop_name || 'Billware';
+    const shopInitials = shopName.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase() || 'BW';
     const bar = document.createElement('div');
     bar.className = 'mm-user-bar';
     bar.innerHTML = `
