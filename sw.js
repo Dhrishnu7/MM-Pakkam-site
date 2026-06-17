@@ -1,6 +1,6 @@
 // ── MM Pakkam Service Worker ──
 // IMPORTANT: Change CACHE_NAME on every deploy so installed apps get the latest version
-const CACHE_NAME = 'mm-pakkam-v65';
+const CACHE_NAME = 'mm-pakkam-v66';
 
 // Pages and assets to cache for offline use
 const PRECACHE_URLS = [

@@ -289,24 +289,47 @@ async function mmRequireAuth() {
     return session;
 }
 
-// Helper to check DB and force logout if token changed
+// Helper to check DB and force logout if account was deleted, rejected, or token changed
 async function _validateSession(session) {
     try {
-        const users = await mmGetUsers();
-        // Fallback for old sessions that lack tenant_id
+        const db = _authDB();
+        if (!db) return; // No Supabase — offline, don't log out
+
+        // Fetch directly from Supabase (not localStorage fallback) to get true DB state
+        const { data: users, error } = await db.from('mm_users').select('*');
+        if (error || !users) return; // Supabase error — don't accidentally log out
+
+        // If Supabase returned data but user is NOT found → account was DELETED
         const tenantId = session.tenant_id || session.username;
-        const dbUser = users.find(u => u.username === session.username && (u.tenant_id === tenantId || u.username === tenantId));
-        
-        if (dbUser && dbUser.active_session_token) {
-            // If the session has no token (old session), or the token doesn't match, log them out
-            if (!session.token || dbUser.active_session_token !== session.token) {
-                mmClearSession();
-                alert("You have been logged out because this account was just signed in from another device.");
-                window.location.replace('login.html');
-            }
+        const dbUser = users.find(u =>
+            u.username === session.username &&
+            ((u.tenant_id || u.username) === tenantId)
+        );
+
+        if (!dbUser) {
+            // Account deleted from admin portal — force logout immediately
+            mmClearSession();
+            alert('⚠️ Your account has been removed. You have been signed out.');
+            window.location.replace('login.html');
+            return;
+        }
+
+        // Account exists but was rejected after login
+        if (dbUser.approval_status === 'rejected') {
+            mmClearSession();
+            alert('❌ Your account has been rejected by the administrator. You have been signed out.');
+            window.location.replace('login.html');
+            return;
+        }
+
+        // Another device forcefully logged in — token mismatch
+        if (dbUser.active_session_token && (!session.token || dbUser.active_session_token !== session.token)) {
+            mmClearSession();
+            alert('📱 You have been logged out because this account was signed in from another device.');
+            window.location.replace('login.html');
         }
     } catch(e) {
-        // Ignore network errors so we don't accidentally log out offline users
+        // Ignore network errors — never log out offline users accidentally
     }
 }
 
