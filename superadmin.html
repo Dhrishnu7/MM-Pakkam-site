@@ -10,368 +10,161 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg:        #06060f;
-            --bg2:       #0d0d1a;
-            --bg3:       #12122a;
-            --card:      rgba(255,255,255,0.04);
-            --border:    rgba(255,255,255,0.08);
-            --purple:    #7c3aed;
-            --purple2:   #a855f7;
-            --blue:      #4f46e5;
-            --cyan:      #06b6d4;
-            --green:     #10b981;
-            --red:       #ef4444;
-            --orange:    #f97316;
-            --gold:      #f59e0b;
-            --text:      #f1f5f9;
-            --text2:     #94a3b8;
-            --text3:     #64748b;
+            --bg:      #06060f;
+            --card:    rgba(255,255,255,0.04);
+            --border:  rgba(255,255,255,0.08);
+            --purple:  #7c3aed;
+            --purple2: #a855f7;
+            --blue:    #4f46e5;
+            --cyan:    #06b6d4;
+            --green:   #10b981;
+            --red:     #ef4444;
+            --orange:  #f97316;
+            --gold:    #f59e0b;
+            --text:    #f1f5f9;
+            --text2:   #94a3b8;
+            --text3:   #64748b;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+        body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 10% 20%,rgba(124,58,237,.12) 0,transparent 60%),radial-gradient(ellipse 60% 50% at 90% 80%,rgba(79,70,229,.10) 0,transparent 60%);pointer-events:none;z-index:0}
+        .grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(124,58,237,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.05) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 
-        /* ── Background ── */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse 80% 60% at 10% 20%, rgba(124,58,237,0.12) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 50% at 90% 80%, rgba(79,70,229,0.10) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 40% at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 60%);
-            pointer-events: none;
-            z-index: 0;
-        }
-        .grid-bg {
-            position: fixed;
-            inset: 0;
-            background-image: linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-        }
+        /* LOGIN */
+        #loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;background:var(--bg)}
+        .login-card{background:rgba(13,13,26,.95);border:1px solid rgba(124,58,237,.3);border-radius:24px;padding:48px 40px;width:100%;max-width:420px;backdrop-filter:blur(20px);box-shadow:0 0 60px rgba(124,58,237,.15);animation:up .6s ease}
+        @keyframes up{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+        .lbl{display:block;font-size:.72rem;color:var(--text2);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+        .inp{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;font-size:.95rem;color:var(--text);font-family:inherit;outline:none;transition:border-color .2s;margin-bottom:14px}
+        .inp:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+        .login-btn{width:100%;background:linear-gradient(135deg,var(--purple),var(--blue));border:none;border-radius:12px;padding:14px;color:#fff;font-family:inherit;font-size:.95rem;font-weight:600;cursor:pointer;transition:opacity .2s,transform .1s}
+        .login-btn:hover{opacity:.9;transform:translateY(-1px)}
+        .login-err{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;font-size:.85rem;color:#fca5a5;margin-top:12px;display:none}
 
-        /* ── LOGIN SCREEN ── */
-        #loginScreen {
-            position: fixed;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            background: var(--bg);
-        }
-        .login-card {
-            background: rgba(13,13,26,0.95);
-            border: 1px solid rgba(124,58,237,0.3);
-            border-radius: 24px;
-            padding: 48px 40px;
-            width: 100%;
-            max-width: 420px;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 0 60px rgba(124,58,237,0.15), 0 0 120px rgba(79,70,229,0.08);
-            animation: loginFadeIn 0.6s ease;
-        }
-        @keyframes loginFadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:none; } }
-        .login-logo {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        .login-logo .logo-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(79,70,229,0.2));
-            border: 1px solid rgba(124,58,237,0.4);
-            border-radius: 50px;
-            padding: 10px 20px;
-            margin-bottom: 16px;
-        }
-        .login-logo .logo-badge span { font-size: 1.1rem; }
-        .login-logo h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); }
-        .login-logo p { font-size: 0.8rem; color: var(--text3); margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase; }
-        .login-field { margin-bottom: 16px; }
-        .login-field label { display: block; font-size: 0.75rem; color: var(--text2); margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-        .login-field input {
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 12px 16px;
-            font-size: 0.95rem;
-            color: var(--text);
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .login-field input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
-        .login-btn {
-            width: 100%;
-            background: linear-gradient(135deg, var(--purple), var(--blue));
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            color: white;
-            font-family: inherit;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: opacity 0.2s, transform 0.1s;
-            letter-spacing: 0.02em;
-        }
-        .login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .login-btn:active { transform: none; }
-        .login-error {
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.3);
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 0.85rem;
-            color: #fca5a5;
-            margin-top: 12px;
-            display: none;
-        }
+        /* TOP BAR */
+        #dashboard{display:none;position:relative;z-index:1}
+        .topbar{position:sticky;top:0;z-index:50;background:rgba(6,6,15,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px}
+        .brand{display:flex;align-items:center;gap:10px}
+        .brand-dot{width:8px;height:8px;border-radius:50%;background:var(--purple2);box-shadow:0 0 8px var(--purple2);animation:pulse 2s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+        .brand h1{font-size:.9rem;font-weight:600;color:var(--text2)}
+        .tbr{display:flex;align-items:center;gap:14px}
+        .live-b{display:flex;align-items:center;gap:6px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:50px;padding:4px 12px;font-size:.7rem;color:#6ee7b7;font-weight:600;letter-spacing:.08em}
+        .live-b::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 1.5s infinite}
+        .out-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;color:var(--text2);font-family:inherit;font-size:.78rem;cursor:pointer;transition:all .2s}
+        .out-btn:hover{border-color:var(--red);color:#fca5a5}
+        #ts{font-size:.7rem;color:var(--text3)}
 
-        /* ── MAIN DASHBOARD ── */
-        #dashboard { display: none; position: relative; z-index: 1; }
+        /* TABS */
+        .tab-bar{display:flex;gap:4px;padding:20px 28px 0;border-bottom:1px solid var(--border);background:rgba(6,6,15,.5)}
+        .tab{padding:10px 18px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:.85rem;font-weight:500;cursor:pointer;border-radius:8px 8px 0 0;transition:all .2s;position:relative;display:flex;align-items:center;gap:6px}
+        .tab.active{color:var(--text);background:var(--card)}
+        .tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--blue))}
+        .tab .badge{background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);border-radius:50px;padding:1px 7px;font-size:.65rem;color:#fca5a5;font-weight:700}
+        .tab .badge.green{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3);color:#6ee7b7}
+        .tab-panel{display:none;padding:28px}
+        .tab-panel.active{display:block}
 
-        /* ── TOPBAR ── */
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: rgba(6,6,15,0.8);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            padding: 0 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 60px;
-        }
-        .topbar-brand { display: flex; align-items: center; gap: 12px; }
-        .topbar-brand .brand-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--purple2);
-            box-shadow: 0 0 8px var(--purple2);
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .topbar-brand h1 { font-size: 0.95rem; font-weight: 600; color: var(--text2); }
-        .topbar-brand span { font-size: 0.75rem; color: var(--purple2); font-weight: 500; }
-        .topbar-right { display: flex; align-items: center; gap: 20px; }
-        .topbar-right .live-badge {
-            display: flex; align-items: center; gap: 6px;
-            background: rgba(16,185,129,0.1);
-            border: 1px solid rgba(16,185,129,0.3);
-            border-radius: 50px;
-            padding: 4px 12px;
-            font-size: 0.72rem;
-            color: #6ee7b7;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-        .topbar-right .live-badge::before {
-            content: '';
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 6px var(--green);
-            animation: pulse 1.5s infinite;
-        }
-        .logout-btn {
-            background: none; border: 1px solid var(--border);
-            border-radius: 8px; padding: 6px 14px;
-            color: var(--text2); font-family: inherit; font-size: 0.8rem;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .logout-btn:hover { border-color: var(--red); color: #fca5a5; }
-        #lastRefresh { font-size: 0.72rem; color: var(--text3); }
+        /* CARDS */
+        .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:28px}
+        .sc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+        .sc:hover{border-color:rgba(124,58,237,.3);transform:translateY(-2px)}
+        .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--acc,linear-gradient(90deg,var(--purple),var(--blue)))}
+        .sc-icon{font-size:1.3rem;margin-bottom:10px}
+        .sc-val{font-size:1.8rem;font-weight:700;line-height:1;margin-bottom:4px}
+        .sc-lbl{font-size:.7rem;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+        .sc-sub{font-size:.72rem;color:var(--text2);margin-top:6px}
 
-        /* ── LAYOUT ── */
-        .container { max-width: 1400px; margin: 0 auto; padding: 32px; }
+        /* SECTION */
+        .sh{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+        .sh h2{font-size:.85rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+        .sh .cnt{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:50px;padding:2px 9px;font-size:.7rem;color:var(--purple2);font-weight:600}
+        .sh .cnt.red{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#fca5a5}
 
-        /* ── SECTION HEADERS ── */
-        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-        .section-header .icon { font-size: 1.1rem; }
-        .section-header h2 { font-size: 1rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
-        .section-header .badge {
-            background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
-            border-radius: 50px; padding: 2px 10px; font-size: 0.72rem; color: var(--purple2); font-weight: 600;
-        }
+        /* PENDING CARDS */
+        .pending-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:28px}
+        .pcard{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:18px}
+        .pcard-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+        .pcard-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--orange));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0}
+        .pcard-name{font-weight:600;color:var(--text);font-size:.95rem}
+        .pcard-meta{font-size:.72rem;color:var(--text3);margin-top:2px}
+        .pcard-actions{display:flex;gap:8px}
+        .approve-btn{flex:1;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.35);border-radius:8px;padding:8px;color:#6ee7b7;font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+        .approve-btn:hover{background:rgba(16,185,129,.25)}
+        .reject-btn{flex:1;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:8px;color:#fca5a5;font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+        .reject-btn:hover{background:rgba(239,68,68,.2)}
+        .no-pending{text-align:center;padding:32px;color:var(--text3);font-size:.85rem}
 
-        /* ── STAT CARDS ── */
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 40px; }
-        .stat-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 24px 20px;
-            position: relative;
-            overflow: hidden;
-            transition: border-color 0.2s, transform 0.2s;
-        }
-        .stat-card:hover { border-color: rgba(124,58,237,0.3); transform: translateY(-2px); }
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: var(--accent, linear-gradient(90deg, var(--purple), var(--blue)));
-        }
-        .stat-card .stat-icon { font-size: 1.4rem; margin-bottom: 12px; }
-        .stat-card .stat-val { font-size: 2rem; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; }
-        .stat-card .stat-lbl { font-size: 0.75rem; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-        .stat-card .stat-sub { font-size: 0.75rem; color: var(--text2); margin-top: 8px; }
+        /* ONLINE PILLS */
+        .online-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+        .opill{display:flex;align-items:center;gap:6px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:50px;padding:5px 14px;font-size:.82rem;color:#6ee7b7;font-weight:500}
+        .opill .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 1.5s infinite}
 
-        /* ── ONLINE STRIP ── */
-        #onlineSection { margin-bottom: 40px; }
-        .online-list { display: flex; flex-wrap: wrap; gap: 10px; }
-        .online-pill {
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(16,185,129,0.08);
-            border: 1px solid rgba(16,185,129,0.25);
-            border-radius: 50px;
-            padding: 6px 16px;
-            font-size: 0.85rem;
-            color: #6ee7b7;
-            font-weight: 500;
-            animation: fadeInUp 0.4s ease;
-        }
-        .online-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.5s infinite; }
-        .no-online { color: var(--text3); font-size: 0.85rem; font-style: italic; }
+        /* TABLE */
+        .tw{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:28px}
+        .tbar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border)}
+        .tsearch{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.85rem;color:var(--text);font-family:inherit;outline:none}
+        .tsearch:focus{border-color:var(--purple)}
+        .rbtn{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:7px 14px;color:var(--purple2);font-family:inherit;font-size:.78rem;cursor:pointer;transition:all .2s}
+        .rbtn:hover{background:rgba(124,58,237,.2)}
+        .tbl{width:100%;border-collapse:collapse}
+        .tbl th{text-align:left;padding:11px 14px;font-size:.67rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap}
+        .tbl td{padding:12px 14px;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+        .tbl tr:last-child td{border-bottom:none}
+        .tbl tr:hover td{background:rgba(255,255,255,.02)}
+        .rp{display:inline-block;border-radius:50px;padding:2px 9px;font-size:.68rem;font-weight:600}
+        .ro{background:rgba(124,58,237,.15);color:var(--purple2);border:1px solid rgba(124,58,237,.3)}
+        .rw{background:rgba(6,182,212,.1);color:#67e8f9;border:1px solid rgba(6,182,212,.2)}
+        .son{display:inline-flex;align-items:center;gap:4px;color:#6ee7b7;font-size:.75rem;font-weight:500}
+        .son::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green)}
+        .soff{color:var(--text3);font-size:.75rem}
+        .mv{font-weight:600;color:var(--text)}
+        .gv{font-weight:700;color:#6ee7b7}
+        .del-btn{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:3px 9px;color:#fca5a5;font-size:.72rem;cursor:pointer;font-family:inherit;transition:all .2s}
+        .del-btn:hover{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4)}
 
-        /* ── ACCOUNTS TABLE ── */
-        #accountsSection { margin-bottom: 40px; }
-        .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-        .table-toolbar {
-            display: flex; align-items: center; gap: 12px; padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-        }
-        .table-search {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-size: 0.875rem;
-            color: var(--text);
-            font-family: inherit;
-            outline: none;
-        }
-        .table-search::placeholder { color: var(--text3); }
-        .table-search:focus { border-color: var(--purple); }
-        .refresh-btn {
-            background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3);
-            border-radius: 8px; padding: 8px 16px;
-            color: var(--purple2); font-family: inherit; font-size: 0.8rem;
-            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
-        }
-        .refresh-btn:hover { background: rgba(124,58,237,0.2); }
-        .tbl { width: 100%; border-collapse: collapse; }
-        .tbl th {
-            text-align: left; padding: 12px 16px;
-            font-size: 0.7rem; font-weight: 600;
-            color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em;
-            border-bottom: 1px solid var(--border);
-            white-space: nowrap;
-        }
-        .tbl td { padding: 14px 16px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
-        .tbl tr:last-child td { border-bottom: none; }
-        .tbl tr:hover td { background: rgba(255,255,255,0.02); }
-        .store-name { font-weight: 600; color: var(--text); }
-        .role-pill {
-            display: inline-block;
-            border-radius: 50px; padding: 2px 10px; font-size: 0.7rem; font-weight: 600;
-        }
-        .role-owner { background: rgba(124,58,237,0.15); color: var(--purple2); border: 1px solid rgba(124,58,237,0.3); }
-        .role-worker { background: rgba(6,182,212,0.1); color: #67e8f9; border: 1px solid rgba(6,182,212,0.2); }
-        .status-online { display: inline-flex; align-items: center; gap: 5px; color: #6ee7b7; font-size: 0.78rem; font-weight: 500; }
-        .status-online::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 5px var(--green); }
-        .status-offline { color: var(--text3); font-size: 0.78rem; }
-        .num-val { font-weight: 600; color: var(--text); }
-        .money-val { font-weight: 700; color: #6ee7b7; }
-        .del-btn {
-            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
-            border-radius: 6px; padding: 4px 10px;
-            color: #fca5a5; font-size: 0.75rem; cursor: pointer; font-family: inherit;
-            transition: all 0.2s;
-        }
-        .del-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); }
-        .joined-date { color: var(--text2); font-size: 0.78rem; }
+        /* PAYMENT TOGGLE */
+        .pay-toggle{position:relative;width:42px;height:22px;display:inline-block}
+        .pay-toggle input{opacity:0;width:0;height:0}
+        .pay-slider{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:50px;cursor:pointer;transition:.3s;border:1px solid rgba(255,255,255,.15)}
+        .pay-slider::before{content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+        input:checked+.pay-slider{background:rgba(16,185,129,.3);border-color:rgba(16,185,129,.5)}
+        input:checked+.pay-slider::before{transform:translateX(20px);background:#6ee7b7}
 
-        /* ── 2-COL GRID ── */
-        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px; }
-        @media(max-width:900px){ .two-col { grid-template-columns: 1fr; } }
+        /* BAR CHART */
+        .bi{padding:8px 18px}
+        .bl{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:5px}
+        .bl span:first-child{color:var(--text);font-weight:500}
+        .bt{height:5px;background:rgba(255,255,255,.06);border-radius:50px;overflow:hidden}
+        .bf{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--purple),var(--cyan));transition:width 1s ease}
 
-        /* ── ACTIVITY FEED ── */
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-size: 0.85rem; font-weight: 600; color: var(--text2); display: flex; align-items: center; justify-content: space-between; }
-        .activity-list { max-height: 400px; overflow-y: auto; }
-        .activity-list::-webkit-scrollbar { width: 4px; }
-        .activity-list::-webkit-scrollbar-track { background: transparent; }
-        .activity-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        .activity-item {
-            display: flex; align-items: flex-start; gap: 12px;
-            padding: 12px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            animation: fadeInUp 0.3s ease;
-        }
-        .activity-item:last-child { border-bottom: none; }
-        .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple2); margin-top: 5px; flex-shrink: 0; }
-        .activity-body { flex: 1; }
-        .activity-body .a-title { font-size: 0.82rem; color: var(--text); font-weight: 500; }
-        .activity-body .a-meta { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
-        .activity-body .a-amount { font-size: 0.8rem; color: #6ee7b7; font-weight: 700; }
+        /* ACTIVITY */
+        .al{max-height:380px;overflow-y:auto}
+        .al::-webkit-scrollbar{width:4px}
+        .al::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+        .ai{display:flex;align-items:flex-start;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.04)}
+        .ai:last-child{border-bottom:none}
+        .adot{width:7px;height:7px;border-radius:50%;background:var(--purple2);margin-top:5px;flex-shrink:0}
+        .ab .at{font-size:.8rem;color:var(--text);font-weight:500}
+        .ab .am{font-size:.7rem;color:var(--text3);margin-top:1px}
+        .aa{font-size:.78rem;color:#6ee7b7;font-weight:700;flex-shrink:0}
 
-        /* ── TOP STORES CHART ── */
-        .bar-item { padding: 10px 20px; }
-        .bar-label { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px; }
-        .bar-label span:first-child { color: var(--text); font-weight: 500; }
-        .bar-label span:last-child { color: #6ee7b7; font-weight: 700; }
-        .bar-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 50px; overflow: hidden; }
-        .bar-fill { height: 100%; border-radius: 50px; background: linear-gradient(90deg, var(--purple), var(--cyan)); transition: width 1s ease; }
+        /* CARD WRAPPER */
+        .cw{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:28px}
+        .ch{padding:14px 18px;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600;color:var(--text2);display:flex;align-items:center;justify-content:space-between}
+        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+        @media(max-width:900px){.two-col{grid-template-columns:1fr}}
 
-        /* ── GROWTH CHART ── */
-        .chart-container { padding: 20px; }
-
-        /* ── FOOTER ── */
-        .admin-footer { text-align: center; padding: 32px; color: var(--text3); font-size: 0.75rem; border-top: 1px solid var(--border); margin-top: 16px; }
-        .admin-footer strong { color: var(--text2); }
-
-        /* ── LOADING ── */
-        .loading { text-align: center; padding: 40px; color: var(--text3); }
-        .spinner {
-            width: 32px; height: 32px;
-            border: 3px solid var(--border);
-            border-top-color: var(--purple);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-        .tbl-empty { text-align: center; padding: 40px; color: var(--text3); font-size: 0.85rem; }
-
-        /* ── ALERT BOXES ── */
-        .info-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 40px; }
-        .info-mini {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-        }
-        .info-mini .im-label { font-size: 0.68rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
-        .info-mini .im-val { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+        /* LOADING */
+        .ld{text-align:center;padding:32px;color:var(--text3)}
+        .sp{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        .empty{text-align:center;padding:32px;color:var(--text3);font-size:.82rem}
+        .info-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:24px}
+        .im{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px}
+        .im-l{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+        .im-v{font-size:1.05rem;font-weight:700;color:var(--text)}
     </style>
 </head>
 <body>
@@ -380,481 +173,455 @@
 <!-- LOGIN -->
 <div id="loginScreen">
     <div class="login-card">
-        <div class="login-logo">
-            <div class="logo-badge">
-                <span>⚡</span>
-                <strong style="color:var(--purple2);font-size:0.9rem;letter-spacing:0.05em">SUPERADMIN</strong>
+        <div style="text-align:center;margin-bottom:28px">
+            <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(79,70,229,.2));border:1px solid rgba(124,58,237,.4);border-radius:50px;padding:8px 18px;margin-bottom:14px">
+                <span>⚡</span><strong style="color:var(--purple2);font-size:.85rem;letter-spacing:.05em">SUPERADMIN</strong>
             </div>
-            <h1>MM Pakkam Control</h1>
-            <p>Restricted Access — Creator Only</p>
+            <h1 style="font-size:1.4rem;font-weight:700">MM Pakkam Control</h1>
+            <p style="font-size:.75rem;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.1em">Restricted Access — Creator Only</p>
         </div>
-        <div class="login-field">
-            <label>Username</label>
-            <input type="text" id="saUsername" placeholder="Super Admin Username" autocomplete="off">
-        </div>
-        <div class="login-field">
-            <label>Password</label>
-            <input type="password" id="saPassword" placeholder="••••••••••••••" autocomplete="off">
-        </div>
+        <label class="lbl">Username</label>
+        <input class="inp" type="text" id="saU" placeholder="Super Admin Username" autocomplete="off">
+        <label class="lbl">Password</label>
+        <input class="inp" type="password" id="saP" placeholder="••••••••••••" autocomplete="off">
         <button class="login-btn" onclick="doLogin()">Enter Portal</button>
-        <div class="login-error" id="loginError">❌ Access denied. Invalid credentials.</div>
+        <div class="login-err" id="lerr">❌ Access denied. Invalid credentials.</div>
     </div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard">
     <nav class="topbar">
-        <div class="topbar-brand">
+        <div class="brand">
             <div class="brand-dot"></div>
             <div>
-                <h1>MM Pakkam — Super Admin</h1>
-                <span id="adminUser"></span>
+                <h1>MM Pakkam Super Admin</h1>
             </div>
         </div>
-        <div class="topbar-right">
-            <div class="live-badge">Live</div>
-            <span id="lastRefresh"></span>
-            <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+        <div class="tbr">
+            <div class="live-b">Live</div>
+            <span id="ts"></span>
+            <button class="out-btn" onclick="doLogout()">Sign Out</button>
         </div>
     </nav>
 
-    <div class="container">
+    <!-- TABS -->
+    <div class="tab-bar">
+        <button class="tab active" onclick="switchTab('overview',this)">📊 Overview</button>
+        <button class="tab" onclick="switchTab('accounts',this)">🏪 Accounts <span class="badge green" id="tabAcctCount">0</span></button>
+        <button class="tab" onclick="switchTab('requests',this)">🔔 Requests <span class="badge" id="tabPendCount">0</span></button>
+        <button class="tab" onclick="switchTab('activity',this)">📋 Activity</button>
+    </div>
 
-        <!-- PLATFORM OVERVIEW -->
-        <div class="section-header">
-            <span class="icon">📊</span>
-            <h2>Platform Overview</h2>
-        </div>
-        <div class="stat-grid" id="statGrid">
-            <div class="loading"><div class="spinner"></div>Loading...</div>
-        </div>
-
-        <!-- EXTRA INFO ROW -->
+    <!-- TAB: OVERVIEW -->
+    <div class="tab-panel active" id="tab-overview">
+        <div class="stat-grid" id="statGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
         <div class="info-row" id="infoRow"></div>
 
-        <!-- CURRENTLY ONLINE -->
-        <div id="onlineSection">
-            <div class="section-header">
-                <span class="icon">🟢</span>
-                <h2>Currently Online</h2>
-                <span class="badge" id="onlineCount">0</span>
-            </div>
-            <div class="online-list" id="onlineList"><div class="no-online">Checking...</div></div>
-        </div>
+        <div class="sh"><span>🟢</span><h2>Currently Online</h2><span class="cnt" id="onCnt">0</span></div>
+        <div class="online-wrap" id="onlineList"><div style="color:var(--text3);font-size:.82rem">Checking...</div></div>
 
-        <!-- ALL ACCOUNTS -->
-        <div id="accountsSection">
-            <div class="section-header">
-                <span class="icon">🏪</span>
-                <h2>All Accounts</h2>
-                <span class="badge" id="acctCount">0</span>
-            </div>
-            <div class="table-wrap">
-                <div class="table-toolbar">
-                    <input class="table-search" id="acctSearch" placeholder="🔍 Search store or username..." oninput="filterAccounts()">
-                    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
-                </div>
-                <div style="overflow-x:auto">
-                    <table class="tbl">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Store / Username</th>
-                                <th>Role</th>
-                                <th>Team Size</th>
-                                <th>Bills</th>
-                                <th>Revenue (₹)</th>
-                                <th>Purchases</th>
-                                <th>Customers</th>
-                                <th>Medicines</th>
-                                <th>Status</th>
-                                <th>Joined</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="acctBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- TWO COLUMN -->
         <div class="two-col">
-            <!-- RECENT ACTIVITY -->
             <div>
-                <div class="section-header"><span class="icon">📋</span><h2>Recent Bills (All Stores)</h2></div>
-                <div class="card">
-                    <div class="card-header">
-                        <span>Latest Transactions</span>
-                        <span id="totalBillsHeader" style="color:var(--purple2);font-size:0.8rem"></span>
-                    </div>
-                    <div class="activity-list" id="activityFeed">
-                        <div class="loading"><div class="spinner"></div></div>
-                    </div>
-                </div>
+                <div class="sh"><span>🏆</span><h2>Top Stores by Revenue</h2></div>
+                <div class="cw"><div class="ch"><span>Revenue Leaderboard</span></div><div id="revChart" style="padding:10px 0"><div class="ld"><div class="sp"></div></div></div></div>
             </div>
-
-            <!-- TOP STORES BY REVENUE -->
             <div>
-                <div class="section-header"><span class="icon">🏆</span><h2>Top Stores by Revenue</h2></div>
-                <div class="card">
-                    <div class="card-header"><span>Revenue Leaderboard</span></div>
-                    <div id="revenueChart" style="padding:12px 0">
-                        <div class="loading"><div class="spinner"></div></div>
-                    </div>
-                </div>
+                <div class="sh"><span>👥</span><h2>Customer Count by Store</h2></div>
+                <div class="cw"><div class="ch"><span>Top Stores</span></div><div id="custChart" style="padding:10px 0"><div class="ld"><div class="sp"></div></div></div></div>
             </div>
         </div>
 
-        <!-- TWO COLUMN 2 -->
-        <div class="two-col">
-            <!-- RECENT SIGNUPS -->
-            <div>
-                <div class="section-header"><span class="icon">🆕</span><h2>Recent Signups</h2></div>
-                <div class="card">
-                    <div class="card-header"><span>New Accounts (Latest 10)</span></div>
-                    <div id="recentSignups" class="activity-list">
-                        <div class="loading"><div class="spinner"></div></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MOST ACTIVE CUSTOMERS -->
-            <div>
-                <div class="section-header"><span class="icon">👥</span><h2>Platform Customers</h2></div>
-                <div class="card">
-                    <div class="card-header"><span>Top Stores by Customer Count</span></div>
-                    <div id="custChart" style="padding:12px 0">
-                        <div class="loading"><div class="spinner"></div></div>
-                    </div>
-                </div>
+        <div class="sh"><span>⚙️</span><h2>System Info</h2></div>
+        <div class="cw" style="margin-bottom:0">
+            <div style="padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px">
+                <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Supabase Project</div><div style="font-size:.82rem;color:var(--cyan)">jwyyjdwlbgjijmwillow</div></div>
+                <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Firebase Hosting</div><div style="font-size:.82rem;color:var(--cyan)">mmpakkam.web.app</div></div>
+                <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Local Time (IST)</div><div style="font-size:.82rem;color:var(--text)" id="sysTime">—</div></div>
+                <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Portal Version</div><div style="font-size:.82rem;color:var(--purple2)">v2.0 — Dhrishnu Darshan</div></div>
             </div>
         </div>
-
-        <!-- DANGER ZONE -->
-        <div class="section-header" style="margin-top:8px">
-            <span class="icon">⚙️</span>
-            <h2>System</h2>
-        </div>
-        <div class="card" style="margin-bottom:40px">
-            <div class="card-header">Platform Information</div>
-            <div style="padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
-                <div>
-                    <div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Supabase Project</div>
-                    <div style="font-size:0.85rem;color:var(--cyan)">jwyyjdwlbgjijmwillow</div>
-                </div>
-                <div>
-                    <div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Hosting</div>
-                    <div style="font-size:0.85rem;color:var(--cyan)">Firebase — mmpakkam.web.app</div>
-                </div>
-                <div>
-                    <div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Current Date/Time</div>
-                    <div style="font-size:0.85rem;color:var(--text)" id="sysTime">—</div>
-                </div>
-                <div>
-                    <div style="font-size:0.72rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Portal Version</div>
-                    <div style="font-size:0.85rem;color:var(--purple2)">v1.0 — Built by Dhrishnu Darshan</div>
-                </div>
-            </div>
-        </div>
-
     </div>
-    <div class="admin-footer">
-        MM Pakkam Super Admin Portal &nbsp;·&nbsp; <strong>Dhrishnu Darshan</strong> &nbsp;·&nbsp; Restricted Access
+
+    <!-- TAB: ACCOUNTS -->
+    <div class="tab-panel" id="tab-accounts">
+        <div class="tw">
+            <div class="tbar">
+                <input class="tsearch" id="acctSearch" placeholder="🔍 Search store name..." oninput="filterAccounts()">
+                <button class="rbtn" onclick="loadAll()">↻ Refresh</button>
+                <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--text2);cursor:pointer">
+                    <input type="checkbox" id="showWorkers" onchange="filterAccounts()" style="accent-color:var(--purple)">
+                    Show Workers
+                </label>
+            </div>
+            <div style="overflow-x:auto">
+                <table class="tbl">
+                    <thead><tr>
+                        <th>#</th>
+                        <th>Store / Username</th>
+                        <th>Role</th>
+                        <th>Team</th>
+                        <th>Bills</th>
+                        <th>Revenue (₹)</th>
+                        <th>Purchases</th>
+                        <th>Customers</th>
+                        <th>Medicines</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th>Action</th>
+                    </tr></thead>
+                    <tbody id="acctBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: REQUESTS -->
+    <div class="tab-panel" id="tab-requests">
+        <div class="sh"><span>⏳</span><h2>Pending Approval Requests</h2><span class="cnt red" id="pendCnt">0</span></div>
+        <div class="pending-grid" id="pendingGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
+
+        <div class="sh" style="margin-top:8px"><span>❌</span><h2>Rejected Accounts</h2></div>
+        <div class="pending-grid" id="rejectedGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
+
+        <div class="sh" style="margin-top:8px"><span>✅</span><h2>Recently Approved</h2></div>
+        <div class="pending-grid" id="approvedGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
+    </div>
+
+    <!-- TAB: ACTIVITY -->
+    <div class="tab-panel" id="tab-activity">
+        <div class="two-col">
+            <div>
+                <div class="sh"><span>📋</span><h2>Recent Bills (All Stores)</h2><span class="cnt" id="billTotalCnt">0</span></div>
+                <div class="cw"><div class="ch"><span>Latest Transactions</span></div><div class="al" id="actFeed"><div class="ld"><div class="sp"></div></div></div></div>
+            </div>
+            <div>
+                <div class="sh"><span>🆕</span><h2>Recent Signups</h2></div>
+                <div class="cw"><div class="ch"><span>Latest 10 accounts</span></div><div class="al" id="signupFeed"><div class="ld"><div class="sp"></div></div></div></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-// ── CREDENTIALS ──
 const SA_USERNAME = 'Dhrishnu Darshan';
 const SA_PASSWORD = 'Lavanya@28121602';
-
-// ── SUPABASE ──
 const SB_URL = 'https://jwyyjdwlbgjijmwillow.supabase.co';
 const SB_KEY = 'sb_publishable_sY9QwFEMckky9KDJoc1O_w_zN7qY0mo';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ── AUTH ──
 function doLogin() {
-    const u = document.getElementById('saUsername').value.trim();
-    const p = document.getElementById('saPassword').value;
-    const err = document.getElementById('loginError');
+    const u = document.getElementById('saU').value.trim();
+    const p = document.getElementById('saP').value;
     if (u === SA_USERNAME && p === SA_PASSWORD) {
-        sessionStorage.setItem('sa_auth', 'ok');
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('adminUser').textContent = SA_USERNAME;
-        loadAll();
-        startClock();
-        setInterval(loadAll, 60000); // auto-refresh every 60s
+        sessionStorage.setItem('sa_ok','1');
+        boot();
     } else {
-        err.style.display = 'block';
-        setTimeout(() => { err.style.display = 'none'; }, 3000);
+        const e = document.getElementById('lerr');
+        e.style.display = 'block';
+        setTimeout(()=>e.style.display='none', 3000);
     }
 }
-function doLogout() {
-    sessionStorage.removeItem('sa_auth');
-    location.reload();
-}
-// Auto-login if session exists
-if (sessionStorage.getItem('sa_auth') === 'ok') {
+function doLogout() { sessionStorage.removeItem('sa_ok'); location.reload(); }
+function boot() {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('adminUser').textContent = SA_USERNAME;
-    document.addEventListener('DOMContentLoaded', () => { loadAll(); startClock(); setInterval(loadAll, 60000); });
+    loadAll();
+    startClock();
+    setInterval(loadAll, 60000);
 }
-document.getElementById('saPassword').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+if (sessionStorage.getItem('sa_ok')==='1') boot();
+document.addEventListener('keydown', e => { if (e.key==='Enter' && document.getElementById('saP')===document.activeElement) doLogin(); });
+
+// ── TABS ──
+function switchTab(id, el) {
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+id).classList.add('active');
+    el.classList.add('active');
+}
 
 // ── CLOCK ──
 function startClock() {
     const el = document.getElementById('sysTime');
-    const tick = () => { el.textContent = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true }); };
+    const ts = document.getElementById('ts');
+    const tick = () => {
+        const s = new Date().toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:true});
+        if(el) el.textContent = s;
+        if(ts) ts.textContent = 'Updated '+new Date().toLocaleTimeString('en-IN');
+    };
     tick(); setInterval(tick, 1000);
 }
 
-// ── MAIN DATA LOADER ──
-let allUsers = [], allBills = [], allPurchases = [], allCustomers = [], allMedicines = [];
+// ── DATA ──
+let allUsers=[], allBills=[], allPurchases=[], allCustomers=[], allMedicines=[];
 
 async function loadAll() {
-    try {
-        // Fetch all data in parallel
-        const [usersRes, billsRes, purchasesRes, custRes, medsRes] = await Promise.all([
-            sb.from('mm_users').select('*'),
-            sb.from('bills').select('*').order('saved_at', { ascending: false }),
-            sb.from('purchases').select('*'),
-            sb.from('customers').select('*'),
-            sb.from('medicines').select('name,user_id'),
-        ]);
+    const [uR,bR,pR,cR,mR] = await Promise.all([
+        sb.from('mm_users').select('*'),
+        sb.from('bills').select('*').order('saved_at',{ascending:false}),
+        sb.from('purchases').select('*'),
+        sb.from('customers').select('*'),
+        sb.from('medicines').select('name,user_id'),
+    ]);
+    allUsers=uR.data||[]; allBills=bR.data||[]; allPurchases=pR.data||[]; allCustomers=cR.data||[]; allMedicines=mR.data||[];
 
-        allUsers     = usersRes.data  || [];
-        allBills     = billsRes.data  || [];
-        allPurchases = purchasesRes.data || [];
-        allCustomers = custRes.data   || [];
-        allMedicines = medsRes.data   || [];
+    // Update tab badge counts
+    const owners = allUsers.filter(u=>u.role==='owner');
+    const pending = allUsers.filter(u=>u.approval_status==='pending');
+    document.getElementById('tabAcctCount').textContent = owners.length;
+    document.getElementById('tabPendCount').textContent = pending.length;
+    document.getElementById('tabPendCount').style.display = pending.length ? '' : 'none';
 
-        renderStats();
-        renderOnline();
-        renderAccounts();
-        renderActivity();
-        renderRevenueChart();
-        renderRecentSignups();
-        renderCustChart();
-        renderInfoRow();
-
-        document.getElementById('lastRefresh').textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN');
-    } catch(e) {
-        console.error('Load error:', e);
-    }
+    renderStats(); renderInfoRow(); renderOnline(); renderRevChart(); renderCustChart();
+    renderAccounts(); renderRequests(); renderActivity(); renderSignups();
 }
 
 // ── STATS ──
 function renderStats() {
-    const owners     = allUsers.filter(u => u.role === 'owner');
-    const workers    = allUsers.filter(u => u.role === 'worker');
-    const online     = allUsers.filter(u => u.active_session_token);
-    const totalRev   = allBills.reduce((s, b) => s + (parseFloat(b.grand_total) || 0), 0);
-    const todayBills = allBills.filter(b => b.date === new Date().toISOString().slice(0,10));
-    const todayRev   = todayBills.reduce((s, b) => s + (parseFloat(b.grand_total) || 0), 0);
-
-    const cards = [
-        { icon:'🏪', val: owners.length, lbl:'Total Stores', sub:`${workers.length} workers registered`, accent:'linear-gradient(90deg,#7c3aed,#4f46e5)' },
-        { icon:'👥', val: allUsers.length, lbl:'Total Users', sub:`${online.length} online right now`, accent:'linear-gradient(90deg,#06b6d4,#3b82f6)' },
-        { icon:'🧾', val: allBills.length, lbl:'Total Bills', sub:`${todayBills.length} bills today`, accent:'linear-gradient(90deg,#10b981,#06b6d4)' },
-        { icon:'💰', val: '₹' + fmt(totalRev), lbl:'Total Revenue', sub:`₹${fmt(todayRev)} today`, accent:'linear-gradient(90deg,#f59e0b,#f97316)' },
-        { icon:'📦', val: allPurchases.length, lbl:'Total Purchases', sub:'Stock entries logged', accent:'linear-gradient(90deg,#a855f7,#ec4899)' },
-        { icon:'🧑‍⚕️', val: allCustomers.length, lbl:'Total Customers', sub:'Across all stores', accent:'linear-gradient(90deg,#ef4444,#f97316)' },
-        { icon:'💊', val: allMedicines.length, lbl:'Medicines Listed', sub:'In all catalogues', accent:'linear-gradient(90deg,#06b6d4,#10b981)' },
+    const owners=allUsers.filter(u=>u.role==='owner');
+    const online=allUsers.filter(u=>u.active_session_token);
+    const paid=allUsers.filter(u=>u.payment_status==='paid'&&u.role==='owner');
+    const rev=allBills.reduce((s,b)=>s+(parseFloat(b.grand_total)||0),0);
+    const today=new Date().toISOString().slice(0,10);
+    const todayB=allBills.filter(b=>b.date===today);
+    const todayR=todayB.reduce((s,b)=>s+(parseFloat(b.grand_total)||0),0);
+    const cards=[
+        {icon:'🏪',val:owners.length,lbl:'Total Stores',sub:`${allUsers.filter(u=>u.role==='worker').length} workers`,acc:'linear-gradient(90deg,#7c3aed,#4f46e5)'},
+        {icon:'💰',val:'₹'+fmt(rev),lbl:'Total Revenue',sub:`₹${fmt(todayR)} today`,acc:'linear-gradient(90deg,#f59e0b,#f97316)'},
+        {icon:'🧾',val:allBills.length,lbl:'Total Bills',sub:`${todayB.length} bills today`,acc:'linear-gradient(90deg,#10b981,#06b6d4)'},
+        {icon:'💳',val:paid.length+'/'+owners.length,lbl:'Paid Accounts',sub:`${owners.length-paid.length} unpaid`,acc:'linear-gradient(90deg,#a855f7,#ec4899)'},
+        {icon:'📦',val:allPurchases.length,lbl:'Purchases Logged',sub:'Stock entries',acc:'linear-gradient(90deg,#06b6d4,#3b82f6)'},
+        {icon:'🧑‍⚕️',val:allCustomers.length,lbl:'Total Customers',sub:'Across all stores',acc:'linear-gradient(90deg,#ef4444,#f97316)'},
+        {icon:'🟢',val:online.length,lbl:'Online Now',sub:'Active sessions',acc:'linear-gradient(90deg,#10b981,#06b6d4)'},
     ];
-
-    document.getElementById('statGrid').innerHTML = cards.map(c => `
-        <div class="stat-card" style="--accent:${c.accent}">
-            <div class="stat-icon">${c.icon}</div>
-            <div class="stat-val">${c.val}</div>
-            <div class="stat-lbl">${c.lbl}</div>
-            <div class="stat-sub">${c.sub}</div>
-        </div>
-    `).join('');
+    document.getElementById('statGrid').innerHTML=cards.map(c=>`
+        <div class="sc" style="--acc:${c.acc}">
+            <div class="sc-icon">${c.icon}</div>
+            <div class="sc-val">${c.val}</div>
+            <div class="sc-lbl">${c.lbl}</div>
+            <div class="sc-sub">${c.sub}</div>
+        </div>`).join('');
 }
 
 function renderInfoRow() {
-    const topStore = (() => {
-        const rev = {};
-        allBills.forEach(b => { rev[b.user_id] = (rev[b.user_id]||0) + (parseFloat(b.grand_total)||0); });
-        return Object.entries(rev).sort((a,b) => b[1]-a[1])[0];
-    })();
-    const avgPerStore = allUsers.filter(u=>u.role==='owner').length
-        ? (allBills.reduce((s,b)=>s+(parseFloat(b.grand_total)||0),0) / allUsers.filter(u=>u.role==='owner').length)
-        : 0;
-    const thisMonth = new Date().toISOString().slice(0,7);
-    const monthBills = allBills.filter(b => (b.date||'').startsWith(thisMonth));
-    const monthRev = monthBills.reduce((s,b) => s+(parseFloat(b.grand_total)||0), 0);
-
-    document.getElementById('infoRow').innerHTML = `
-        <div class="info-mini"><div class="im-label">Top Store</div><div class="im-val" style="color:var(--gold)">${topStore ? topStore[0] : '—'}</div></div>
-        <div class="info-mini"><div class="im-label">Top Revenue</div><div class="im-val" style="color:var(--green)">₹${topStore ? fmt(topStore[1]) : 0}</div></div>
-        <div class="info-mini"><div class="im-label">Avg Rev/Store</div><div class="im-val">₹${fmt(avgPerStore)}</div></div>
-        <div class="info-mini"><div class="im-label">This Month Bills</div><div class="im-val">${monthBills.length}</div></div>
-        <div class="info-mini"><div class="im-label">This Month Revenue</div><div class="im-val" style="color:var(--cyan)">₹${fmt(monthRev)}</div></div>
+    const revMap={};
+    allBills.forEach(b=>{revMap[b.user_id]=(revMap[b.user_id]||0)+(parseFloat(b.grand_total)||0);});
+    const top=Object.entries(revMap).sort((a,b)=>b[1]-a[1])[0];
+    const month=new Date().toISOString().slice(0,7);
+    const mB=allBills.filter(b=>(b.date||'').startsWith(month));
+    const mR=mB.reduce((s,b)=>s+(parseFloat(b.grand_total)||0),0);
+    const owners=allUsers.filter(u=>u.role==='owner');
+    const avg=owners.length?(allBills.reduce((s,b)=>s+(parseFloat(b.grand_total)||0),0)/owners.length):0;
+    document.getElementById('infoRow').innerHTML=`
+        <div class="im"><div class="im-l">Top Store</div><div class="im-v" style="color:var(--gold)">${top?top[0]:'—'}</div></div>
+        <div class="im"><div class="im-l">Top Revenue</div><div class="im-v" style="color:var(--green)">₹${top?fmt(top[1]):0}</div></div>
+        <div class="im"><div class="im-l">Avg Rev/Store</div><div class="im-v">₹${fmt(avg)}</div></div>
+        <div class="im"><div class="im-l">This Month Bills</div><div class="im-v">${mB.length}</div></div>
+        <div class="im"><div class="im-l">This Month Revenue</div><div class="im-v" style="color:var(--cyan)">₹${fmt(mR)}</div></div>
     `;
 }
 
 // ── ONLINE ──
 function renderOnline() {
-    const online = allUsers.filter(u => u.active_session_token);
-    document.getElementById('onlineCount').textContent = online.length;
-    document.getElementById('onlineList').innerHTML = online.length
-        ? online.map(u => `<div class="online-pill"><div class="dot"></div>${u.username} <span style="opacity:0.5;font-size:0.7rem">(${u.role})</span></div>`).join('')
-        : '<div class="no-online">No users currently online.</div>';
+    const online=allUsers.filter(u=>u.active_session_token);
+    document.getElementById('onCnt').textContent=online.length;
+    document.getElementById('onlineList').innerHTML=online.length
+        ?online.map(u=>`<div class="opill"><div class="dot"></div>${u.username} <span style="opacity:.5;font-size:.68rem">(${u.role})</span></div>`).join('')
+        :'<div style="color:var(--text3);font-size:.82rem">No users currently online.</div>';
 }
 
 // ── ACCOUNTS ──
-let filteredAccounts = [];
-function renderAccounts() {
-    filteredAccounts = allUsers;
-    _drawAccountTable(filteredAccounts);
-    document.getElementById('acctCount').textContent = allUsers.length;
-}
+function renderAccounts() { filterAccounts(); }
 function filterAccounts() {
-    const q = document.getElementById('acctSearch').value.toLowerCase();
-    filteredAccounts = allUsers.filter(u => u.username.toLowerCase().includes(q) || (u.tenant_id||'').toLowerCase().includes(q));
-    _drawAccountTable(filteredAccounts);
-}
-function _drawAccountTable(users) {
-    const body = document.getElementById('acctBody');
-    if (!users.length) { body.innerHTML = `<tr><td colspan="12" class="tbl-empty">No accounts found</td></tr>`; return; }
-
-    body.innerHTML = users.map((u, i) => {
-        // Scope key: owners use their own username, workers use their tenant
-        const scope = u.tenant_id || u.username;
-        const bills = allBills.filter(b => b.user_id === scope);
-        const revenue = bills.reduce((s, b) => s + (parseFloat(b.grand_total)||0), 0);
-        const purchases = allPurchases.filter(p => p.user_id === scope).length;
-        const customers = allCustomers.filter(c => c.user_id === scope).length;
-        const medicines = allMedicines.filter(m => m.user_id === scope).length;
-        // Team size = how many users share this tenant_id
-        const team = allUsers.filter(u2 => (u2.tenant_id||u2.username) === scope).length;
-        const isOnline = !!u.active_session_token;
-        const joinDate = parseDate(u.createdAt);
-
+    const q=document.getElementById('acctSearch').value.toLowerCase();
+    const showW=document.getElementById('showWorkers').checked;
+    let list=allUsers.filter(u=>(showW||u.role==='owner')&&(u.username.toLowerCase().includes(q)||(u.tenant_id||'').toLowerCase().includes(q)));
+    document.getElementById('tabAcctCount').textContent=allUsers.filter(u=>u.role==='owner').length;
+    const body=document.getElementById('acctBody');
+    if(!list.length){body.innerHTML=`<tr><td colspan="13" class="empty">No accounts found</td></tr>`;return;}
+    body.innerHTML=list.map((u,i)=>{
+        const scope=u.tenant_id||u.username;
+        const bills=allBills.filter(b=>b.user_id===scope);
+        const rev=bills.reduce((s,b)=>s+(parseFloat(b.grand_total)||0),0);
+        const purch=allPurchases.filter(p=>p.user_id===scope).length;
+        const custs=allCustomers.filter(c=>c.user_id===scope).length;
+        const meds=allMedicines.filter(m=>m.user_id===scope).length;
+        const team=allUsers.filter(u2=>(u2.tenant_id||u2.username)===scope).length;
+        const isPaid=u.payment_status==='paid';
+        const statusBadge=u.approval_status==='pending'
+            ?'<span style="color:#fbbf24;font-size:.7rem">⏳ Pending</span>'
+            :u.approval_status==='rejected'
+                ?'<span style="color:#fca5a5;font-size:.7rem">❌ Rejected</span>'
+                :'<span style="color:#6ee7b7;font-size:.7rem">✅ Approved</span>';
+        const onlineSt=u.active_session_token?'<span class="son">Online</span>':'<span class="soff">Offline</span>';
         return `<tr>
-            <td style="color:var(--text3);font-size:0.75rem">${i+1}</td>
-            <td><div class="store-name">${u.username}</div><div style="font-size:0.7rem;color:var(--text3)">${scope !== u.username ? 'In: '+scope : ''}</div></td>
-            <td><span class="role-pill ${u.role==='owner'?'role-owner':'role-worker'}">${u.role}</span></td>
-            <td class="num-val">${team}</td>
-            <td class="num-val">${bills.length}</td>
-            <td class="money-val">₹${fmt(revenue)}</td>
-            <td class="num-val">${purchases}</td>
-            <td class="num-val">${customers}</td>
-            <td class="num-val">${medicines}</td>
-            <td>${isOnline ? '<span class="status-online">Online</span>' : '<span class="status-offline">Offline</span>'}</td>
-            <td class="joined-date">${joinDate}</td>
+            <td style="color:var(--text3);font-size:.72rem">${i+1}</td>
+            <td><div style="font-weight:600">${u.username}</div>${scope!==u.username?`<div style="font-size:.68rem;color:var(--text3)">In: ${scope}</div>`:''}</td>
+            <td><span class="rp ${u.role==='owner'?'ro':'rw'}">${u.role}</span></td>
+            <td class="mv">${team}</td>
+            <td class="mv">${bills.length}</td>
+            <td class="gv">₹${fmt(rev)}</td>
+            <td class="mv">${purch}</td>
+            <td class="mv">${custs}</td>
+            <td class="mv">${meds}</td>
+            <td>
+                <label class="pay-toggle" title="${isPaid?'Paid — click to mark unpaid':'Unpaid — click to mark paid'}">
+                    <input type="checkbox" ${isPaid?'checked':''} onchange="togglePayment('${u.id}','${u.username}',this.checked)">
+                    <span class="pay-slider"></span>
+                </label>
+            </td>
+            <td>${onlineSt}</td>
+            <td style="font-size:.72rem;color:var(--text2)">${parseDate(u.createdAt)}<br>${statusBadge}</td>
             <td><button class="del-btn" onclick="deleteAccount('${u.username}','${u.id}')">🗑️ Delete</button></td>
         </tr>`;
     }).join('');
 }
 
-// ── ACTIVITY FEED ──
-function renderActivity() {
-    const feed = document.getElementById('activityFeed');
-    const recent = allBills.slice(0, 50);
-    document.getElementById('totalBillsHeader').textContent = `Total: ${allBills.length} bills`;
-    feed.innerHTML = recent.length ? recent.map(b => `
-        <div class="activity-item">
-            <div class="activity-dot"></div>
-            <div class="activity-body">
-                <div class="a-title">
-                    <strong>${b.user_id}</strong> — ${b.customer_name || 'Walk-in'}
-                    ${b.doctor_name ? `· Dr. ${b.doctor_name}` : ''}
+// ── PAYMENT TOGGLE ──
+async function togglePayment(id, username, paid) {
+    const status = paid ? 'paid' : 'unpaid';
+    const {error} = await sb.from('mm_users').update({payment_status: status}).eq('id', id);
+    if (error) { alert('Failed to update payment: '+error.message); return; }
+    const u = allUsers.find(u=>u.id===id);
+    if (u) u.payment_status = status;
+    renderStats(); // update paid count
+}
+
+// ── REQUESTS ──
+function renderRequests() {
+    const pending=allUsers.filter(u=>u.approval_status==='pending');
+    const rejected=allUsers.filter(u=>u.approval_status==='rejected');
+    const approved=allUsers.filter(u=>!u.approval_status||u.approval_status==='approved').filter(u=>u.role==='owner').slice(-6).reverse();
+    document.getElementById('pendCnt').textContent=pending.length;
+    document.getElementById('tabPendCount').textContent=pending.length;
+
+    const mkCard=(u,actions)=>`
+        <div class="pcard">
+            <div class="pcard-top">
+                <div class="pcard-avatar">${u.username.slice(0,2).toUpperCase()}</div>
+                <div>
+                    <div class="pcard-name">${u.username}</div>
+                    <div class="pcard-meta">Role: ${u.role} · Joined: ${parseDate(u.createdAt)}</div>
                 </div>
-                <div class="a-meta">Bill No: ${b.bill_no} · ${b.date || '—'}</div>
             </div>
-            <div class="a-amount">₹${fmt(parseFloat(b.grand_total)||0)}</div>
-        </div>
-    `).join('') : '<div class="tbl-empty">No bills found.</div>';
+            ${actions}
+        </div>`;
+
+    document.getElementById('pendingGrid').innerHTML=pending.length
+        ?pending.map(u=>mkCard(u,`
+            <div class="pcard-actions">
+                <button class="approve-btn" onclick="approveAccount('${u.id}')">✅ Approve</button>
+                <button class="reject-btn" onclick="rejectAccount('${u.id}')">❌ Reject</button>
+            </div>`)).join('')
+        :'<div class="no-pending">✨ No pending requests</div>';
+
+    document.getElementById('rejectedGrid').innerHTML=rejected.length
+        ?rejected.map(u=>mkCard(u,`
+            <div class="pcard-actions">
+                <button class="approve-btn" onclick="approveAccount('${u.id}')">↩️ Re-approve</button>
+            </div>`)).join('')
+        :'<div class="no-pending">No rejected accounts</div>';
+
+    document.getElementById('approvedGrid').innerHTML=approved.length
+        ?approved.map(u=>mkCard(u,'<div style="font-size:.78rem;color:#6ee7b7">✅ Approved & Active</div>')).join('')
+        :'<div class="no-pending">No approved accounts yet</div>';
 }
 
-// ── REVENUE CHART ──
-function renderRevenueChart() {
-    const rev = {};
-    allBills.forEach(b => { rev[b.user_id] = (rev[b.user_id]||0) + (parseFloat(b.grand_total)||0); });
-    const sorted = Object.entries(rev).sort((a,b) => b[1]-a[1]).slice(0,8);
-    const max = sorted[0]?.[1] || 1;
-    document.getElementById('revenueChart').innerHTML = sorted.length ? sorted.map(([name, val]) => `
-        <div class="bar-item">
-            <div class="bar-label"><span>${name}</span><span>₹${fmt(val)}</span></div>
-            <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%"></div></div>
-        </div>
-    `).join('') : '<div class="tbl-empty">No revenue data.</div>';
+async function approveAccount(id) {
+    const {error}=await sb.from('mm_users').update({approval_status:'approved'}).eq('id',id);
+    if(error){alert('Error: '+error.message);return;}
+    const u=allUsers.find(u=>u.id===id);
+    if(u) u.approval_status='approved';
+    renderRequests(); renderAccounts(); renderStats();
+    alert('✅ Account approved! They can now log in.');
+}
+async function rejectAccount(id) {
+    if(!confirm('Reject this account? They will not be able to log in.')) return;
+    const {error}=await sb.from('mm_users').update({approval_status:'rejected'}).eq('id',id);
+    if(error){alert('Error: '+error.message);return;}
+    const u=allUsers.find(u=>u.id===id);
+    if(u) u.approval_status='rejected';
+    renderRequests(); renderAccounts();
 }
 
-// ── RECENT SIGNUPS ──
-function renderRecentSignups() {
-    const sorted = [...allUsers].sort((a,b) => parseTs(b.createdAt) - parseTs(a.createdAt)).slice(0,10);
-    document.getElementById('recentSignups').innerHTML = sorted.map(u => `
-        <div class="activity-item">
-            <div class="activity-dot" style="background:var(--cyan)"></div>
-            <div class="activity-body">
-                <div class="a-title"><strong>${u.username}</strong> <span class="role-pill ${u.role==='owner'?'role-owner':'role-worker'}" style="font-size:0.65rem">${u.role}</span></div>
-                <div class="a-meta">Joined: ${parseDate(u.createdAt)}</div>
-            </div>
-        </div>
-    `).join('');
+// ── CHARTS ──
+function renderRevChart() {
+    const rev={};
+    allBills.forEach(b=>{rev[b.user_id]=(rev[b.user_id]||0)+(parseFloat(b.grand_total)||0);});
+    const sorted=Object.entries(rev).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const max=sorted[0]?.[1]||1;
+    document.getElementById('revChart').innerHTML=sorted.length?sorted.map(([n,v])=>`
+        <div class="bi"><div class="bl"><span>${n}</span><span style="color:#6ee7b7">₹${fmt(v)}</span></div>
+        <div class="bt"><div class="bf" style="width:${(v/max*100).toFixed(1)}%"></div></div></div>`).join('')
+        :'<div class="empty">No revenue data</div>';
 }
-
-// ── CUSTOMER CHART ──
 function renderCustChart() {
-    const cust = {};
-    allCustomers.forEach(c => { cust[c.user_id] = (cust[c.user_id]||0) + 1; });
-    const sorted = Object.entries(cust).sort((a,b)=>b[1]-a[1]).slice(0,8);
-    const max = sorted[0]?.[1] || 1;
-    document.getElementById('custChart').innerHTML = sorted.length ? sorted.map(([name, val]) => `
-        <div class="bar-item">
-            <div class="bar-label"><span>${name}</span><span style="color:var(--cyan)">${val} customers</span></div>
-            <div class="bar-track"><div class="bar-fill" style="width:${(val/max*100).toFixed(1)}%;background:linear-gradient(90deg,#06b6d4,#10b981)"></div></div>
-        </div>
-    `).join('') : '<div class="tbl-empty">No customer data.</div>';
+    const c={};
+    allCustomers.forEach(x=>{c[x.user_id]=(c[x.user_id]||0)+1;});
+    const sorted=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const max=sorted[0]?.[1]||1;
+    document.getElementById('custChart').innerHTML=sorted.length?sorted.map(([n,v])=>`
+        <div class="bi"><div class="bl"><span>${n}</span><span style="color:var(--cyan)">${v} customers</span></div>
+        <div class="bt"><div class="bf" style="width:${(v/max*100).toFixed(1)}%;background:linear-gradient(90deg,#06b6d4,#10b981)"></div></div></div>`).join('')
+        :'<div class="empty">No customer data</div>';
 }
 
-// ── DELETE ACCOUNT ──
-async function deleteAccount(username, id) {
-    if (!confirm(`⚠️ PERMANENT DELETE\n\nDelete account "${username}" and ALL their data?\n\nThis cannot be undone.`)) return;
-    if (!confirm(`Are you absolutely sure? Type OK in the next prompt.\n\nDeleting: ${username}`)) return;
+// ── ACTIVITY ──
+function renderActivity() {
+    document.getElementById('billTotalCnt').textContent=allBills.length;
+    document.getElementById('actFeed').innerHTML=allBills.slice(0,60).map(b=>`
+        <div class="ai">
+            <div class="adot"></div>
+            <div class="ab">
+                <div class="at"><strong>${b.user_id}</strong> — ${b.customer_name||'Walk-in'}${b.doctor_name?' · Dr. '+b.doctor_name:''}</div>
+                <div class="am">Bill ${b.bill_no} · ${b.date||'—'}</div>
+            </div>
+            <div class="aa">₹${fmt(parseFloat(b.grand_total)||0)}</div>
+        </div>`).join('')||'<div class="empty">No bills found</div>';
+}
+function renderSignups() {
+    const sorted=[...allUsers].sort((a,b)=>parseTs(b.createdAt)-parseTs(a.createdAt)).slice(0,10);
+    document.getElementById('signupFeed').innerHTML=sorted.map(u=>`
+        <div class="ai">
+            <div class="adot" style="background:var(--cyan)"></div>
+            <div class="ab">
+                <div class="at"><strong>${u.username}</strong> <span class="rp ${u.role==='owner'?'ro':'rw'}" style="font-size:.62rem">${u.role}</span></div>
+                <div class="am">Joined: ${parseDate(u.createdAt)} · ${u.approval_status==='pending'?'⏳ Pending':u.approval_status==='rejected'?'❌ Rejected':'✅ Active'}</div>
+            </div>
+        </div>`).join('');
+}
 
+// ── DELETE ──
+async function deleteAccount(username,id) {
+    if(!confirm(`⚠️ PERMANENTLY DELETE "${username}"?\n\nThis will:\n• Delete their account\n• Remove all their bills, purchases, customers & medicines\n• Block their login immediately\n\nThis CANNOT be undone.`)) return;
     try {
-        // Delete all data scoped to this user
-        const scope = username;
+        const scope=username;
+        const billIds=allBills.filter(b=>b.user_id===scope).map(b=>b.id);
+        if(billIds.length) await sb.from('bill_items').delete().in('bill_id',billIds);
         await Promise.all([
-            sb.from('bill_items').delete().in('bill_id', (allBills.filter(b=>b.user_id===scope).map(b=>b.id))),
-            sb.from('bills').delete().eq('user_id', scope),
-            sb.from('purchases').delete().eq('user_id', scope),
-            sb.from('customers').delete().eq('user_id', scope),
-            sb.from('medicines').delete().eq('user_id', scope),
+            sb.from('bills').delete().eq('user_id',scope),
+            sb.from('purchases').delete().eq('user_id',scope),
+            sb.from('customers').delete().eq('user_id',scope),
+            sb.from('medicines').delete().eq('user_id',scope),
         ]);
-        await sb.from('mm_users').delete().eq('id', id);
-        alert(`✅ Account "${username}" deleted successfully.`);
+        await sb.from('mm_users').delete().eq('id',id);
+        alert(`✅ Account "${username}" fully deleted. Their access is now blocked.`);
         loadAll();
-    } catch(e) {
-        alert('Error deleting account: ' + e.message);
-    }
+    } catch(e) { alert('Delete error: '+e.message); }
 }
 
 // ── HELPERS ──
 function fmt(n) {
-    if (n >= 1e7) return (n/1e7).toFixed(2) + ' Cr';
-    if (n >= 1e5) return (n/1e5).toFixed(2) + ' L';
-    return n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    if(!n||isNaN(n)) return '0';
+    if(n>=1e7) return (n/1e7).toFixed(2)+' Cr';
+    if(n>=1e5) return (n/1e5).toFixed(2)+' L';
+    return Number(n).toLocaleString('en-IN',{maximumFractionDigits:2});
 }
-function parseTs(v) {
-    if (!v) return 0;
-    if (!isNaN(v)) return parseInt(v);
-    return new Date(v).getTime() || 0;
-}
-function parseDate(v) {
-    if (!v) return '—';
-    const ts = parseTs(v);
-    if (!ts || isNaN(ts)) return '—';
-    return new Date(ts).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
-}
+function parseTs(v){if(!v) return 0;if(!isNaN(v)) return parseInt(v);return new Date(v).getTime()||0;}
+function parseDate(v){if(!v) return '—';const ts=parseTs(v);if(!ts||isNaN(ts)) return '—';return new Date(ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
 </script>
 </body>
 </html>

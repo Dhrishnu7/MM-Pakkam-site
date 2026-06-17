@@ -523,10 +523,20 @@
             setBtnLoading('Creating accountâ€¦');
             const result = await mmCreateOwner(username, password);
             if (result.success) {
-                setBtnDone('Account created! Signing inâ€¦');
-                // Auto login after creating account
-                await mmLogin(username, password, false);
-                setTimeout(() => window.location.replace('index.html'), 900);
+                setBtnDone('Request Sent!');
+                // Show waiting screen instead of auto-login — admin must approve first
+                document.getElementById('setupCard').innerHTML = `
+                    <div style="text-align:center;padding:20px">
+                        <div style="font-size:3rem;margin-bottom:16px">⏳</div>
+                        <h2 style="font-size:1.3rem;font-weight:700;margin-bottom:10px">Account Request Sent!</h2>
+                        <p style="color:#94a3b8;font-size:0.9rem;line-height:1.6;margin-bottom:24px">
+                            Your account <strong style="color:#f1f5f9">${username}</strong> has been submitted for approval.<br>
+                            Please wait while the administrator reviews your request.<br>
+                            You will be able to sign in once it is approved.
+                        </p>
+                        <a href="login.html" style="display:inline-block;background:linear-gradient(135deg,#0d9488,#0891b2);color:white;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:600;font-size:0.9rem">Go to Login Page</a>
+                    </div>
+                `;
             } else {
                 showError(result.message);
                 resetBtn();

@@ -342,6 +342,13 @@ async function mmLogin(username, password, remember, force = false) {
             u.passwordHash === hash
         );
         if (!user) return { success: false, message: 'Invalid username or password.' };
+        // Check approval status
+        if (user.approval_status === 'pending') {
+            return { success: false, message: '⏳ Your account is pending approval. Please wait for admin confirmation before signing in.' };
+        }
+        if (user.approval_status === 'rejected') {
+            return { success: false, message: '❌ Your account request was rejected. Please contact the administrator.' };
+        }
         // Ensure tenant_id is always set (migrate old records on the fly)
         if (!user.tenant_id) user.tenant_id = user.username;
 
@@ -417,9 +424,10 @@ async function mmCreateOwner(username, password) {
     }
     const hash = await mmHashPassword(password);
     // tenant_id for an owner = their own username (they ARE the tenant root)
-    const user = { username: username.trim(), passwordHash: hash, role: 'owner', tenant_id: username.trim(), createdAt: Date.now() };
+    // approval_status = 'pending' until super admin approves
+    const user = { username: username.trim(), passwordHash: hash, role: 'owner', tenant_id: username.trim(), createdAt: Date.now(), approval_status: 'pending', payment_status: 'unpaid' };
     await _saveUser(user);
-    return { success: true };
+    return { success: true, pending: true };
 }
 
 /** Add a worker to the current owner's store. Username unique within this store only. */
