@@ -471,11 +471,15 @@ async function saveAndContinue() {
 
     // Determine user_id
     let userId = tenantId;
-    if (isEditMode) {
+    if (!userId) {
         const session = JSON.parse(localStorage.getItem('mm_session') || sessionStorage.getItem('mm_session') || 'null');
-        userId = session?.tenant_id || session?.username || tenantId;
+        userId = session?.tenant_id || session?.username;
     }
-    if (!userId) { showErr('Session error. Please go back and try again.'); btn.disabled=false; return; }
+    if (!userId) { 
+        showErr('Session missing. Please refresh the page (Ctrl+Shift+R) or log in again.'); 
+        btn.disabled = false; 
+        return; 
+    }
 
     const terms = [term1, term2, term3].filter(Boolean).join('\n');
 
