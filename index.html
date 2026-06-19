@@ -277,7 +277,7 @@
     <div class="dashboard-wrapper">
 
         <div class="dashboard-header">
-            <h2>Welcome to your Dashboard</h2>
+            <h2 id="dashWelcome">Welcome to your Dashboard</h2>
             <p>Select an action below to get started</p>
         </div>
 
@@ -421,6 +421,29 @@
                 banner.style.display = 'none';
             });
         });
+    </script>
+    <script>
+        // Set personalised welcome as soon as DOM is ready
+        (function() {
+            function setWelcome() {
+                try {
+                    const session = JSON.parse(
+                        localStorage.getItem('mm_session') ||
+                        sessionStorage.getItem('mm_session') ||
+                        'null'
+                    );
+                    const el = document.getElementById('dashWelcome');
+                    if (el && session && session.username) {
+                        el.textContent = 'Welcome, ' + session.username + '!';
+                    }
+                } catch(e) {}
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setWelcome);
+            } else {
+                setWelcome();
+            }
+        })();
     </script></body>
 </html>
 
