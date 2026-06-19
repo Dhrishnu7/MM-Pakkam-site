@@ -785,7 +785,40 @@ function fmt(n) {
     return Number(n).toLocaleString('en-IN',{maximumFractionDigits:2});
 }
 function parseTs(v){if(!v) return 0;if(!isNaN(v)) return parseInt(v);return new Date(v).getTime()||0;}
-function parseDate(v){if(!v) return '—';const ts=parseTs(v);if(!ts||isNaN(ts)) return '—';return new Date(ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function parseDate(v){if(!v) return '-';const ts=parseTs(v);if(!ts||isNaN(ts)) return '-';return new Date(ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+
+// ── SHOP INFO MODAL ──
+function openShopModal(username) {
+    const p = window.currentShopProfiles ? window.currentShopProfiles[username] : null;
+    const body = document.getElementById('shopModalBody');
+    if (!p) {
+        body.innerHTML = '<p>No shop profile found for this user. They might have signed up before the shop info form was added.</p>';
+    } else {
+        body.innerHTML = `
+            <p><strong>Shop Name:</strong> <span>${p.shop_name || '-'}</span></p>
+            <p><strong>Phone Number:</strong> <span>${p.phone || '-'}</span></p>
+            <p><strong>Address Line 1:</strong> <span>${p.address_line1 || '-'}</span></p>
+            <p><strong>Address Line 2:</strong> <span>${p.address_line2 || '-'}</span></p>
+            <p><strong>DL Number:</strong> <span>${p.dl_no || '-'}</span></p>
+            <p><strong>GSTIN:</strong> <span>${p.gstin || '-'}</span></p>
+        `;
+    }
+    document.getElementById('shopModal').style.display = 'flex';
+}
+function closeShopModal() {
+    document.getElementById('shopModal').style.display = 'none';
+}
 </script>
+
+<div id="shopModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🏪 Full Shop Details</h3>
+            <button onclick="closeShopModal()">×</button>
+        </div>
+        <div class="modal-body" id="shopModalBody"></div>
+    </div>
+</div>
+
 </body>
 </html>
