@@ -378,12 +378,12 @@
             if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
             if (/[0-9]/.test(pw) || /[^A-Za-z0-9]/.test(pw)) score++;
             const levels = ['weak','weak','medium','strong'];
-            const labels = ['Too short','Weak','Moderate','Strong ðŸ’ª'];
+            const labels = ['Too short','Weak','Moderate','Strong ✨'];
             for (let i = 0; i < score; i++) segs[i] && segs[i].classList.add(levels[score - 1]);
             lbl.textContent = labels[score - 1] || 'Too short';
         }
 
-        // â”€â”€ Render the single unified Create Account form â”€â”€
+        // ——— Render the single unified Create Account form ———
         function renderSetup() {
             document.getElementById('pageContent').innerHTML = `
                 <div class="mode-badge badge-owner">
