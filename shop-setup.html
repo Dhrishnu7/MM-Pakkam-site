@@ -439,47 +439,58 @@ if (isEditMode) {
 
 // ── EDIT MODE: check if profile exists, then check edit permission ──
 async function initEditMode() {
-    const session = JSON.parse(localStorage.getItem('mm_session') || sessionStorage.getItem('mm_session') || 'null');
-    if (!session) { removeLoading(); return; }
-    const userId = session.tenant_id || session.username;
+    try {
+        const session = JSON.parse(localStorage.getItem('mm_session') || sessionStorage.getItem('mm_session') || 'null');
+        if (!session) { removeLoading(); document.getElementById('setupCard').style.display = 'block'; return; }
+        const userId = session.tenant_id || session.username;
 
-    // Load existing profile
-    const { data: profile } = await sb.from('shop_profiles').select('*').eq('user_id', userId).maybeSingle();
+        // Load existing profile
+        const { data: profile } = await sb.from('shop_profiles').select('*').eq('user_id', userId).maybeSingle();
 
-    removeLoading(); // always remove spinner before showing anything
+        // Always remove spinner and show the card now
+        removeLoading();
+        document.getElementById('setupCard').style.display = 'block';
 
-    if (profile && profile.shop_name) {
-        // Profile already filled — check for an approved edit request
-        const { data: req } = await sb.from('shop_edit_requests')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('status', 'approved')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-        if (req) {
-            // Has approved request — show editable form
-            document.getElementById('setupCard').style.display = 'block';
-            populateForm(profile);
-            showInfoBanner('✅ Your edit request was approved. Make your changes and save.', '#10b981');
-        } else {
-            // No approval — check if there's a pending request
-            const { data: pending } = await sb.from('shop_edit_requests')
+        if (profile && profile.shop_name) {
+            // Profile already filled — check for an approved edit request
+            const { data: req, error: reqErr } = await sb.from('shop_edit_requests')
                 .select('*')
                 .eq('user_id', userId)
-                .eq('status', 'pending')
+                .eq('status', 'approved')
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle();
 
-            // Show locked card with request panel (no form)
-            document.getElementById('setupCard').style.display = 'block';
-            lockForm(profile, pending);
+            if (reqErr) {
+                // Table might not exist yet — just lock the form with no pending info
+                lockForm(profile, null);
+                return;
+            }
+
+            if (req) {
+                // Has approved request — show editable form
+                populateForm(profile);
+                showInfoBanner('✅ Your edit request was approved. Make your changes and save.', '#10b981');
+            } else {
+                // No approval — check if there's a pending request
+                const { data: pending } = await sb.from('shop_edit_requests')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                // Lock the form and show the request panel
+                lockForm(profile, pending);
+            }
         }
-    } else {
-        // No profile yet — free to fill for first time
+        // else: no profile yet — form stays visible for first-time fill
+    } catch(e) {
+        // On any unexpected error, always show the form
+        removeLoading();
         document.getElementById('setupCard').style.display = 'block';
+        console.error('initEditMode error:', e);
     }
 }
 
