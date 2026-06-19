@@ -721,7 +721,7 @@ function mmInjectUserBar() {
         </a>` : ''}
         <div class="mm-user-pill">
             <div class="mm-avatar">${shopInitials}</div>
-            <span class="mm-user-name">${shopName}</span>
+            <span class="mm-user-name">${session.username}</span>
             <span class="mm-role-badge ${isOwner ? 'mm-role-owner' : 'mm-role-worker'}">${session.role}</span>
         </div>
         <button class="mm-logout-btn" onclick="mmLogout()" title="Logout">
@@ -734,6 +734,12 @@ function mmInjectUserBar() {
 
     const header = document.querySelector('header');
     if (header) header.appendChild(bar);
+
+    // Update dashboard welcome message with shop name
+    const dashWelcome = document.querySelector('.dashboard-header h2');
+    if (dashWelcome) {
+        dashWelcome.textContent = `Welcome, ${shopName}!`;
+    }
 }
 
 // =========================================================
