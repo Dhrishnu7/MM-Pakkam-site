@@ -416,88 +416,135 @@ if (isEditMode) {
     document.querySelector('.page-header h1').textContent = 'Shop Settings';
     document.querySelector('.page-header p').textContent = 'Update your store details and invoice information';
     document.querySelector('.step-bar').style.display = 'none';
-    document.querySelector('.submit-btn').innerHTML = `
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-        Save Changes
-    `;
     document.querySelector('.skip-link').textContent = '← Back to Dashboard';
     document.querySelector('.skip-link').onclick = () => window.location.href = 'index.html';
 
-    // ── HIDE form immediately — show loading while we check permissions ──
-    const setupCard = document.getElementById('setupCard');
-    setupCard.style.display = 'none';
+    // ── LOCK everything IMMEDIATELY (before any async call) ──
+    // This guarantees the form is never editable until explicitly unlocked
+    document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
+        el.setAttribute('disabled', 'true');
+        el.style.background = '#f8fafc';
+        el.style.cursor = 'not-allowed';
+        el.style.color = '#475569';
+        el.style.borderColor = '#e2e8f0';
+    });
+    // Hide save button, update skip link
+    document.getElementById('submitBtn').style.display = 'none';
+    document.querySelector('.skip-link').style.display = 'none';
 
-    // Show loading spinner
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = 'permLoading';
-    loadingDiv.style.cssText = 'text-align:center;padding:40px;color:#64748b;font-size:.9rem;';
-    loadingDiv.innerHTML = `<svg style="animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px" width="18" height="18" fill="none" stroke="#0d9488" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.13-3.36M20 15a9 9 0 01-14.13 3.36"/></svg>Checking permissions…`;
-    setupCard.parentNode.insertBefore(loadingDiv, setupCard);
+    // Show a loading placeholder in the button area
+    const btnWrapper = document.getElementById('submitBtn').parentElement;
+    btnWrapper.innerHTML = `
+        <div id="permLoading" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 22px;text-align:center;color:#64748b;font-size:.87rem;">
+            <svg style="animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px" width="15" height="15" fill="none" stroke="#0d9488" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.13-3.36M20 15a9 9 0 01-14.13 3.36"/></svg>
+            Checking permissions…
+        </div>
+    `;
 
     initEditMode();
 }
 
-// ── EDIT MODE: check if profile exists, then check edit permission ──
+
+// ── EDIT MODE: populate data and finalise permissions (form is already locked) ──
 async function initEditMode() {
     try {
         const session = JSON.parse(localStorage.getItem('mm_session') || sessionStorage.getItem('mm_session') || 'null');
-        if (!session) { removeLoading(); document.getElementById('setupCard').style.display = 'block'; return; }
+        if (!session) {
+            unlockFormFirstTime(); // no session — show empty form for setup
+            return;
+        }
         const userId = session.tenant_id || session.username;
 
         // Load existing profile
         const { data: profile } = await sb.from('shop_profiles').select('*').eq('user_id', userId).maybeSingle();
 
-        // Always remove spinner and show the card now
-        removeLoading();
-        document.getElementById('setupCard').style.display = 'block';
+        if (!profile || !profile.shop_name) {
+            // No profile yet — first time filling, unlock the form
+            unlockFormFirstTime();
+            return;
+        }
 
-        if (profile && profile.shop_name) {
-            // Profile already filled — check for an approved edit request
-            const { data: req, error: reqErr } = await sb.from('shop_edit_requests')
+        // Profile exists — populate fields (still disabled/locked)
+        populateForm(profile);
+
+        // Check for an approved edit request
+        const { data: req, error: reqErr } = await sb.from('shop_edit_requests')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (!reqErr && req) {
+            // Approved — unlock the form for editing
+            unlockFormApproved(profile);
+        } else {
+            // No approval — check if request is pending
+            const { data: pending } = await sb.from('shop_edit_requests')
                 .select('*')
                 .eq('user_id', userId)
-                .eq('status', 'approved')
+                .eq('status', 'pending')
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .maybeSingle();
 
-            if (reqErr) {
-                // Table might not exist yet — just lock the form with no pending info
-                lockForm(profile, null);
-                return;
-            }
-
-            if (req) {
-                // Has approved request — show editable form
-                populateForm(profile);
-                showInfoBanner('✅ Your edit request was approved. Make your changes and save.', '#10b981');
-            } else {
-                // No approval — check if there's a pending request
-                const { data: pending } = await sb.from('shop_edit_requests')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .eq('status', 'pending')
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
-
-                // Lock the form and show the request panel
-                lockForm(profile, pending);
-            }
+            // Show locked footer (with or without pending state)
+            showLockedFooter(pending);
         }
-        // else: no profile yet — form stays visible for first-time fill
     } catch(e) {
-        // On any unexpected error, always show the form
-        removeLoading();
-        document.getElementById('setupCard').style.display = 'block';
+        // On any error, keep form locked and show generic locked footer
         console.error('initEditMode error:', e);
+        showLockedFooter(null);
     }
+}
+
+// Unlock form for first-time users (no profile yet)
+function unlockFormFirstTime() {
+    document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
+        el.removeAttribute('disabled');
+        el.style.background = '';
+        el.style.cursor = '';
+        el.style.color = '';
+        el.style.borderColor = '';
+    });
+    const btnWrapper = document.getElementById('submitBtn').parentElement;
+    btnWrapper.innerHTML = `
+        <button class="submit-btn" id="submitBtn" onclick="saveAndContinue()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Save Changes
+        </button>
+        <span class="skip-link" onclick="window.location.href='index.html'">← Back to Dashboard</span>
+    `;
+}
+
+// Unlock form when edit is approved
+function unlockFormApproved(profile) {
+    document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
+        el.removeAttribute('disabled');
+        el.style.background = '';
+        el.style.cursor = '';
+        el.style.color = '';
+        el.style.borderColor = '';
+    });
+    const btnWrapper = document.getElementById('submitBtn').parentElement;
+    btnWrapper.innerHTML = `
+        <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:12px 18px;margin-bottom:14px;font-size:.85rem;font-weight:600;color:#10b981;">
+            ✅ Your edit request was approved. Make your changes and save.
+        </div>
+        <button class="submit-btn" id="submitBtn" onclick="saveAndContinue()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Save Changes
+        </button>
+        <span class="skip-link" onclick="window.location.href='index.html'">← Back to Dashboard</span>
+    `;
 }
 
 function removeLoading() {
     const el = document.getElementById('permLoading');
     if (el) el.remove();
 }
+
 
 function populateForm(data) {
     document.getElementById('shopName').value      = data.shop_name      || '';
