@@ -237,6 +237,7 @@
     <div class="tab-bar">
         <button class="tab active" onclick="switchTab('overview',this)">📊 Overview</button>
         <button class="tab" onclick="switchTab('accounts',this)">🏪 Accounts <span class="badge green" id="tabAcctCount">0</span></button>
+        <button class="tab" onclick="switchTab('shops',this)">🏪 Shops <span class="badge blue" id="tabShopCount" style="background:#3b82f6;">0</span></button>
         <button class="tab" onclick="switchTab('requests',this)">🔔 Requests <span class="badge" id="tabPendCount">0</span></button>
         <button class="tab" onclick="switchTab('activity',this)">📋 Activity</button>
     </div>
@@ -302,6 +303,14 @@
                     <tbody id="acctBody"></tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- TAB: SHOPS -->
+    <div class="tab-panel" id="tab-shops">
+        <div class="sh"><h2>All Registered Shops</h2></div>
+        <div class="pending-grid" id="shopsGrid">
+            <div class="ld"><div class="sp"></div>Loading shops...</div>
         </div>
     </div>
 
@@ -394,14 +403,20 @@ function startClock() {
 let allUsers=[], allBills=[], allPurchases=[], allCustomers=[], allMedicines=[];
 
 async function loadAll() {
-    const [uR,bR,pR,cR,mR] = await Promise.all([
+    const [uR,bR,pR,cR,mR,sR] = await Promise.all([
         sb.from('mm_users').select('*'),
         sb.from('bills').select('*').order('saved_at',{ascending:false}),
         sb.from('purchases').select('*'),
         sb.from('customers').select('*'),
         sb.from('medicines').select('name,user_id'),
+        sb.from('shop_profiles').select('*')
     ]);
     allUsers=uR.data||[]; allBills=bR.data||[]; allPurchases=pR.data||[]; allCustomers=cR.data||[]; allMedicines=mR.data||[];
+
+    window.currentShopProfiles = {};
+    if (sR && sR.data) {
+        sR.data.forEach(p => { window.currentShopProfiles[p.user_id] = p; });
+    }
 
     // Update tab badge counts
     const owners = allUsers.filter(u=>u.role==='owner');
@@ -409,9 +424,11 @@ async function loadAll() {
     document.getElementById('tabAcctCount').textContent = owners.length;
     document.getElementById('tabPendCount').textContent = pending.length;
     document.getElementById('tabPendCount').style.display = pending.length ? '' : 'none';
+    const shopBadge = document.getElementById('tabShopCount');
+    if (shopBadge) shopBadge.textContent = Object.keys(window.currentShopProfiles).length;
 
     renderStats(); renderInfoRow(); renderOnline(); renderRevChart(); renderCustChart();
-    renderAccounts(); renderRequests(); renderActivity(); renderSignups();
+    renderAccounts(); renderRequests(); renderShops(); renderActivity(); renderSignups();
     renderShopEditRequests();
 }
 
@@ -534,16 +551,6 @@ async function renderRequests() {
     document.getElementById('pendCnt').textContent=pending.length;
     document.getElementById('tabPendCount').textContent=pending.length;
 
-    // Fetch shop profiles for pending users
-    window.currentShopProfiles = {};
-    if (pending.length > 0) {
-        const ids = pending.map(u => u.username);
-        const { data } = await sb.from('shop_profiles').select('*').in('user_id', ids);
-        if (data) {
-            data.forEach(p => { window.currentShopProfiles[p.user_id] = p; });
-        }
-    }
-
     const mkCard=(u,actions)=>`
         <div class="pcard">
             <div class="pcard-top">
@@ -581,6 +588,35 @@ async function renderRequests() {
     document.getElementById('approvedGrid').innerHTML=approved.length
         ?approved.map(u=>mkCard(u,'<div style="font-size:.78rem;color:#6ee7b7">✅ Approved & Active</div>')).join('')
         :'<div class="no-pending">No approved accounts yet</div>';
+}
+
+function renderShops() {
+    const shops = Object.values(window.currentShopProfiles);
+    const grid = document.getElementById('shopsGrid');
+    if (!grid) return;
+    
+    if (shops.length === 0) {
+        grid.innerHTML = '<div class="no-pending">✨ No registered shops found</div>';
+        return;
+    }
+    
+    const mkShopCard = (s) => `
+        <div class="pcard">
+            <div class="pcard-top">
+                <div class="pcard-avatar" style="background:#0f172a;color:#10b981;">🏪</div>
+                <div>
+                    <div class="pcard-name">${s.shop_name || 'Unnamed Shop'}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">📞 ${s.phone || 'No Phone'}</div>
+                    <div class="pcard-meta" style="margin-top:6px;">Owner: <strong>${s.user_id}</strong></div>
+                </div>
+            </div>
+            <div class="pcard-actions">
+                <button class="approve-btn" style="background:var(--card);color:var(--text);border-color:var(--border);" onclick="openShopModal('${s.user_id}')">🔍 View Full Details</button>
+            </div>
+        </div>
+    `;
+
+    grid.innerHTML = shops.map(s => mkShopCard(s)).join('');
 }
 
 // ── SHOP EDIT REQUESTS ──
