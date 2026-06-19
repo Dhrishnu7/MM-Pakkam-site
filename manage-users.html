@@ -360,6 +360,20 @@
                     </svg>
                     Delete This Account Permanently
                 </button>
+            <!-- ── Edit Requests ── -->
+            <div class="card" id="editRequestsCard">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-title-icon" style="background:rgba(234,88,12,0.12);">
+                            <svg width="17" height="17" fill="none" stroke="#ea580c" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </div>
+                        🔒 Shop Edit Requests
+                    </div>
+                    <span style="font-size:0.78rem;color:#94a3b8;" id="editReqCount"></span>
+                </div>
+                <div id="editReqList"><div class="empty-state">Loading…</div></div>
             </div>
 
         </div>
@@ -713,8 +727,93 @@
         document.getElementById('deleteAccountModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeDeleteAccountModal(); });
         document.addEventListener('keydown', e => { if(e.key==='Escape') { closeResetModal(); closeRenameModal(); closeDeleteModal(); closeDeleteAccountModal(); } });
 
+        // ── Edit Requests ──
+        const sb = _supabase; // alias for brevity
+        async function renderEditRequests() {
+            const list = document.getElementById('editReqList');
+            const count = document.getElementById('editReqCount');
+            list.innerHTML = '<div class="empty-state">Loading…</div>';
+
+            const { data: reqs, error } = await sb
+                .from('shop_edit_requests')
+                .select('*')
+                .in('status', ['pending', 'approved'])
+                .order('created_at', { ascending: false });
+
+            if (error || !reqs || reqs.length === 0) {
+                list.innerHTML = '<div class="empty-state">No edit requests at the moment ✓</div>';
+                count.textContent = '';
+                return;
+            }
+
+            const pending = reqs.filter(r => r.status === 'pending');
+            count.textContent = pending.length > 0 ? `${pending.length} pending` : 'all reviewed';
+
+            list.innerHTML = reqs.map(req => {
+                const isPending = req.status === 'pending';
+                const isApproved = req.status === 'approved';
+                const dateStr = new Date(req.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+                const statusBadge = isPending
+                    ? `<span style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;">⏳ Pending</span>`
+                    : `<span style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;">✅ Approved</span>`;
+
+                return `
+                <div style="border:1.5px solid ${isPending ? '#fed7aa' : '#bbf7d0'};border-radius:14px;padding:16px 18px;margin-bottom:12px;background:${isPending ? '#fff7ed' : '#f0fdf4'};">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                        <div>
+                            <div style="font-weight:800;font-size:.95rem;color:#0f172a;">${req.shop_name || req.user_id}</div>
+                            <div style="font-size:.76rem;color:#64748b;margin-top:2px;">User: <b>${req.user_id}</b> &nbsp;·&nbsp; ${dateStr}</div>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:.85rem;color:#334155;margin-bottom:${isPending ? '14px' : '0'};">
+                        <span style="font-size:.72rem;text-transform:uppercase;font-weight:700;color:#94a3b8;display:block;margin-bottom:4px;">Reason</span>
+                        ${req.reason}
+                    </div>
+                    ${isPending ? `
+                    <div style="display:flex;gap:10px;margin-top:0;">
+                        <button onclick="approveEditRequest('${req.id}', '${req.user_id}')" style="
+                            flex:1;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:9px;
+                            padding:9px 16px;color:white;font-family:inherit;font-size:.85rem;font-weight:700;
+                            cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s;
+                        ">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            Approve
+                        </button>
+                        <button onclick="rejectEditRequest('${req.id}', '${req.user_id}')" style="
+                            flex:1;background:white;border:1.5px solid #fca5a5;border-radius:9px;
+                            padding:9px 16px;color:#dc2626;font-family:inherit;font-size:.85rem;font-weight:700;
+                            cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;
+                        ">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Reject
+                        </button>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        async function approveEditRequest(id, userId) {
+            const { error } = await sb.from('shop_edit_requests')
+                .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+                .eq('id', id);
+            if (error) { alert('Error: ' + error.message); return; }
+            showToast('Edit Request Approved ✅', `${userId} can now edit their shop details.`);
+            renderEditRequests();
+        }
+
+        async function rejectEditRequest(id, userId) {
+            const { error } = await sb.from('shop_edit_requests')
+                .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+                .eq('id', id);
+            if (error) { alert('Error: ' + error.message); return; }
+            showToast('Request Rejected ❌', `${userId}'s edit request has been declined.`);
+            renderEditRequests();
+        }
+
         // Init
         renderUsers();
+        renderEditRequests();
     </script>
 
 

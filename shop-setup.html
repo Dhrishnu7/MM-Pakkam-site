@@ -411,7 +411,7 @@ if (!tenantId && !isEditMode) {
     }
 }
 
-// If edit mode (logged in owner updating their profile), load existing data
+// If edit mode (logged in owner updating their profile), initialise
 if (isEditMode) {
     document.querySelector('.page-header h1').textContent = 'Shop Settings';
     document.querySelector('.page-header p').textContent = 'Update your store details and invoice information';
@@ -422,16 +422,50 @@ if (isEditMode) {
     `;
     document.querySelector('.skip-link').textContent = '← Back to Dashboard';
     document.querySelector('.skip-link').onclick = () => window.location.href = 'index.html';
-    loadExistingProfile();
+    initEditMode();
 }
 
-async function loadExistingProfile() {
-    // In edit mode the user is logged in — fetch via supabase directly
+// ── EDIT MODE: check if profile exists, then check edit permission ──
+async function initEditMode() {
     const session = JSON.parse(localStorage.getItem('mm_session') || sessionStorage.getItem('mm_session') || 'null');
     if (!session) return;
     const userId = session.tenant_id || session.username;
-    const { data } = await sb.from('shop_profiles').select('*').eq('user_id', userId).maybeSingle();
-    if (!data) return;
+
+    // Load existing profile
+    const { data: profile } = await sb.from('shop_profiles').select('*').eq('user_id', userId).maybeSingle();
+
+    if (profile && profile.shop_name) {
+        // Profile already filled — check for an approved edit request
+        const { data: req } = await sb.from('shop_edit_requests')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('status', 'approved')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (req) {
+            // Has approved request — allow editing, populate form
+            populateForm(profile);
+            showInfoBanner('✅ Your edit request was approved. Make your changes and save.', '#10b981');
+        } else {
+            // No approval — check if there's a pending request
+            const { data: pending } = await sb.from('shop_edit_requests')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            // Lock the form and show the request panel
+            lockForm(profile, pending);
+        }
+    }
+    // else: no profile yet — free to fill for first time, nothing to do
+}
+
+function populateForm(data) {
     document.getElementById('shopName').value      = data.shop_name      || '';
     document.getElementById('invoicePrefix').value = data.invoice_prefix || '';
     document.getElementById('phone').value         = data.phone          || '';
@@ -444,6 +478,140 @@ async function loadExistingProfile() {
     document.getElementById('term2').value = terms[1] || '';
     document.getElementById('term3').value = terms[2] || '';
     document.getElementById('footerMsg').value = data.footer_msg || '';
+}
+
+function lockForm(profile, pendingReq) {
+    populateForm(profile);
+
+    // Disable all inputs
+    document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
+        el.setAttribute('disabled', 'true');
+        el.style.background = '#f8fafc';
+        el.style.cursor = 'not-allowed';
+        el.style.color = '#64748b';
+    });
+
+    // Hide save & skip buttons
+    document.getElementById('submitBtn').style.display = 'none';
+    document.querySelector('.skip-link').style.display = 'none';
+
+    // Insert lock panel at top of card
+    const card = document.getElementById('setupCard');
+    const lockDiv = document.createElement('div');
+    lockDiv.id = 'lockPanel';
+    lockDiv.style.cssText = `
+        background:#fff7ed; border:1.5px solid #fed7aa; border-radius:14px;
+        padding:22px 24px; margin-bottom:22px; text-align:center;
+    `;
+
+    if (pendingReq) {
+        lockDiv.innerHTML = `
+            <div style="font-size:2.2rem;margin-bottom:10px">⏳</div>
+            <div style="font-weight:800;font-size:1.05rem;color:#9a3412;margin-bottom:6px">Edit Request Pending</div>
+            <div style="font-size:.87rem;color:#c2410c;line-height:1.65;margin-bottom:12px">
+                Your request to edit shop details is awaiting Super Admin approval.<br>
+                You'll be able to make changes once it's approved.
+            </div>
+            <div style="font-size:.76rem;color:#9a3412;background:#ffedd5;border-radius:8px;padding:8px 14px;display:inline-block;">
+                📅 Submitted: ${new Date(pendingReq.created_at).toLocaleString('en-IN')}
+            </div>
+            <div style="margin-top:14px">
+                <a href="index.html" style="font-size:.83rem;color:#9a3412;font-weight:600;text-decoration:underline;">← Back to Dashboard</a>
+            </div>
+        `;
+    } else {
+        lockDiv.innerHTML = `
+            <div style="font-size:2.2rem;margin-bottom:10px">🔒</div>
+            <div style="font-weight:800;font-size:1.05rem;color:#9a3412;margin-bottom:6px">Shop Details are Locked</div>
+            <div style="font-size:.87rem;color:#c2410c;line-height:1.65;margin-bottom:18px">
+                Your shop details are already saved. To make changes, you need<br>
+                permission from the Super Admin. Please explain why you need to edit.
+            </div>
+            <div id="reqForm" style="text-align:left;max-width:480px;margin:0 auto;">
+                <label style="font-size:.78rem;font-weight:700;color:#9a3412;letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:8px;">
+                    Reason for editing <span style="color:#ef4444">*</span>
+                </label>
+                <textarea id="editReason" rows="3" style="
+                    width:100%;border:1.5px solid #fed7aa;border-radius:10px;
+                    padding:10px 14px;font-family:inherit;font-size:.88rem;color:#0f172a;
+                    resize:vertical;background:white;outline:none;margin-bottom:14px;
+                    transition:border-color .2s;
+                " placeholder="e.g. Our shop name changed, address updated, need to correct GSTIN..." 
+                   onfocus="this.style.borderColor='#ea580c'" 
+                   onblur="this.style.borderColor='#fed7aa'"></textarea>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <button id="sendReqBtn" onclick="sendEditRequest()" style="
+                        background:linear-gradient(135deg,#ea580c,#dc2626);
+                        border:none;border-radius:10px;padding:11px 22px;
+                        color:white;font-family:inherit;font-size:.9rem;font-weight:700;
+                        cursor:pointer;display:inline-flex;align-items:center;gap:8px;
+                        transition:opacity .2s;
+                    ">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        Send Request to Admin
+                    </button>
+                    <a href="index.html" style="font-size:.83rem;color:#9a3412;font-weight:600;text-decoration:underline;">← Back to Dashboard</a>
+                </div>
+                <div id="reqMsg" style="margin-top:12px;font-size:.83rem;display:none;padding:10px 14px;border-radius:8px;"></div>
+            </div>
+        `;
+    }
+
+    card.insertBefore(lockDiv, card.firstChild);
+}
+
+function showInfoBanner(msg, color) {
+    const card = document.getElementById('setupCard');
+    const div = document.createElement('div');
+    div.style.cssText = `
+        background:${color}15;border:1.5px solid ${color}44;border-radius:12px;
+        padding:12px 18px;margin-bottom:18px;font-size:.87rem;font-weight:600;
+        color:${color};text-align:center;
+    `;
+    div.textContent = msg;
+    card.insertBefore(div, card.firstChild);
+}
+
+async function sendEditRequest() {
+    const reason = (document.getElementById('editReason').value || '').trim();
+    const msg = document.getElementById('reqMsg');
+    if (!reason) {
+        msg.style.display = 'block';
+        msg.style.background = '#fef2f2';
+        msg.style.color = '#dc2626';
+        msg.textContent = '⚠️ Please enter a reason for your edit request.';
+        return;
+    }
+    const btn = document.getElementById('sendReqBtn');
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="spin" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.13-3.36M20 15a9 9 0 01-14.13 3.36"/></svg> Sending...`;
+
+    const session = JSON.parse(localStorage.getItem('mm_session') || sessionStorage.getItem('mm_session') || 'null');
+    const userId = session?.tenant_id || session?.username || tenantId;
+    const shopName = document.getElementById('shopName').value || userId;
+
+    const { error } = await sb.from('shop_edit_requests').insert({
+        user_id:    userId,
+        shop_name:  shopName,
+        reason:     reason,
+        status:     'pending',
+        created_at: new Date().toISOString(),
+    });
+
+    msg.style.display = 'block';
+    if (error) {
+        msg.style.background = '#fef2f2';
+        msg.style.color = '#dc2626';
+        msg.textContent = 'Failed to send: ' + error.message;
+        btn.disabled = false;
+        btn.innerHTML = 'Send Request to Admin';
+    } else {
+        msg.style.background = '#f0fdf4';
+        msg.style.color = '#10b981';
+        msg.textContent = '✅ Request sent! You\'ll be able to edit once the Super Admin approves it.';
+        btn.style.display = 'none';
+        document.getElementById('editReason').setAttribute('disabled', 'true');
+    }
 }
 
 function showErr(msg) {
@@ -507,17 +675,21 @@ async function saveAndContinue() {
     if (error) {
         showErr('Failed to save: ' + error.message);
         btn.disabled = false;
-        btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Shop Details & Submit for Approval`;
+        btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save Changes`;
         return;
     }
 
+    // Mark the approved edit request as 'used' so they can't edit again without re-requesting
     if (isEditMode) {
-        // In edit mode → go back to dashboard
+        await sb.from('shop_edit_requests')
+            .update({ status: 'used', reviewed_at: new Date().toISOString() })
+            .eq('user_id', userId)
+            .eq('status', 'approved');
         window.location.href = 'index.html';
         return;
     }
 
-    // Show pending screen
+    // Show pending screen (first-time setup flow)
     document.getElementById('setupCard').style.display = 'none';
     document.getElementById('pendingScreen').style.display = 'block';
     document.querySelector('.page-header h1').textContent = 'Almost Done!';
