@@ -418,22 +418,18 @@ if (isEditMode) {
     document.querySelector('.page-header h1').textContent = 'Shop Settings';
     document.querySelector('.page-header p').textContent = 'Update your store details and invoice information';
     document.querySelector('.step-bar').style.display = 'none';
-    document.querySelector('.skip-link').textContent = '← Back to Dashboard';
-    document.querySelector('.skip-link').onclick = () => window.location.href = 'index.html';
 
-    // ── SHOW OVERLAY IMMEDIATELY — blocks all input interaction ──
+    // Show overlay IMMEDIATELY — blocks all interaction before async check
     document.getElementById('formOverlay').style.display = 'block';
 
-    // Also disable inputs for extra safety
+    // Disable all inputs as extra safety
     document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
         el.setAttribute('disabled', 'true');
     });
 
-    // Hide save/skip, show loading in button area
-    document.getElementById('submitBtn').style.display = 'none';
-    document.querySelector('.skip-link').style.display = 'none';
-    const btnWrapper = document.getElementById('submitBtn').parentElement;
-    btnWrapper.innerHTML = `
+    // Replace the button area with a loading indicator
+    const btnArea = document.getElementById('submitBtn').closest('div[style]') || document.getElementById('submitBtn').parentElement;
+    btnArea.innerHTML = `
         <div id="permLoading" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 22px;text-align:center;color:#64748b;font-size:.87rem;">
             <svg style="animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px" width="15" height="15" fill="none" stroke="#0d9488" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.13-3.36M20 15a9 9 0 01-14.13 3.36"/></svg>
             Checking permissions…
@@ -442,6 +438,7 @@ if (isEditMode) {
 
     initEditMode();
 }
+
 
 
 // ── EDIT MODE: populate data and finalise permissions (form is already locked) ──
