@@ -703,6 +703,13 @@ function mmInjectUserBar() {
                 cursor: pointer; transition: all 0.22s ease; font-family: 'Inter', sans-serif;
             }
             .mm-logout-btn:hover { background: #ef4444; color: white; border-color: #ef4444; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
+
+            /* Perfectly center the back button in the header on desktop */
+            @media (min-width: 850px) {
+                header { position: relative; }
+                .back-btn { position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; }
+                .back-btn:hover { transform: translate(-50%, -1px) !important; }
+            }
         `;
         document.head.appendChild(style);
     }
