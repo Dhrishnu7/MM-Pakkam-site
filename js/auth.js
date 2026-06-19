@@ -231,6 +231,14 @@ function mmClearSession() {
     sessionStorage.removeItem(MM_SESSION_KEY);
     localStorage.removeItem(MM_SESSION_KEY);
     localStorage.removeItem(MM_REMEMBER_KEY);
+
+    // Clear all offline business data to prevent data leakage across accounts
+    const keysToClear = [
+        'mm_purchases', 'mm_sales', 'mm_customers', 'mm_doctors', 
+        'mm_pending_purchases', 'mm_pending_sales', 'report_bin', 
+        'mm_schedule_h_register', 'mm_schedule_h_drugs', 'mm_medicines'
+    ];
+    keysToClear.forEach(k => localStorage.removeItem(k));
 }
 
 /* ─────────────────────────────────────────

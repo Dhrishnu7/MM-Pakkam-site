@@ -706,7 +706,11 @@
 
                 if (result.success) {
                     setBtnSuccess(result.user.username);
-                    setTimeout(() => window.location.replace('index.html'), 700);
+                    if (typeof dbSyncDown === 'function') {
+                        document.getElementById('loginBtnText').textContent = 'Syncing Data...';
+                        await dbSyncDown();
+                    }
+                    setTimeout(() => window.location.replace('index.html'), 400);
                 } else if (result.forceRequired) {
                     setBtnDefault();
                     // Prompt the user to force login
@@ -715,7 +719,11 @@
                         const forceResult = await mmLogin(username, password, remember, true);
                         if (forceResult.success) {
                             setBtnSuccess(forceResult.user.username);
-                            setTimeout(() => window.location.replace('index.html'), 700);
+                            if (typeof dbSyncDown === 'function') {
+                                document.getElementById('loginBtnText').textContent = 'Syncing Data...';
+                                await dbSyncDown();
+                            }
+                            setTimeout(() => window.location.replace('index.html'), 400);
                         } else {
                             setBtnDefault();
                             showError(forceResult.message);

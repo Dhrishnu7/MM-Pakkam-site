@@ -497,3 +497,29 @@ async function dbSaveShopProfile(profile) {
     if (error) { console.error('shop profile save:', error); return { success: false, message: error.message }; }
     return { success: true };
 }
+
+/* ─────────────────────────────────────────
+   SYNC DOWN FROM CLOUD (On Login)
+───────────────────────────────────────── */
+async function dbSyncDown() {
+    const user = _currentUser();
+    if (!user) return;
+    try {
+        console.log('[Sync] Fetching cloud data down to local storage...');
+        const [purchases, bills, customers, doctors] = await Promise.all([
+            dbGetPurchases(),
+            dbGetBills(),
+            dbGetCustomers(),
+            dbGetDoctors()
+        ]);
+        
+        if (purchases && purchases.length) localStorage.setItem('mm_purchases', JSON.stringify(purchases));
+        if (bills && bills.length) localStorage.setItem('mm_sales', JSON.stringify(bills));
+        if (customers && customers.length) localStorage.setItem('mm_customers', JSON.stringify(customers));
+        if (doctors && doctors.length) localStorage.setItem('mm_doctors', JSON.stringify(doctors));
+        
+        console.log('[Sync] Cloud data restored successfully.');
+    } catch(e) {
+        console.error('[Sync] Failed to sync down:', e);
+    }
+}
