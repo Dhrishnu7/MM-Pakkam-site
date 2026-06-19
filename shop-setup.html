@@ -665,6 +665,10 @@ function showLockedFooter(pendingReq) {
     const btnWrapper = loadingEl ? loadingEl.parentElement : null;
     if (!btnWrapper) return;
 
+    // Hide the overlay — inputs are already disabled, the footer needs to be clickable
+    const overlay = document.getElementById('formOverlay');
+    if (overlay) overlay.style.display = 'none';
+
     btnWrapper.innerHTML = pendingReq ? `
         <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
             <div style="font-size:1.8rem;flex-shrink:0;">⏳</div>
