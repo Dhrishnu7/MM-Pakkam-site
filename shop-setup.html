@@ -284,7 +284,9 @@
         </div>
     </div>
 
-    <div class="card" id="setupCard">
+    <div class="card" id="setupCard" style="position:relative;">
+        <!-- Lock overlay: covers the form, removed by JS when editing is allowed -->
+        <div id="formOverlay" style="display:none;position:absolute;inset:0;background:rgba(248,250,252,0.55);backdrop-filter:blur(1px);border-radius:inherit;z-index:10;cursor:not-allowed;"></div>
         <div class="err-box" id="errBox"></div>
 
         <!-- STORE IDENTITY -->
@@ -419,20 +421,17 @@ if (isEditMode) {
     document.querySelector('.skip-link').textContent = '← Back to Dashboard';
     document.querySelector('.skip-link').onclick = () => window.location.href = 'index.html';
 
-    // ── LOCK everything IMMEDIATELY (before any async call) ──
-    // This guarantees the form is never editable until explicitly unlocked
+    // ── SHOW OVERLAY IMMEDIATELY — blocks all input interaction ──
+    document.getElementById('formOverlay').style.display = 'block';
+
+    // Also disable inputs for extra safety
     document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
         el.setAttribute('disabled', 'true');
-        el.style.background = '#f8fafc';
-        el.style.cursor = 'not-allowed';
-        el.style.color = '#475569';
-        el.style.borderColor = '#e2e8f0';
     });
-    // Hide save button, update skip link
+
+    // Hide save/skip, show loading in button area
     document.getElementById('submitBtn').style.display = 'none';
     document.querySelector('.skip-link').style.display = 'none';
-
-    // Show a loading placeholder in the button area
     const btnWrapper = document.getElementById('submitBtn').parentElement;
     btnWrapper.innerHTML = `
         <div id="permLoading" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 22px;text-align:center;color:#64748b;font-size:.87rem;">
@@ -501,6 +500,9 @@ async function initEditMode() {
 
 // Unlock form for first-time users (no profile yet)
 function unlockFormFirstTime() {
+    // Remove overlay and re-enable inputs
+    const overlay = document.getElementById('formOverlay');
+    if (overlay) overlay.style.display = 'none';
     document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
         el.removeAttribute('disabled');
         el.style.background = '';
@@ -508,7 +510,8 @@ function unlockFormFirstTime() {
         el.style.color = '';
         el.style.borderColor = '';
     });
-    const btnWrapper = document.getElementById('submitBtn').parentElement;
+    const loadingEl = document.getElementById('permLoading');
+    const btnWrapper = loadingEl ? loadingEl.parentElement : document.getElementById('submitBtn').parentElement;
     btnWrapper.innerHTML = `
         <button class="submit-btn" id="submitBtn" onclick="saveAndContinue()">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
@@ -520,6 +523,9 @@ function unlockFormFirstTime() {
 
 // Unlock form when edit is approved
 function unlockFormApproved(profile) {
+    // Remove overlay and re-enable inputs
+    const overlay = document.getElementById('formOverlay');
+    if (overlay) overlay.style.display = 'none';
     document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
         el.removeAttribute('disabled');
         el.style.background = '';
@@ -527,7 +533,8 @@ function unlockFormApproved(profile) {
         el.style.color = '';
         el.style.borderColor = '';
     });
-    const btnWrapper = document.getElementById('submitBtn').parentElement;
+    const loadingEl = document.getElementById('permLoading');
+    const btnWrapper = loadingEl ? loadingEl.parentElement : document.getElementById('submitBtn').parentElement;
     btnWrapper.innerHTML = `
         <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:12px 18px;margin-bottom:14px;font-size:.85rem;font-weight:600;color:#10b981;">
             ✅ Your edit request was approved. Make your changes and save.
