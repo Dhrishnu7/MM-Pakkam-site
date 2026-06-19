@@ -431,6 +431,31 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="ownerAddress">Address</label>
+                    <div class="input-wrap" style="margin-bottom:8px;">
+                        <input type="text" id="ownerAddress1" placeholder="Address Line 1 (Street, Building)" autocomplete="address-line1">
+                    </div>
+                    <div class="input-wrap">
+                        <input type="text" id="ownerAddress2" placeholder="Address Line 2 (City, State, ZIP)" autocomplete="address-line2">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <label for="ownerDL">Drug License (DL) No.</label>
+                        <div class="input-wrap">
+                            <input type="text" id="ownerDL" placeholder="e.g. TN-XX-XXXX">
+                        </div>
+                    </div>
+                    <div style="flex:1;">
+                        <label for="ownerGST">GSTIN</label>
+                        <div class="input-wrap">
+                            <input type="text" id="ownerGST" placeholder="e.g. 33XXXXXZZ">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label for="ownerUser">Account Username</label>
                     <div class="input-wrap">
                         <span class="input-icon">
@@ -541,18 +566,26 @@
             
             const shopName = document.getElementById('ownerShopName').value.trim();
             const phone = document.getElementById('ownerPhone').value.trim();
+            const addr1 = document.getElementById('ownerAddress1').value.trim();
+            const addr2 = document.getElementById('ownerAddress2').value.trim();
+            const dlNo = document.getElementById('ownerDL').value.trim();
+            const gstin = document.getElementById('ownerGST').value.trim();
+            
             const username = document.getElementById('ownerUser').value.trim();
             const password = document.getElementById('ownerPw').value;
             const confirm  = document.getElementById('ownerConfirm').value;
             
             if (!shopName) return showError('Shop Name is required.');
             if (!phone) return showError('Phone Number is required.');
+            if (!addr1) return showError('Address Line 1 is required.');
+            if (!dlNo) return showError('Drug License Number is required.');
             if (username.length < 3) return showError('Username must be at least 3 characters.');
             if (password.length < 6) return showError('Password must be at least 6 characters.');
             if (password !== confirm) return showError('Passwords do not match.');
             
             setBtnLoading('Creating account...');
-            const result = await mmCreateOwner(username, password, { shopName, phone });
+            const shopInfo = { shopName, phone, addressLine1: addr1, addressLine2: addr2, dlNo, gstin };
+            const result = await mmCreateOwner(username, password, shopInfo);
             if (result.success) {
                 setBtnDone('Account Created!');
                 // Redirect to shop setup page — fill details before pending approval

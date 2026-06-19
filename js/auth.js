@@ -513,7 +513,11 @@ async function mmCreateOwner(username, password, shopInfo = null) {
             await db.from('shop_profiles').upsert({
                 user_id: username.trim(),
                 shop_name: shopInfo.shopName,
-                phone: shopInfo.phone
+                phone: shopInfo.phone,
+                address_line1: shopInfo.addressLine1 || '',
+                address_line2: shopInfo.addressLine2 || '',
+                dl_no: shopInfo.dlNo || '',
+                gstin: shopInfo.gstin || ''
             });
         }
     }
