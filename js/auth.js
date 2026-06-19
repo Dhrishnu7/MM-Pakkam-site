@@ -495,7 +495,7 @@ async function mmGetTenantUsers() {
 }
 
 /** Create a new store owner account. Every account is fully isolated. Returns { success, message } */
-async function mmCreateOwner(username, password) {
+async function mmCreateOwner(username, password, shopInfo = null) {
     // Owner usernames must be globally unique (needed for unambiguous login)
     const users = await mmGetUsers();
     if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
@@ -506,6 +506,18 @@ async function mmCreateOwner(username, password) {
     // approval_status = 'pending' until super admin approves
     const user = { username: username.trim(), passwordHash: hash, role: 'owner', tenant_id: username.trim(), createdAt: Date.now(), approval_status: 'pending', payment_status: 'unpaid' };
     await _saveUser(user);
+
+    if (shopInfo) {
+        const db = _authDB();
+        if (db) {
+            await db.from('shop_profiles').upsert({
+                user_id: username.trim(),
+                shop_name: shopInfo.shopName,
+                phone: shopInfo.phone
+            });
+        }
+    }
+
     return { success: true, pending: true };
 }
 
