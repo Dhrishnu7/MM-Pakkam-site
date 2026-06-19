@@ -737,61 +737,79 @@
             const { data: reqs, error } = await sb
                 .from('shop_edit_requests')
                 .select('*')
-                .in('status', ['pending', 'approved'])
                 .order('created_at', { ascending: false });
 
-            if (error || !reqs || reqs.length === 0) {
-                list.innerHTML = '<div class="empty-state">No edit requests at the moment ✓</div>';
+            if (error) {
+                list.innerHTML = `<div class="empty-state" style="color:#dc2626;">
+                    ⚠️ Could not load requests.<br>
+                    <span style="font-size:.78rem;color:#94a3b8;">Make sure the <b>shop_edit_requests</b> table exists in Supabase.<br>
+                    Error: ${error.message}</span>
+                    <br><br>
+                    <button onclick="renderEditRequests()" style="background:#0d9488;border:none;border-radius:8px;padding:7px 16px;color:white;font-size:.82rem;font-weight:700;cursor:pointer;">🔄 Retry</button>
+                </div>`;
                 count.textContent = '';
                 return;
             }
 
-            const pending = reqs.filter(r => r.status === 'pending');
-            count.textContent = pending.length > 0 ? `${pending.length} pending` : 'all reviewed';
+            if (!reqs || reqs.length === 0) {
+                list.innerHTML = '<div class="empty-state">✓ No edit requests yet</div>';
+                count.textContent = '';
+                return;
+            }
+
+            const pendingCount = reqs.filter(r => r.status === 'pending').length;
+            count.textContent = pendingCount > 0 ? `${pendingCount} pending` : 'all reviewed';
+            if (pendingCount > 0) count.style.color = '#ea580c';
+
+            const statusStyles = {
+                pending:  { bg: '#fff7ed', border: '#fed7aa', badge: 'background:#fff7ed;color:#ea580c;border:1px solid #fed7aa', label: '⏳ Pending' },
+                approved: { bg: '#f0fdf4', border: '#bbf7d0', badge: 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0', label: '✅ Approved' },
+                rejected: { bg: '#fef2f2', border: '#fecaca', badge: 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca', label: '❌ Rejected' },
+            };
 
             list.innerHTML = reqs.map(req => {
+                const st = statusStyles[req.status] || statusStyles.pending;
                 const isPending = req.status === 'pending';
-                const isApproved = req.status === 'approved';
                 const dateStr = new Date(req.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
-                const statusBadge = isPending
-                    ? `<span style="background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;">⏳ Pending</span>`
-                    : `<span style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;">✅ Approved</span>`;
 
                 return `
-                <div style="border:1.5px solid ${isPending ? '#fed7aa' : '#bbf7d0'};border-radius:14px;padding:16px 18px;margin-bottom:12px;background:${isPending ? '#fff7ed' : '#f0fdf4'};">
-                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                <div style="border:1.5px solid ${st.border};border-radius:14px;padding:16px 18px;margin-bottom:12px;background:${st.bg};">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
                         <div>
-                            <div style="font-weight:800;font-size:.95rem;color:#0f172a;">${req.shop_name || req.user_id}</div>
-                            <div style="font-size:.76rem;color:#64748b;margin-top:2px;">User: <b>${req.user_id}</b> &nbsp;·&nbsp; ${dateStr}</div>
+                            <div style="font-weight:800;font-size:.97rem;color:#0f172a;">${req.shop_name || req.user_id}</div>
+                            <div style="font-size:.76rem;color:#64748b;margin-top:3px;">
+                                👤 <b>${req.user_id}</b> &nbsp;·&nbsp; 📅 ${dateStr}
+                            </div>
                         </div>
-                        ${statusBadge}
+                        <span style="${st.badge};border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:700;white-space:nowrap;">${st.label}</span>
                     </div>
-                    <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:.85rem;color:#334155;margin-bottom:${isPending ? '14px' : '0'};">
-                        <span style="font-size:.72rem;text-transform:uppercase;font-weight:700;color:#94a3b8;display:block;margin-bottom:4px;">Reason</span>
-                        ${req.reason}
+                    <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;font-size:.85rem;color:#334155;line-height:1.5;margin-bottom:${isPending ? '14px' : '0'};">
+                        <span style="font-size:.7rem;text-transform:uppercase;font-weight:700;color:#94a3b8;display:block;margin-bottom:4px;">Reason</span>
+                        ${req.reason || '<em style="color:#94a3b8">No reason provided</em>'}
                     </div>
                     ${isPending ? `
                     <div style="display:flex;gap:10px;margin-top:0;">
                         <button onclick="approveEditRequest('${req.id}', '${req.user_id}')" style="
                             flex:1;background:linear-gradient(135deg,#10b981,#059669);border:none;border-radius:9px;
-                            padding:9px 16px;color:white;font-family:inherit;font-size:.85rem;font-weight:700;
+                            padding:10px 16px;color:white;font-family:inherit;font-size:.87rem;font-weight:700;
                             cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s;
-                        ">
+                        " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                            Approve
+                            ✅ Approve
                         </button>
                         <button onclick="rejectEditRequest('${req.id}', '${req.user_id}')" style="
                             flex:1;background:white;border:1.5px solid #fca5a5;border-radius:9px;
-                            padding:9px 16px;color:#dc2626;font-family:inherit;font-size:.85rem;font-weight:700;
-                            cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;
-                        ">
+                            padding:10px 16px;color:#dc2626;font-family:inherit;font-size:.87rem;font-weight:700;
+                            cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+                        " onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='white'">
                             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                            Reject
+                            ❌ Reject
                         </button>
                     </div>` : ''}
                 </div>`;
             }).join('');
         }
+
 
         async function approveEditRequest(id, userId) {
             const { error } = await sb.from('shop_edit_requests')
