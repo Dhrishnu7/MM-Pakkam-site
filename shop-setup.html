@@ -422,17 +422,31 @@ if (isEditMode) {
     `;
     document.querySelector('.skip-link').textContent = '← Back to Dashboard';
     document.querySelector('.skip-link').onclick = () => window.location.href = 'index.html';
+
+    // ── HIDE form immediately — show loading while we check permissions ──
+    const setupCard = document.getElementById('setupCard');
+    setupCard.style.display = 'none';
+
+    // Show loading spinner
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'permLoading';
+    loadingDiv.style.cssText = 'text-align:center;padding:40px;color:#64748b;font-size:.9rem;';
+    loadingDiv.innerHTML = `<svg style="animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px" width="18" height="18" fill="none" stroke="#0d9488" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.13-3.36M20 15a9 9 0 01-14.13 3.36"/></svg>Checking permissions…`;
+    setupCard.parentNode.insertBefore(loadingDiv, setupCard);
+
     initEditMode();
 }
 
 // ── EDIT MODE: check if profile exists, then check edit permission ──
 async function initEditMode() {
     const session = JSON.parse(localStorage.getItem('mm_session') || sessionStorage.getItem('mm_session') || 'null');
-    if (!session) return;
+    if (!session) { removeLoading(); return; }
     const userId = session.tenant_id || session.username;
 
     // Load existing profile
     const { data: profile } = await sb.from('shop_profiles').select('*').eq('user_id', userId).maybeSingle();
+
+    removeLoading(); // always remove spinner before showing anything
 
     if (profile && profile.shop_name) {
         // Profile already filled — check for an approved edit request
@@ -445,7 +459,8 @@ async function initEditMode() {
             .maybeSingle();
 
         if (req) {
-            // Has approved request — allow editing, populate form
+            // Has approved request — show editable form
+            document.getElementById('setupCard').style.display = 'block';
             populateForm(profile);
             showInfoBanner('✅ Your edit request was approved. Make your changes and save.', '#10b981');
         } else {
@@ -458,11 +473,19 @@ async function initEditMode() {
                 .limit(1)
                 .maybeSingle();
 
-            // Lock the form and show the request panel
+            // Show locked card with request panel (no form)
+            document.getElementById('setupCard').style.display = 'block';
             lockForm(profile, pending);
         }
+    } else {
+        // No profile yet — free to fill for first time
+        document.getElementById('setupCard').style.display = 'block';
     }
-    // else: no profile yet — free to fill for first time, nothing to do
+}
+
+function removeLoading() {
+    const el = document.getElementById('permLoading');
+    if (el) el.remove();
 }
 
 function populateForm(data) {
