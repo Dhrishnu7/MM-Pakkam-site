@@ -735,10 +735,10 @@ function mmInjectUserBar() {
     const header = document.querySelector('header');
     if (header) header.appendChild(bar);
 
-    // Update dashboard welcome message with shop name
+    // Update dashboard welcome message with username
     const dashWelcome = document.querySelector('.dashboard-header h2');
     if (dashWelcome) {
-        dashWelcome.textContent = `Welcome, ${shopName}!`;
+        dashWelcome.textContent = `Welcome, ${session.username}!`;
     }
 }
 
