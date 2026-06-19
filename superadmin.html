@@ -287,6 +287,13 @@
 
         <div class="sh" style="margin-top:8px"><span>✅</span><h2>Recently Approved</h2></div>
         <div class="pending-grid" id="approvedGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
+
+        <!-- Shop Edit Requests -->
+        <div class="sh" style="margin-top:16px">
+            <span>🔒</span><h2>Shop Edit Requests</h2>
+            <span class="cnt red" id="editReqBadge" style="display:none"></span>
+        </div>
+        <div id="shopEditReqGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
     </div>
 
     <!-- TAB: ACTIVITY -->
@@ -377,6 +384,7 @@ async function loadAll() {
 
     renderStats(); renderInfoRow(); renderOnline(); renderRevChart(); renderCustChart();
     renderAccounts(); renderRequests(); renderActivity(); renderSignups();
+    renderShopEditRequests();
 }
 
 // ── STATS ──
@@ -528,6 +536,81 @@ function renderRequests() {
     document.getElementById('approvedGrid').innerHTML=approved.length
         ?approved.map(u=>mkCard(u,'<div style="font-size:.78rem;color:#6ee7b7">✅ Approved & Active</div>')).join('')
         :'<div class="no-pending">No approved accounts yet</div>';
+}
+
+// ── SHOP EDIT REQUESTS ──
+async function renderShopEditRequests() {
+    const grid = document.getElementById('shopEditReqGrid');
+    const badge = document.getElementById('editReqBadge');
+    if (!grid) return;
+    grid.innerHTML = '<div class="ld"><div class="sp"></div>Loading…</div>';
+
+    const { data: reqs, error } = await sb.from('shop_edit_requests')
+        .select('*').order('created_at', { ascending: false });
+
+    if (error) {
+        grid.innerHTML = `<div class="no-pending" style="color:#f87171">⚠️ Table not found. Run SQL to create shop_edit_requests.<br><small>${error.message}</small></div>`;
+        return;
+    }
+    if (!reqs || reqs.length === 0) {
+        grid.innerHTML = '<div class="no-pending">✨ No shop edit requests</div>';
+        badge.style.display = 'none';
+        return;
+    }
+
+    const pendingCount = reqs.filter(r => r.status === 'pending').length;
+    if (pendingCount > 0) {
+        badge.textContent = pendingCount;
+        badge.style.display = '';
+    } else {
+        badge.style.display = 'none';
+    }
+
+    const statusColor = { pending: '#fbbf24', approved: '#34d399', rejected: '#f87171' };
+    const statusLabel = { pending: '⏳ Pending', approved: '✅ Approved', rejected: '❌ Rejected' };
+
+    grid.innerHTML = reqs.map(req => {
+        const isPending = req.status === 'pending';
+        const dateStr = new Date(req.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+        return `
+        <div class="pcard" style="border-left:3px solid ${statusColor[req.status] || '#6b7280'}">
+            <div class="pcard-top">
+                <div class="pcard-avatar" style="background:linear-gradient(135deg,#0d9488,#0891b2)">${(req.shop_name||req.user_id||'?').slice(0,2).toUpperCase()}</div>
+                <div>
+                    <div class="pcard-name">${req.shop_name || req.user_id}</div>
+                    <div class="pcard-meta">👤 ${req.user_id} · 📅 ${dateStr}</div>
+                </div>
+                <span style="margin-left:auto;font-size:.72rem;font-weight:700;color:${statusColor[req.status]};white-space:nowrap;">${statusLabel[req.status] || req.status}</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:.83rem;color:#cbd5e1;">
+                <span style="font-size:.68rem;text-transform:uppercase;font-weight:700;color:#64748b;display:block;margin-bottom:3px;">Reason</span>
+                ${req.reason || '<em style="color:#475569">No reason provided</em>'}
+            </div>
+            ${isPending ? `
+            <div class="pcard-actions">
+                <button class="approve-btn" onclick="approveShopEdit('${req.id}','${req.user_id}')">✅ Approve Edit</button>
+                <button class="reject-btn" onclick="rejectShopEdit('${req.id}','${req.user_id}')">❌ Reject</button>
+            </div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+async function approveShopEdit(id, userId) {
+    const { error } = await sb.from('shop_edit_requests')
+        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+        .eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    alert('✅ Approved! ' + userId + ' can now edit their shop details.');
+    renderShopEditRequests();
+}
+
+async function rejectShopEdit(id, userId) {
+    if (!confirm('Reject this edit request?')) return;
+    const { error } = await sb.from('shop_edit_requests')
+        .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+        .eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    renderShopEditRequests();
 }
 
 async function approveAccount(id) {
