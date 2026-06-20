@@ -81,7 +81,10 @@ const MMNotifications = (() => {
                 const daysLeft = Math.round((expDate - today) / 86400000);
                 const expStr = expDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
-                if (daysLeft < 0) {
+                if (daysLeft < -30) {
+                    // Auto-hide expired alerts if they expired more than 30 days ago to prevent inbox clutter
+                    return;
+                } else if (daysLeft < 0) {
                     results.push(notif({ id: `exp_${name}_${b.batch}_expired`, category: 'medicines', type: 'expired', priority: 1, readIds,
                         title: `${name} — EXPIRED`, icon: '💀', color: '#dc2626', bg: '#fef2f2', border: '#fca5a5', time: expStr,
                         message: `Batch <b>${b.batch}</b> expired ${Math.abs(daysLeft)} day${Math.abs(daysLeft)!==1?'s':''} ago. Remove from stock immediately.`
