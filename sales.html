@@ -741,6 +741,17 @@
                     <button type="button" id="disconnectPrinterBtn" onclick="handleDisconnectPrinter()" style="display:none; padding:0.4rem 0.9rem; border-radius:8px; border:1.5px solid #ef4444; background:white; color:#ef4444; font-weight:700; font-size:0.78rem; cursor:pointer; font-family:'Inter',sans-serif;" onmouseover="this.style.background='#ef4444';this.style.color='white';" onmouseout="this.style.background='white';this.style.color='#ef4444';">✕ Disconnect</button>
                 </div>
 
+                <div style="display:flex; justify-content:flex-end; margin-bottom: 1rem;">
+                    <div style="display:flex; align-items:center; gap: 0.5rem; background:white; padding: 0.5rem 1rem; border-radius: 12px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                        <label style="font-size:0.85rem; font-weight:700; color:#475569;">Payment Mode:</label>
+                        <select id="paymentMode" style="border:none; outline:none; font-size:0.9rem; font-weight:700; color:#0f172a; cursor:pointer; background:transparent;">
+                            <option value="cash">💵 Cash</option>
+                            <option value="upi">📱 UPI</option>
+                            <option value="credit">📒 Credit (Khata)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- -- Form Actions -- -->
                 <div class="form-actions">
                     <button type="button" class="btn btn-cancel" onclick="window.location.href='index.html'">Cancel</button>
@@ -1324,13 +1335,23 @@
                 }
             } catch(e) {}
 
+            const customerName = document.getElementById('customerName').value.trim();
+            const paymentMode = document.getElementById('paymentMode').value;
+
+            if (paymentMode === 'credit' && !customerName) {
+                alert('A valid Customer Name is required for Credit sales.');
+                document.getElementById('customerName').focus();
+                return;
+            }
+
             const bill = {
                 billNo:       finalBillNo,
                 date:         document.getElementById('saleDate').value,
-                customerName: document.getElementById('customerName').value.trim(),
+                customerName: customerName,
                 doctorName:   document.getElementById('doctorName').value.trim(),
                 medicines:    medicines,
                 grandTotal:   grandTotal,
+                paymentMode:  paymentMode,
                 savedAt:      new Date().toISOString()
             };
 
@@ -1341,6 +1362,23 @@
             const sales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
             sales.push(bill);
             localStorage.setItem('mm_sales', JSON.stringify(sales));
+
+            // Update Customer Balance if Credit
+            if (paymentMode === 'credit' && customerName) {
+                const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+                let cust = customers.find(c => (c.name || '').toLowerCase() === customerName.toLowerCase());
+                
+                // Get numeric total
+                const numTotal = parseFloat(grandTotal.replace(/[^\d.]/g, '')) || 0;
+
+                if (cust) {
+                    cust.balance = (cust.balance || 0) + numTotal;
+                } else {
+                    cust = { name: customerName, phone: '', address: '', balance: numTotal };
+                    customers.push(cust);
+                }
+                localStorage.setItem('mm_customers', JSON.stringify(customers));
+            }
 
             // Show Success Modal
             document.getElementById('successModalSub').innerHTML = `Bill No: <strong>${bill.billNo}</strong><br>Total Amount: <strong>${grandTotal}</strong>`;
@@ -1380,6 +1418,7 @@
                 // Reset form in background
                 document.getElementById('customerName').value = '';
                 document.getElementById('doctorName').value   = '';
+                document.getElementById('paymentMode').value  = 'cash';
                 document.getElementById('medicineRows').innerHTML = '';
                 rowCount = 0;
                 addRow(); // start fresh with 1 row
