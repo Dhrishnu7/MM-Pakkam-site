@@ -340,7 +340,6 @@
                         ${med.manufacturer?`<span>${med.manufacturer}</span>`:''}
                         ${med.gst?`<span class="dm-badge dm-gst">GST ${med.gst}%</span>`:''}
                         ${med.schedule?`<span class="dm-badge ${schCls}">${med.schedule}</span>`:''}
-                        ${med.pack?`<span>Pack: ${med.pack}</span>`:''}
                     </span>`;
                 item.addEventListener('mousedown',e=>{e.preventDefault();selectMedicine(med);});
                 dd.appendChild(item);
