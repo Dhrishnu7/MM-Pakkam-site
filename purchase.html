@@ -762,28 +762,47 @@
 
             // Gather all line items
             const records = [];
-            let hasEmpty = false;
+            let hasEmptyName = false;
+            let hasMissingDetails = false;
+
             items.forEach(item => {
                 const productName = item.querySelector('.li-productName').value.trim();
-                if (!productName) { hasEmpty = true; }
+                const batchNo     = item.querySelector('.li-batchNo').value.trim();
+                const expireDate  = item.querySelector('.li-expireDate').value;
+                const quantity    = item.querySelector('.li-quantity').value;
+                const rate        = item.querySelector('.li-rate').value;
+                const mrp         = item.querySelector('.li-mrp').value;
+
+                if (!productName) { 
+                    hasEmptyName = true; 
+                } else {
+                    // If product name exists, check if key details are missing/zero
+                    if (!batchNo || !expireDate || !quantity || quantity === '0' || !rate || rate === '0' || rate === '0.00' || !mrp || mrp === '0' || mrp === '0.00') {
+                        hasMissingDetails = true;
+                    }
+                }
+
                 records.push({
                     billNo,
                     firm,
                     date,
                     productName,
-                    batchNo:    item.querySelector('.li-batchNo').value.trim(),
-                    expireDate: item.querySelector('.li-expireDate').value,
+                    batchNo,
+                    expireDate,
                     pack:       item.querySelector('.li-pack').value,
-                    quantity:   item.querySelector('.li-quantity').value,
-                    mrp:        item.querySelector('.li-mrp').value,
-                    rate:       item.querySelector('.li-rate').value,
+                    quantity,
+                    mrp,
+                    rate,
                     gst:        item.querySelector('.li-gst').value,
                     savedAt:    new Date().toISOString()
                 });
             });
 
-            if (hasEmpty) {
+            if (hasEmptyName) {
                 if (!confirm('Some items have empty product names. Save anyway?')) return;
+            }
+            if (hasMissingDetails) {
+                if (!confirm('You have entered a Product Name but left some details (Batch, Expiry, Qty, MRP, or Rate) empty or zero. Are you sure you want to save this incomplete record?')) return;
             }
 
             btn.disabled = true;
