@@ -213,19 +213,41 @@
     async function search(query, limit=10) {
         const q = (query||'').trim().toLowerCase();
         if (q.length < 2) return [];
+        
+        // 1. Local Storage (Custom imports & past purchases)
+        const customMeds = [];
+        try {
+            const ml = JSON.parse(localStorage.getItem('mm_medicine_list')||'[]');
+            ml.forEach(n => { if (typeof n==='string' && n.toLowerCase().includes(q)) customMeds.push({name: n}); });
+            const pu = JSON.parse(localStorage.getItem('mm_purchases')||'[]');
+            pu.forEach(p => { if (p.productName && p.productName.toLowerCase().includes(q)) customMeds.push({name: p.productName, gst: p.gst||'', pack: p.pack||''}); });
+        } catch(e){}
+
+        // 2. Seed List
         const sw = _seedList.filter(m => m.name.toLowerCase().startsWith(q));
         const co = _seedList.filter(m => !m.name.toLowerCase().startsWith(q) && m.name.toLowerCase().includes(q));
-        let results = [...sw, ...co].slice(0, limit);
+        
+        let results = [...customMeds, ...sw, ...co];
+        
+        // Deduplicate by lowercase name
+        const seen = new Set();
+        results = results.filter(r => {
+            const ln = r.name.toLowerCase();
+            if (seen.has(ln)) return false;
+            seen.add(ln);
+            return true;
+        }).slice(0, limit);
+
+        // 3. Supabase fallback
         try {
-            if (typeof _supabase !== 'undefined' && navigator.onLine) {
+            if (typeof _supabase !== 'undefined' && navigator.onLine && results.length < limit) {
                 const {data} = await _supabase
                     .from('drug_master')
                     .select('name,manufacturer,gst_percent,pack,hsn_code,schedule')
                     .ilike('name', `${query.trim()}%`)
                     .order('name').limit(limit);
                 if (data && data.length) {
-                    const ln = new Set(results.map(r=>r.name.toLowerCase()));
-                    const sb = data.filter(d=>!ln.has((d.name||'').toLowerCase()))
+                    const sb = data.filter(d=>!seen.has((d.name||'').toLowerCase()))
                         .map(d=>({name:d.name, manufacturer:d.manufacturer||'', gst:d.gst_percent||12, pack:d.pack||'', hsn:d.hsn_code||'', schedule:d.schedule||''}));
                     results = [...results,...sb].slice(0,limit);
                 }
