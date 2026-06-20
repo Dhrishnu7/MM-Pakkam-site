@@ -609,6 +609,7 @@
     <script src="js/auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
+    <script src="js/keyboard-nav.js"></script>
 </head>
 <body>
     <script>
@@ -1366,70 +1367,11 @@
         /* -- Init: start with 1 row -- */
         addRow();
 
-        /* ════════════════════════════════════════
-           Keyboard Shortcuts (100% Keyboard Nav)
-        ════════════════════════════════════════ */
-        document.addEventListener('keydown', function(e) {
-            // Ignore if a modal is open
-            if (document.querySelector('.modal-overlay.open') || document.querySelector('.qa-modal-overlay.open')) return;
-
-            // F2: Add new row
-            if (e.key === 'F2') {
-                e.preventDefault();
-                const newId = addRow();
-                if (newId) {
-                    setTimeout(() => document.getElementById('product_' + newId)?.focus(), 50);
-                }
-            }
-            // F9: Jump to Save button
-            if (e.key === 'F9') {
-                e.preventDefault();
-                document.getElementById('saveBtn')?.focus();
-            }
-            // Alt + S: Save bill
-            if (e.altKey && (e.key === 's' || e.key === 'S')) {
-                e.preventDefault();
-                const saveBtn = document.getElementById('saveBtn');
-                if (saveBtn && !saveBtn.disabled) {
-                    saveBtn.click();
-                }
-            }
-        });
-
-        // Intercept Enter key inside the entire form to act like Tab
-        document.getElementById('salesForm').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                // If it's a button (like saveBtn or addRowBtn), let it do its native click action if focused.
-                if (e.target.tagName.toLowerCase() === 'button') {
-                    return; // allow native behavior
-                }
-
-                e.preventDefault(); // Prevent form submission
-                
-                // Find all focusable inputs in the form
-                const focusables = Array.from(document.querySelectorAll('#salesForm input:not([type="hidden"]), #salesForm select'))
-                                        .filter(el => !el.readOnly && !el.disabled && el.tabIndex !== -1);
-                
-                const currentIndex = focusables.indexOf(e.target);
-                if (currentIndex > -1) {
-                    const isLastFocusable = currentIndex === focusables.length - 1;
-                    if (isLastFocusable) {
-                        // At the last input in the table, trigger addRow
-                        const newId = addRow();
-                        if (newId) {
-                            setTimeout(() => document.getElementById('product_' + newId)?.focus(), 50);
-                        }
-                    } else {
-                        // Focus the next element
-                        const nextEl = focusables[currentIndex + 1];
-                        nextEl.focus();
-                        if (typeof nextEl.select === 'function') {
-                            nextEl.select(); // Auto-select text for easy typing
-                        }
-                    }
-                }
-            }
-        });
+        /* ── Hook keyboard-nav.js into addRow for F2 / Enter-on-last-field ── */
+        window.__kbAddRow = function() {
+            const newId = addRow();
+            if (newId) setTimeout(() => document.getElementById('product_' + newId)?.focus(), 50);
+        };
 
         /* ════════════════════════════════════════
            Medicine List — localStorage helpers
