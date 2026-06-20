@@ -405,12 +405,22 @@
             color: #0f172a; margin-bottom: 4px;
             line-height: 1.3;
         }
+        .notif-meta {
+            display: flex; align-items: center; gap: 7px;
+            margin-bottom: 4px; flex-wrap: wrap;
+        }
+        .notif-category-tag {
+            font-size: 0.6rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            padding: 2px 7px; border-radius: 20px;
+            flex-shrink: 0;
+        }
         .notif-msg {
             font-size: 0.78rem; color: #64748b;
-            line-height: 1.5; margin-bottom: 6px;
+            line-height: 1.5; margin-bottom: 5px;
         }
         .notif-time {
-            font-size: 0.7rem; color: #94a3b8; font-weight: 500;
+            font-size: 0.68rem; color: #94a3b8; font-weight: 500;
         }
         .notif-unread-dot {
             width: 8px; height: 8px;
@@ -419,6 +429,9 @@
             flex-shrink: 0;
             margin-top: 5px;
         }
+        /* Scrollable tab row */
+        .inbox-filter-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .inbox-filter-tabs::-webkit-scrollbar { display: none; }
 
         .inbox-empty {
             text-align: center;
@@ -489,8 +502,10 @@
         <div class="inbox-toolbar">
             <div class="inbox-filter-tabs">
                 <button class="inbox-tab active" id="tabAll" onclick="filterNotif('all')">All</button>
-                <button class="inbox-tab" id="tabExpiry" onclick="filterNotif('expiry')">⏰ Expiry</button>
-                <button class="inbox-tab" id="tabStock" onclick="filterNotif('stock')">📦 Stock</button>
+                <button class="inbox-tab" id="tabMedicines" onclick="filterNotif('medicines')">💊 Medicines</button>
+                <button class="inbox-tab" id="tabRequests" onclick="filterNotif('requests')">📋 Requests</button>
+                <button class="inbox-tab" id="tabBusiness" onclick="filterNotif('business')">📊 Business</button>
+                <button class="inbox-tab" id="tabUpdates" onclick="filterNotif('updates')">📢 Updates</button>
             </div>
             <button class="mark-all-btn" onclick="markAllRead()">✓ Mark all read</button>
         </div>
@@ -676,15 +691,56 @@
     </script>
 
     <script>
-    // ── Inbox / Notification System ──
+    // ── Inbox / Notification System v2 ──
     let _allNotifs = [];
     let _activeFilter = 'all';
 
+    // Category display config used in card rendering
+    const CAT_META = {
+        medicines: { label: '💊 Medicine', bg: '#dcfce7', color: '#15803d' },
+        requests:  { label: '📋 Request',  bg: '#dbeafe', color: '#1d4ed8' },
+        business:  { label: '📊 Business', bg: '#ede9fe', color: '#6d28d9' },
+        updates:   { label: '📢 Update',   bg: '#fce7f3', color: '#be185d' },
+    };
+
     async function loadNotifications() {
         try {
-            const purchases = await dbGetPurchases();
-            _allNotifs = MMNotifications.generate(purchases);
+            // Fetch all data sources independently — one failure won't break others
+            const [purchases, bills] = await Promise.all([
+                dbGetPurchases().catch(() => []),
+                dbGetBills().catch(() => [])
+            ]);
+
+            // Fetch request statuses (filtered by current user via RLS / user_id)
+            const session = mmGetSession ? mmGetSession() : null;
+            const tenantId = session ? (session.tenant_id || session.username) : null;
+            let shopEditReqs = [], extraUserReqs = [], announcements = [];
+            if (tenantId) {
+                const [er, eu, ann] = await Promise.all([
+                    _supabase.from('shop_edit_requests').select('*').eq('user_id', tenantId).in('status', ['approved','rejected']).order('reviewed_at', { ascending: false }).limit(10),
+                    _supabase.from('extra_user_requests').select('*').eq('user_id', tenantId).in('status', ['approved','rejected']).order('reviewed_at', { ascending: false }).limit(10),
+                    _supabase.from('mm_announcements').select('*').order('created_at', { ascending: false }).limit(10)
+                ]);
+                shopEditReqs = er.data || [];
+                extraUserReqs = eu.data || [];
+                announcements = ann.data || []; // gracefully empty if table doesn't exist
+            }
+
+            // Generate all categories and merge
+            const medicineAlerts = MMNotifications.generateMedicineAlerts(purchases);
+            const requestAlerts  = MMNotifications.generateRequestAlerts(shopEditReqs, extraUserReqs);
+            const businessAlerts = MMNotifications.generateBusinessAlerts(bills);
+            const systemAlerts   = MMNotifications.generateSystemAlerts(announcements);
+
+            _allNotifs = MMNotifications.sort([
+                ...medicineAlerts,
+                ...requestAlerts,
+                ...businessAlerts,
+                ...systemAlerts
+            ]);
+
             updateBellBadge();
+            updateTabCounts();
         } catch(e) {
             console.warn('[Inbox] Failed to load notifications:', e);
         }
@@ -694,7 +750,6 @@
         const unread = _allNotifs.filter(n => !n.isRead).length;
         const btn = document.getElementById('bellBtn');
         if (!btn) return;
-        // Remove old badge
         const old = btn.querySelector('.bell-badge');
         if (old) old.remove();
         if (unread > 0) {
@@ -702,10 +757,30 @@
             badge.className = 'bell-badge';
             badge.textContent = unread > 99 ? '99+' : unread;
             btn.appendChild(badge);
-            // Shake the bell
             const svg = btn.querySelector('svg');
             if (svg) { svg.classList.add('bell-shake'); setTimeout(() => svg.classList.remove('bell-shake'), 600); }
         }
+    }
+
+    function updateTabCounts() {
+        // Show unread counts on each tab button
+        const cats = { medicines: 0, requests: 0, business: 0, updates: 0 };
+        _allNotifs.forEach(n => { if (!n.isRead && cats[n.category] !== undefined) cats[n.category]++; });
+        const tabMap = { medicines: 'tabMedicines', requests: 'tabRequests', business: 'tabBusiness', updates: 'tabUpdates' };
+        Object.entries(cats).forEach(([cat, count]) => {
+            const btn = document.getElementById(tabMap[cat]);
+            if (!btn) return;
+            // Remove old badge
+            const old = btn.querySelector('.tab-badge');
+            if (old) old.remove();
+            if (count > 0) {
+                const b = document.createElement('span');
+                b.className = 'tab-badge';
+                b.style.cssText = 'background:#ef4444;color:white;font-size:.55rem;font-weight:800;padding:1px 5px;border-radius:10px;margin-left:4px;';
+                b.textContent = count;
+                btn.appendChild(b);
+            }
+        });
     }
 
     function openInbox() {
@@ -724,7 +799,7 @@
     function filterNotif(type) {
         _activeFilter = type;
         document.querySelectorAll('.inbox-tab').forEach(t => t.classList.remove('active'));
-        const map = { all: 'tabAll', expiry: 'tabExpiry', stock: 'tabStock' };
+        const map = { all: 'tabAll', medicines: 'tabMedicines', requests: 'tabRequests', business: 'tabBusiness', updates: 'tabUpdates' };
         document.getElementById(map[type])?.classList.add('active');
         renderInbox();
     }
@@ -733,61 +808,67 @@
         const body = document.getElementById('inboxBody');
         const pill = document.getElementById('inboxUnreadPill');
 
-        const filtered = _allNotifs.filter(n => {
-            if (_activeFilter === 'expiry') return ['expired','expiring_soon','expiring_notice'].includes(n.type);
-            if (_activeFilter === 'stock')  return ['out_of_stock','low_stock'].includes(n.type);
-            return true;
-        });
+        const filtered = _allNotifs.filter(n => _activeFilter === 'all' || n.category === _activeFilter);
 
         const unread = _allNotifs.filter(n => !n.isRead).length;
-        if (unread > 0) {
-            pill.textContent = `${unread} new`;
-            pill.style.display = '';
-        } else {
-            pill.style.display = 'none';
-        }
+        pill.textContent = `${unread} new`;
+        pill.style.display = unread > 0 ? '' : 'none';
 
         if (!filtered.length) {
+            const emptyMsgs = {
+                all:       ['All Clear! 🎉', 'No alerts right now. Everything looks good!'],
+                medicines: ['No Medicine Alerts 💚', 'No expiry or stock issues found.'],
+                requests:  ['No Requests 📋', 'No approvals or rejections to show.'],
+                business:  ['No Business Data 📊', 'Make some sales to see your summary here.'],
+                updates:   ['No Updates 📢', 'No system announcements at the moment.'],
+            };
+            const [h, p] = emptyMsgs[_activeFilter] || emptyMsgs.all;
             body.innerHTML = `
             <div class="inbox-empty">
                 <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <h3>All Clear! 🎉</h3>
-                <p>No alerts in this category.<br>Your medicines and stock are looking good.</p>
+                <h3>${h}</h3>
+                <p>${p}</p>
             </div>`;
             return;
         }
 
-        body.innerHTML = filtered.map(n => `
-        <div class="notif-card ${n.isRead ? 'read' : 'unread'}"
-             style="border-left-color:${n.color};background:${n.isRead ? 'white' : n.bg};"
-             onclick="markOneRead('${n.id}', this)">
-            <div class="notif-icon">${n.icon}</div>
-            <div class="notif-content">
-                <div class="notif-title" style="color:${n.isRead ? '#334155' : n.color}">${n.title}</div>
-                <div class="notif-msg">${n.message}</div>
-                <div class="notif-time">${n.time}</div>
-            </div>
-            ${!n.isRead ? '<div class="notif-unread-dot"></div>' : ''}
-        </div>`).join('');
+        body.innerHTML = filtered.map(n => {
+            const cat = CAT_META[n.category] || CAT_META.updates;
+            const safeId = n.id.replace(/'/g, "\\'")
+            return `
+            <div class="notif-card ${n.isRead ? 'read' : 'unread'}"
+                 style="border-left-color:${n.color};background:${n.isRead ? 'white' : n.bg};"
+                 onclick="markOneRead('${safeId}', this)">
+                <div class="notif-icon">${n.icon}</div>
+                <div class="notif-content">
+                    <div class="notif-meta">
+                        <span class="notif-category-tag" style="background:${cat.bg};color:${cat.color};">${cat.label}</span>
+                    </div>
+                    <div class="notif-title" style="color:${n.isRead ? '#334155' : n.color}">${n.title}</div>
+                    <div class="notif-msg">${n.message}</div>
+                    <div class="notif-time">${n.time}</div>
+                </div>
+                ${!n.isRead ? '<div class="notif-unread-dot"></div>' : ''}
+            </div>`;
+        }).join('');
     }
 
     function markOneRead(id, cardEl) {
         MMNotifications.markRead([id]);
         const notif = _allNotifs.find(n => n.id === id);
         if (notif) notif.isRead = true;
-        // Animate card to read state
         if (cardEl) {
             cardEl.classList.remove('unread');
             cardEl.classList.add('read');
             cardEl.style.background = 'white';
-            const dot = cardEl.querySelector('.notif-unread-dot');
-            if (dot) dot.remove();
+            cardEl.querySelector('.notif-unread-dot')?.remove();
             const title = cardEl.querySelector('.notif-title');
             if (title) title.style.color = '#334155';
         }
         updateBellBadge();
+        updateTabCounts();
         const pill = document.getElementById('inboxUnreadPill');
         const unread = _allNotifs.filter(n => !n.isRead).length;
         pill.textContent = `${unread} new`;
@@ -798,15 +879,14 @@
         MMNotifications.markAllRead(_allNotifs);
         _allNotifs.forEach(n => n.isRead = true);
         updateBellBadge();
+        updateTabCounts();
         renderInbox();
     }
 
-    // Close on Escape
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInbox(); });
 
-    // Load notifications after page is ready
     document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(loadNotifications, 800); // slight delay so auth/supabase init first
+        setTimeout(loadNotifications, 800);
     });
     </script></body>
 </html>
