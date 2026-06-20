@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="js/auth.js"></script>
+    <script src="js/notifications.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -247,6 +248,194 @@
             .logo-text { font-size: 1rem; }
             .dashboard-header h2 { font-size: 1.6rem; }
         }
+
+        /* ── Bell Button ── */
+        .bell-btn {
+            position: relative;
+            background: rgba(255,255,255,0.8);
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 50%;
+            width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        }
+        .bell-btn:hover { background: white; box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: scale(1.05); }
+        .bell-btn svg { width: 20px; height: 20px; stroke: #334155; transition: stroke 0.2s; }
+        .bell-btn:hover svg { stroke: #0f172a; }
+        .bell-badge {
+            position: absolute;
+            top: -4px; right: -4px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            font-size: 0.62rem;
+            font-weight: 800;
+            min-width: 18px; height: 18px;
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid white;
+            padding: 0 4px;
+            animation: bellPop 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        @keyframes bellPop { from{transform:scale(0)} to{transform:scale(1)} }
+        .bell-shake { animation: bellShake 0.5s ease !important; }
+        @keyframes bellShake {
+            0%,100%{transform:rotate(0)}
+            20%{transform:rotate(-15deg)}
+            40%{transform:rotate(15deg)}
+            60%{transform:rotate(-10deg)}
+            80%{transform:rotate(10deg)}
+        }
+
+        /* ── Inbox Drawer ── */
+        .inbox-overlay {
+            position: fixed; inset: 0;
+            background: rgba(15,23,42,0.35);
+            backdrop-filter: blur(4px);
+            z-index: 900;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .inbox-overlay.open { opacity: 1; pointer-events: all; }
+
+        .inbox-drawer {
+            position: fixed;
+            top: 0; right: 0;
+            width: min(420px, 100vw);
+            height: 100vh;
+            background: #f8fafc;
+            z-index: 901;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            display: flex; flex-direction: column;
+            box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+        }
+        .inbox-drawer.open { transform: translateX(0); }
+
+        .inbox-head {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 20px 20px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .inbox-head-left { display: flex; align-items: center; gap: 10px; }
+        .inbox-head h2 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em; }
+        .inbox-head .unread-pill {
+            background: #ef4444;
+            color: white;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .inbox-close-btn {
+            background: rgba(255,255,255,0.1);
+            border: none; border-radius: 50%;
+            width: 34px; height: 34px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: white;
+            transition: background 0.2s;
+        }
+        .inbox-close-btn:hover { background: rgba(255,255,255,0.2); }
+
+        .inbox-toolbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .inbox-filter-tabs { display: flex; gap: 6px; }
+        .inbox-tab {
+            padding: 5px 12px;
+            border-radius: 20px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 0.75rem; font-weight: 600;
+            cursor: pointer; background: white;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .inbox-tab.active {
+            background: #0f172a; color: white; border-color: #0f172a;
+        }
+        .mark-all-btn {
+            font-size: 0.72rem; font-weight: 600; color: #0891b2;
+            background: none; border: none; cursor: pointer; padding: 4px 8px;
+            border-radius: 6px; transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .mark-all-btn:hover { background: #e0f2fe; }
+
+        .inbox-body {
+            flex: 1; overflow-y: auto; padding: 12px;
+        }
+        .inbox-body::-webkit-scrollbar { width: 4px; }
+        .inbox-body::-webkit-scrollbar-track { background: transparent; }
+        .inbox-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* Notification Cards */
+        .notif-card {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            border: 1.5px solid #e2e8f0;
+            display: flex; gap: 12px; align-items: flex-start;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .notif-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .notif-card.unread { border-left-width: 4px; }
+        .notif-card.read { opacity: 0.65; }
+
+        .notif-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .notif-content { flex: 1; min-width: 0; }
+        .notif-title {
+            font-size: 0.87rem; font-weight: 700;
+            color: #0f172a; margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        .notif-msg {
+            font-size: 0.78rem; color: #64748b;
+            line-height: 1.5; margin-bottom: 6px;
+        }
+        .notif-time {
+            font-size: 0.7rem; color: #94a3b8; font-weight: 500;
+        }
+        .notif-unread-dot {
+            width: 8px; height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+
+        .inbox-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+        .inbox-empty svg { width: 52px; height: 52px; margin: 0 auto 16px; display: block; stroke: #cbd5e1; }
+        .inbox-empty h3 { font-size: 1rem; font-weight: 700; color: #64748b; margin-bottom: 6px; }
+        .inbox-empty p { font-size: 0.82rem; line-height: 1.6; }
+
+        .inbox-loading {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; padding: 40px 20px;
+            color: #94a3b8; font-size: 0.85rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
@@ -271,7 +460,47 @@
             <div class="logo-icon">BW</div>
             <span class="logo-text">Billware</span>
         </div>
+        <button class="bell-btn" id="bellBtn" onclick="openInbox()" title="Notifications">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+        </button>
     </header>
+
+    <!-- Inbox Overlay -->
+    <div class="inbox-overlay" id="inboxOverlay" onclick="closeInbox()"></div>
+
+    <!-- Inbox Drawer -->
+    <div class="inbox-drawer" id="inboxDrawer">
+        <div class="inbox-head">
+            <div class="inbox-head-left">
+                <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+                <h2>Inbox</h2>
+                <span class="unread-pill" id="inboxUnreadPill" style="display:none">0 new</span>
+            </div>
+            <button class="inbox-close-btn" onclick="closeInbox()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="inbox-toolbar">
+            <div class="inbox-filter-tabs">
+                <button class="inbox-tab active" id="tabAll" onclick="filterNotif('all')">All</button>
+                <button class="inbox-tab" id="tabExpiry" onclick="filterNotif('expiry')">⏰ Expiry</button>
+                <button class="inbox-tab" id="tabStock" onclick="filterNotif('stock')">📦 Stock</button>
+            </div>
+            <button class="mark-all-btn" onclick="markAllRead()">✓ Mark all read</button>
+        </div>
+        <div class="inbox-body" id="inboxBody">
+            <div class="inbox-loading">
+                <svg class="spin" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+                Loading alerts…
+            </div>
+        </div>
+    </div>
 
     <!-- Dashboard -->
     <div class="dashboard-wrapper">
@@ -444,6 +673,141 @@
                 setWelcome();
             }
         })();
+    </script>
+
+    <script>
+    // ── Inbox / Notification System ──
+    let _allNotifs = [];
+    let _activeFilter = 'all';
+
+    async function loadNotifications() {
+        try {
+            const purchases = await dbGetPurchases();
+            _allNotifs = MMNotifications.generate(purchases);
+            updateBellBadge();
+        } catch(e) {
+            console.warn('[Inbox] Failed to load notifications:', e);
+        }
+    }
+
+    function updateBellBadge() {
+        const unread = _allNotifs.filter(n => !n.isRead).length;
+        const btn = document.getElementById('bellBtn');
+        if (!btn) return;
+        // Remove old badge
+        const old = btn.querySelector('.bell-badge');
+        if (old) old.remove();
+        if (unread > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'bell-badge';
+            badge.textContent = unread > 99 ? '99+' : unread;
+            btn.appendChild(badge);
+            // Shake the bell
+            const svg = btn.querySelector('svg');
+            if (svg) { svg.classList.add('bell-shake'); setTimeout(() => svg.classList.remove('bell-shake'), 600); }
+        }
+    }
+
+    function openInbox() {
+        document.getElementById('inboxOverlay').classList.add('open');
+        document.getElementById('inboxDrawer').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        renderInbox();
+    }
+
+    function closeInbox() {
+        document.getElementById('inboxOverlay').classList.remove('open');
+        document.getElementById('inboxDrawer').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function filterNotif(type) {
+        _activeFilter = type;
+        document.querySelectorAll('.inbox-tab').forEach(t => t.classList.remove('active'));
+        const map = { all: 'tabAll', expiry: 'tabExpiry', stock: 'tabStock' };
+        document.getElementById(map[type])?.classList.add('active');
+        renderInbox();
+    }
+
+    function renderInbox() {
+        const body = document.getElementById('inboxBody');
+        const pill = document.getElementById('inboxUnreadPill');
+
+        const filtered = _allNotifs.filter(n => {
+            if (_activeFilter === 'expiry') return ['expired','expiring_soon','expiring_notice'].includes(n.type);
+            if (_activeFilter === 'stock')  return ['out_of_stock','low_stock'].includes(n.type);
+            return true;
+        });
+
+        const unread = _allNotifs.filter(n => !n.isRead).length;
+        if (unread > 0) {
+            pill.textContent = `${unread} new`;
+            pill.style.display = '';
+        } else {
+            pill.style.display = 'none';
+        }
+
+        if (!filtered.length) {
+            body.innerHTML = `
+            <div class="inbox-empty">
+                <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3>All Clear! 🎉</h3>
+                <p>No alerts in this category.<br>Your medicines and stock are looking good.</p>
+            </div>`;
+            return;
+        }
+
+        body.innerHTML = filtered.map(n => `
+        <div class="notif-card ${n.isRead ? 'read' : 'unread'}"
+             style="border-left-color:${n.color};background:${n.isRead ? 'white' : n.bg};"
+             onclick="markOneRead('${n.id}', this)">
+            <div class="notif-icon">${n.icon}</div>
+            <div class="notif-content">
+                <div class="notif-title" style="color:${n.isRead ? '#334155' : n.color}">${n.title}</div>
+                <div class="notif-msg">${n.message}</div>
+                <div class="notif-time">${n.time}</div>
+            </div>
+            ${!n.isRead ? '<div class="notif-unread-dot"></div>' : ''}
+        </div>`).join('');
+    }
+
+    function markOneRead(id, cardEl) {
+        MMNotifications.markRead([id]);
+        const notif = _allNotifs.find(n => n.id === id);
+        if (notif) notif.isRead = true;
+        // Animate card to read state
+        if (cardEl) {
+            cardEl.classList.remove('unread');
+            cardEl.classList.add('read');
+            cardEl.style.background = 'white';
+            const dot = cardEl.querySelector('.notif-unread-dot');
+            if (dot) dot.remove();
+            const title = cardEl.querySelector('.notif-title');
+            if (title) title.style.color = '#334155';
+        }
+        updateBellBadge();
+        const pill = document.getElementById('inboxUnreadPill');
+        const unread = _allNotifs.filter(n => !n.isRead).length;
+        pill.textContent = `${unread} new`;
+        if (!unread) pill.style.display = 'none';
+    }
+
+    function markAllRead() {
+        MMNotifications.markAllRead(_allNotifs);
+        _allNotifs.forEach(n => n.isRead = true);
+        updateBellBadge();
+        renderInbox();
+    }
+
+    // Close on Escape
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInbox(); });
+
+    // Load notifications after page is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(loadNotifications, 800); // slight delay so auth/supabase init first
+    });
     </script></body>
 </html>
 
