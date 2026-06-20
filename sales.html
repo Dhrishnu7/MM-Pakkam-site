@@ -1396,31 +1396,36 @@
             }
         });
 
-        // Intercept Enter key inside the medicine table to act like Tab
-        document.getElementById('medicineTable').addEventListener('keydown', function(e) {
+        // Intercept Enter key inside the entire form to act like Tab
+        document.getElementById('salesForm').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
+                // If it's a button (like saveBtn or addRowBtn), let it do its native click action if focused.
+                if (e.target.tagName.toLowerCase() === 'button') {
+                    return; // allow native behavior
+                }
+
                 e.preventDefault(); // Prevent form submission
                 
-                const currentEl = e.target;
-                if (!currentEl.classList.contains('t-input')) return;
-
-                // Find all focusable inputs in the table
-                const focusables = Array.from(document.querySelectorAll('#medicineTable .t-input'))
-                                        .filter(el => !el.readOnly && !el.disabled);
+                // Find all focusable inputs in the form
+                const focusables = Array.from(document.querySelectorAll('#salesForm input:not([type="hidden"]), #salesForm select'))
+                                        .filter(el => !el.readOnly && !el.disabled && el.tabIndex !== -1);
                 
-                const currentIndex = focusables.indexOf(currentEl);
+                const currentIndex = focusables.indexOf(e.target);
                 if (currentIndex > -1) {
                     const isLastFocusable = currentIndex === focusables.length - 1;
                     if (isLastFocusable) {
-                        // At the last input, trigger addRow
+                        // At the last input in the table, trigger addRow
                         const newId = addRow();
                         if (newId) {
                             setTimeout(() => document.getElementById('product_' + newId)?.focus(), 50);
                         }
                     } else {
                         // Focus the next element
-                        focusables[currentIndex + 1].focus();
-                        focusables[currentIndex + 1].select(); // Auto-select text for easy typing
+                        const nextEl = focusables[currentIndex + 1];
+                        nextEl.focus();
+                        if (typeof nextEl.select === 'function') {
+                            nextEl.select(); // Auto-select text for easy typing
+                        }
                     }
                 }
             }
