@@ -342,15 +342,24 @@
         .inbox-close-btn:hover { background: rgba(255,255,255,0.2); }
 
         .inbox-toolbar {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 10px 16px;
+            display: flex; flex-direction: column;
+            padding: 0;
             background: white;
             border-bottom: 1px solid #e2e8f0;
             flex-shrink: 0;
-            gap: 8px;
-            flex-wrap: wrap;
         }
-        .inbox-filter-tabs { display: flex; gap: 6px; }
+        .inbox-filter-tabs {
+            display: flex; gap: 6px;
+            padding: 10px 16px 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .inbox-filter-tabs::-webkit-scrollbar { display: none; }
+        .inbox-toolbar-actions {
+            display: flex; justify-content: flex-end;
+            padding: 0 16px 8px;
+        }
         .inbox-tab {
             padding: 5px 12px;
             border-radius: 20px;
@@ -429,9 +438,7 @@
             flex-shrink: 0;
             margin-top: 5px;
         }
-        /* Scrollable tab row */
-        .inbox-filter-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        .inbox-filter-tabs::-webkit-scrollbar { display: none; }
+
 
         .inbox-empty {
             text-align: center;
@@ -507,7 +514,9 @@
                 <button class="inbox-tab" id="tabBusiness" onclick="filterNotif('business')">📊 Business</button>
                 <button class="inbox-tab" id="tabUpdates" onclick="filterNotif('updates')">📢 Updates</button>
             </div>
-            <button class="mark-all-btn" onclick="markAllRead()">✓ Mark all read</button>
+            <div class="inbox-toolbar-actions">
+                <button class="mark-all-btn" onclick="markAllRead()">✓ Mark all read</button>
+            </div>
         </div>
         <div class="inbox-body" id="inboxBody">
             <div class="inbox-loading">
