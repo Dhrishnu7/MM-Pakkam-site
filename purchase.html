@@ -512,6 +512,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/keyboard-nav.js"></script>
+    <script src="js/drug-master.js"></script>
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0d9488">
@@ -711,6 +712,12 @@
             container.insertAdjacentHTML('beforeend', createLineItemHTML(lineItemCounter));
             renumberItems();
             updateGrandTotal();
+            // -- Attach Drug Master autocomplete to the new item's product name input --
+            const newEl   = document.getElementById(`item_${lineItemCounter}`);
+            const inputEl = newEl?.querySelector('.li-productName');
+            if (inputEl && newEl && typeof DrugMaster !== 'undefined') {
+                DrugMaster.init(inputEl, newEl);
+            }
         }
 
         function removeLineItem(id) {
