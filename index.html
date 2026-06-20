@@ -349,13 +349,11 @@
             flex-shrink: 0;
         }
         .inbox-filter-tabs {
-            display: flex; gap: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
             padding: 10px 16px 8px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
         }
-        .inbox-filter-tabs::-webkit-scrollbar { display: none; }
         .inbox-toolbar-actions {
             display: flex; justify-content: flex-end;
             padding: 0 16px 8px;
@@ -374,18 +372,7 @@
         .inbox-tab.active {
             background: #0f172a; color: white; border-color: #0f172a;
         }
-        /* Fade hint on right edge to show more tabs exist */
-        .inbox-filter-tabs-wrap {
-            position: relative;
-        }
-        .inbox-filter-tabs-wrap::after {
-            content: '';
-            position: absolute;
-            right: 0; top: 0; bottom: 0;
-            width: 32px;
-            background: linear-gradient(to right, transparent, white);
-            pointer-events: none;
-        }
+
         .mark-all-btn {
             font-size: 0.72rem; font-weight: 600; color: #0891b2;
             background: none; border: none; cursor: pointer; padding: 4px 8px;
@@ -521,14 +508,12 @@
             </button>
         </div>
         <div class="inbox-toolbar">
-            <div class="inbox-filter-tabs-wrap">
-                <div class="inbox-filter-tabs">
-                    <button class="inbox-tab active" id="tabAll" onclick="filterNotif('all')">All</button>
-                    <button class="inbox-tab" id="tabMedicines" onclick="filterNotif('medicines')">💊 Medicines</button>
-                    <button class="inbox-tab" id="tabRequests" onclick="filterNotif('requests')">📋 Requests</button>
-                    <button class="inbox-tab" id="tabBusiness" onclick="filterNotif('business')">📊 Business</button>
-                    <button class="inbox-tab" id="tabUpdates" onclick="filterNotif('updates')">📢 Updates</button>
-                </div>
+            <div class="inbox-filter-tabs">
+                <button class="inbox-tab active" id="tabAll" onclick="filterNotif('all')">All</button>
+                <button class="inbox-tab" id="tabMedicines" onclick="filterNotif('medicines')">💊 Medicines</button>
+                <button class="inbox-tab" id="tabRequests" onclick="filterNotif('requests')">📋 Requests</button>
+                <button class="inbox-tab" id="tabBusiness" onclick="filterNotif('business')">📊 Business</button>
+                <button class="inbox-tab" id="tabUpdates" onclick="filterNotif('updates')">📢 Updates</button>
             </div>
             <div class="inbox-toolbar-actions">
                 <button class="mark-all-btn" onclick="markAllRead()">✓ Mark all read</button>
