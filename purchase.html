@@ -478,6 +478,34 @@
             display: flex; gap: 0.5rem; align-items: center;
             justify-content: flex-end; margin-bottom: 0.6rem;
         }
+
+        /* ── Invoice Import Modal extras ── */
+        .inv-field-map {
+            display:grid; grid-template-columns:1fr 1fr; gap:0.55rem 1rem;
+            margin:0.8rem 0;
+        }
+        .inv-field-row { display:flex; flex-direction:column; gap:4px; }
+        .inv-field-lbl { font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#64748b; }
+        .inv-field-select {
+            padding:6px 10px; border-radius:8px; border:1.5px solid #e2e8f0;
+            font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600;
+            color:#0f172a; background:white; cursor:pointer;
+        }
+        .inv-field-select:focus { outline:none; border-color:#f59e0b; }
+        .inv-preview-table { width:100%; border-collapse:collapse; font-size:0.78rem; margin-top:0.5rem; }
+        .inv-preview-table th { background:#f1f5f9; padding:5px 8px; text-align:left; font-weight:800; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap; }
+        .inv-preview-table td { padding:5px 8px; border-bottom:1px solid #f1f5f9; color:#0f172a; white-space:nowrap; }
+        .inv-preview-table tr:last-child td { border-bottom:none; }
+        .inv-prev-wrap { overflow:auto; max-height:160px; border:1.5px solid #e2e8f0; border-radius:10px; margin-top:0.5rem; }
+        .btn-do-import.inv {
+            background:linear-gradient(135deg,#0ea5e9,#0284c7); color:white;
+            box-shadow:0 4px 14px rgba(14,165,233,0.3);
+        }
+        .btn-do-import.inv:hover { box-shadow:0 6px 20px rgba(14,165,233,0.4); }
+        .import-btn-sm.inv-btn {
+            background:linear-gradient(135deg,#0ea5e9,#0284c7); color:white;
+            border:none; box-shadow:0 2px 8px rgba(14,165,233,0.25);
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="js/auth.js"></script>
@@ -542,7 +570,10 @@
                         🗑️ Clear Imported
                     </button>
                     <button type="button" class="import-btn-sm" onclick="openImportModal()">
-                        📋 Import Medicine List
+                        📋 Import Medicine Names
+                    </button>
+                    <button type="button" class="import-btn-sm inv-btn" onclick="openInvoiceImportModal()">
+                        📥 Import Full Invoice
                     </button>
                 </div>
 
@@ -1000,6 +1031,177 @@
             showToast(`${fresh.length} medicine(s) imported!`, `${getMedList().length} total in medicine list.`);
         }
 
+        /* ══════════════════════════════════════════════════════════════════
+           FULL INVOICE IMPORT — reads every column and populates the grid
+        ══════════════════════════════════════════════════════════════════ */
+        const INV_FIELDS = [
+            { key:'productName', label:'Product Name ✱', required:true },
+            { key:'batchNo',     label:'Batch No' },
+            { key:'expireDate',  label:'Expiry (MM/YY or YYYY-MM)' },
+            { key:'quantity',    label:'Quantity' },
+            { key:'mrp',         label:'MRP (₹)' },
+            { key:'rate',        label:'Purchase Rate (₹)' },
+            { key:'gst',         label:'GST (%)' },
+            { key:'pack',        label:'Pack Size' },
+        ];
+
+        let _invRows=[], _invHdrs=[];
+
+        function openInvoiceImportModal() {
+            _invRows=[]; _invHdrs=[];
+            document.getElementById('invImportModal').classList.add('open');
+            document.getElementById('invStep1').style.display='block';
+            document.getElementById('invStep2').style.display='none';
+            document.getElementById('invStep3').style.display='none';
+            document.getElementById('invImportBtn').disabled=true;
+            const fi=document.getElementById('invFileInput'); if(fi) fi.value='';
+        }
+        function closeInvoiceImportModal() { document.getElementById('invImportModal').classList.remove('open'); }
+
+        function handleInvFile(e) {
+            const files=[...e.target.files].filter(f=>/\.(csv|xlsx|xls)$/i.test(f.name));
+            if(files.length) readInvFile(files[0]);
+        }
+        function handleInvDrop(e) {
+            e.preventDefault();
+            document.getElementById('invDropZone').classList.remove('drag-over');
+            const files=[...e.dataTransfer.files].filter(f=>/\.(csv|xlsx|xls)$/i.test(f.name));
+            if(files.length) readInvFile(files[0]);
+        }
+
+        function readInvFile(file) {
+            const rdr=new FileReader();
+            rdr.onload=ev=>{
+                try {
+                    const isCSV=file.name.toLowerCase().endsWith('.csv');
+                    const wb=XLSX.read(ev.target.result,{type:isCSV?'string':'array'});
+                    const ws=wb.Sheets[wb.SheetNames[0]];
+                    const raw=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+                    if(!raw||raw.length<2){ showToast('Empty File','No data rows found.'); return; }
+                    _invHdrs=raw[0].map(String);
+                    _invRows=raw.slice(1).filter(r=>r.some(c=>String(c).trim()));
+                    showInvMapper();
+                } catch(err){ showToast('Read Error','Could not read file.'); }
+            };
+            file.name.toLowerCase().endsWith('.csv')?rdr.readAsText(file):rdr.readAsArrayBuffer(file);
+        }
+
+        function showInvMapper() {
+            document.getElementById('invStep1').style.display='none';
+            document.getElementById('invStep2').style.display='block';
+            document.getElementById('invStep3').style.display='none';
+            document.getElementById('invImportBtn').disabled=true;
+            document.getElementById('invRowCount').textContent=`${_invRows.length} data row(s) detected`;
+            const colOpts='<option value="">— Skip —</option>'+
+                _invHdrs.map((h,i)=>`<option value="${i}">${h||('Col '+(i+1))}</option>`).join('');
+            INV_FIELDS.forEach(f=>{
+                const sel=document.getElementById('invSel_'+f.key);
+                if(!sel) return;
+                sel.innerHTML=colOpts;
+                // Auto-detect by header name
+                const keywords={
+                    productName:/product|medicine|drug|name|item|brand|generic/i,
+                    batchNo:/batch|lot/i,
+                    expireDate:/exp|expiry|expire/i,
+                    quantity:/qty|quant|nos|units/i,
+                    mrp:/mrp|max.*price|selling/i,
+                    rate:/rate|purchase|cost|ptr|pts/i,
+                    gst:/gst|tax|vat/i,
+                    pack:/pack|packing|size/i,
+                };
+                const kw=keywords[f.key];
+                if(kw){
+                    const idx=_invHdrs.findIndex(h=>kw.test(h));
+                    if(idx>=0) sel.value=String(idx);
+                }
+            });
+        }
+
+        function buildInvPreview() {
+            const map={};
+            INV_FIELDS.forEach(f=>{
+                const sel=document.getElementById('invSel_'+f.key);
+                if(sel&&sel.value!=='') map[f.key]=parseInt(sel.value);
+            });
+            if(map.productName===undefined){
+                showToast('Required','Please map the Product Name column.'); return;
+            }
+            document.getElementById('invStep2').style.display='none';
+            document.getElementById('invStep3').style.display='block';
+            document.getElementById('invImportBtn').disabled=false;
+
+            const previewRows=_invRows.slice(0,8);
+            const thead=INV_FIELDS.filter(f=>map[f.key]!==undefined).map(f=>`<th>${f.label.replace(' ✱','')}</th>`).join('');
+            const tbody=previewRows.map(row=>{
+                const cells=INV_FIELDS.filter(f=>map[f.key]!==undefined).map(f=>{
+                    let v=String(row[map[f.key]]??'').trim();
+                    return `<td>${v||'—'}</td>`;
+                }).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+            document.getElementById('invPreviewTable').innerHTML=
+                `<thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody>`;
+            document.getElementById('invPreviewCount').textContent=
+                `${_invRows.length} row(s) will be added to the purchase form.`;
+            window._invMap=map;
+        }
+
+        function _parseExpiry(raw) {
+            const s=String(raw||'').trim();
+            if(!s) return '';
+            // YYYY-MM or YYYY-MM-DD
+            if(/^\d{4}-\d{2}/.test(s)) return s.slice(0,7);
+            // MM/YY or MM/YYYY
+            const m1=s.match(/^(\d{1,2})[\/\-](\d{2,4})$/);
+            if(m1){
+                const mm=m1[1].padStart(2,'0');
+                const yy=m1[2].length===2?'20'+m1[2]:m1[2];
+                return `${yy}-${mm}`;
+            }
+            // Excel serial date
+            if(/^\d{5}$/.test(s)){
+                const d=XLSX.SSF.parse_date_code(parseInt(s));
+                if(d) return `${d.y}-${String(d.m).padStart(2,'0')}`;
+            }
+            return '';
+        }
+
+        function applyInvoiceImport() {
+            const map=window._invMap||{};
+            if(map.productName===undefined){ showToast('Error','Column mapping lost. Please re-map.'); return; }
+
+            // Clear existing rows
+            document.getElementById('lineItemsContainer').innerHTML='';
+            lineItemCounter=0;
+
+            _invRows.forEach(row=>{
+                const pName=String(row[map.productName]??'').trim();
+                if(!pName) return; // skip blank rows
+
+                lineItemCounter++;
+                const container=document.getElementById('lineItemsContainer');
+                container.insertAdjacentHTML('beforeend', createLineItemHTML(lineItemCounter));
+                const el=document.getElementById(`item_${lineItemCounter}`);
+
+                el.querySelector('.li-productName').value = pName;
+                if(map.batchNo!==undefined)   el.querySelector('.li-batchNo').value    = String(row[map.batchNo]??'').trim();
+                if(map.expireDate!==undefined) el.querySelector('.li-expireDate').value = _parseExpiry(row[map.expireDate]);
+                if(map.pack!==undefined)       el.querySelector('.li-pack').value       = String(row[map.pack]??'').trim();
+                if(map.quantity!==undefined)   el.querySelector('.li-quantity').value   = String(row[map.quantity]??'').trim();
+                if(map.mrp!==undefined)        el.querySelector('.li-mrp').value        = String(row[map.mrp]??'').trim();
+                if(map.rate!==undefined)       el.querySelector('.li-rate').value       = String(row[map.rate]??'').trim();
+                if(map.gst!==undefined)        el.querySelector('.li-gst').value        = String(row[map.gst]??'').trim();
+
+                calcItemTotal(`item_${lineItemCounter}`);
+            });
+
+            if(lineItemCounter===0) addLineItem(); // safety: always have 1 row
+            renumberItems();
+            updateGrandTotal();
+            closeInvoiceImportModal();
+            showToast(`✅ ${lineItemCounter} items loaded!`, 'Review, adjust, then click Save All Purchases.');
+        }
+
         // ── Initialize with one line item ──
         addLineItem();
     </script>
@@ -1042,6 +1244,117 @@
             </div>
         </div>
     </div>
+
+    <!-- ── Full Invoice Import Modal ── -->
+    <div class="modal-overlay" id="invImportModal">
+        <div class="modal-card" style="max-width:580px;">
+            <div class="modal-hd">
+                <h3>📥 Import Full Invoice</h3>
+                <button class="modal-x" type="button" onclick="closeInvoiceImportModal()">×</button>
+            </div>
+
+            <!-- Step 1: Upload File -->
+            <div class="modal-bd" id="invStep1">
+                <div style="font-size:0.82rem;color:#64748b;margin-bottom:0.8rem;">
+                    Upload your distributor's Excel or CSV invoice. Billware will read all columns and fill in the purchase form automatically.
+                </div>
+                <div class="drop-zone" id="invDropZone"
+                     ondragover="event.preventDefault();this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')"
+                     ondrop="handleInvDrop(event)">
+                    <input type="file" id="invFileInput" accept=".csv,.xlsx,.xls" onchange="handleInvFile(event)">
+                    <div class="dz-ico">📊</div>
+                    <div class="dz-txt">Drop invoice file here or click to browse</div>
+                    <div class="dz-sub">Supports .xlsx, .xls, .csv — one file at a time</div>
+                </div>
+            </div>
+
+            <!-- Step 2: Map Columns -->
+            <div class="modal-bd" id="invStep2" style="display:none">
+                <div class="step-lbl">Match your file's columns to Billware fields</div>
+                <div class="stats-txt" id="invRowCount"></div>
+                <div class="inv-field-map">
+                    <!-- dynamically generated selects for each INV_FIELD -->
+                    <div class="inv-field-row">
+                        <label class="inv-field-lbl">Product Name ✱</label>
+                        <select class="inv-field-select" id="invSel_productName"></select>
+                    </div>
+                    <div class="inv-field-row">
+                        <label class="inv-field-lbl">Batch No</label>
+                        <select class="inv-field-select" id="invSel_batchNo"></select>
+                    </div>
+                    <div class="inv-field-row">
+                        <label class="inv-field-lbl">Expiry Date</label>
+                        <select class="inv-field-select" id="invSel_expireDate"></select>
+                    </div>
+                    <div class="inv-field-row">
+                        <label class="inv-field-lbl">Quantity</label>
+                        <select class="inv-field-select" id="invSel_quantity"></select>
+                    </div>
+                    <div class="inv-field-row">
+                        <label class="inv-field-lbl">MRP (₹)</label>
+                        <select class="inv-field-select" id="invSel_mrp"></select>
+                    </div>
+                    <div class="inv-field-row">
+                        <label class="inv-field-lbl">Purchase Rate (₹)</label>
+                        <select class="inv-field-select" id="invSel_rate"></select>
+                    </div>
+                    <div class="inv-field-row">
+                        <label class="inv-field-lbl">GST (%)</label>
+                        <select class="inv-field-select" id="invSel_gst"></select>
+                    </div>
+                    <div class="inv-field-row">
+                        <label class="inv-field-lbl">Pack Size</label>
+                        <select class="inv-field-select" id="invSel_pack"></select>
+                    </div>
+                </div>
+                <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.2rem;">✱ Required. All other fields are optional.</div>
+            </div>
+
+            <!-- Step 3: Preview -->
+            <div class="modal-bd" id="invStep3" style="display:none">
+                <div class="step-lbl">Preview (first 8 rows)</div>
+                <div class="inv-prev-wrap">
+                    <table class="inv-preview-table" id="invPreviewTable"></table>
+                </div>
+                <div class="import-count" id="invPreviewCount" style="margin-top:0.6rem;"></div>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:0.4rem;">✅ Looks good? Click <strong>Load into Form</strong> to fill all items instantly.</div>
+            </div>
+
+            <div class="modal-ft">
+                <button class="btn-mcancel" type="button" onclick="closeInvoiceImportModal()">Cancel</button>
+                <!-- Step 2 action -->
+                <button class="btn-do-import inv" id="invPreviewBtn" type="button"
+                        onclick="buildInvPreview()"
+                        style="display:none">
+                    Preview →
+                </button>
+                <!-- Step 3 action -->
+                <button class="btn-do-import inv" id="invImportBtn" type="button"
+                        onclick="applyInvoiceImport()" disabled>
+                    ✓ Load into Form
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Show Preview button on step 2, hide on other steps -->
+    <script>
+        document.getElementById('invStep2') && (() => {
+            // Watch step visibility to toggle Preview button
+            const obs = new MutationObserver(() => {
+                const s2 = document.getElementById('invStep2');
+                const pb = document.getElementById('invPreviewBtn');
+                const ib = document.getElementById('invImportBtn');
+                if (!s2 || !pb || !ib) return;
+                const on2 = s2.style.display !== 'none';
+                pb.style.display = on2 ? '' : 'none';
+                ib.style.display = on2 ? 'none' : '';
+            });
+            obs.observe(document.getElementById('invStep2'), { attributes:true, attributeFilter:['style'] });
+            obs.observe(document.getElementById('invStep3'), { attributes:true, attributeFilter:['style'] });
+        })();
+    </script>
 
     <script>
         if ('serviceWorker' in navigator) {
