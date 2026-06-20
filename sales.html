@@ -1367,6 +1367,66 @@
         addRow();
 
         /* ════════════════════════════════════════
+           Keyboard Shortcuts (100% Keyboard Nav)
+        ════════════════════════════════════════ */
+        document.addEventListener('keydown', function(e) {
+            // Ignore if a modal is open
+            if (document.querySelector('.modal-overlay.open') || document.querySelector('.qa-modal-overlay.open')) return;
+
+            // F2: Add new row
+            if (e.key === 'F2') {
+                e.preventDefault();
+                const newId = addRow();
+                if (newId) {
+                    setTimeout(() => document.getElementById('product_' + newId)?.focus(), 50);
+                }
+            }
+            // F9: Jump to Save button
+            if (e.key === 'F9') {
+                e.preventDefault();
+                document.getElementById('saveBtn')?.focus();
+            }
+            // Alt + S: Save bill
+            if (e.altKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                const saveBtn = document.getElementById('saveBtn');
+                if (saveBtn && !saveBtn.disabled) {
+                    saveBtn.click();
+                }
+            }
+        });
+
+        // Intercept Enter key inside the medicine table to act like Tab
+        document.getElementById('medicineTable').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                
+                const currentEl = e.target;
+                if (!currentEl.classList.contains('t-input')) return;
+
+                // Find all focusable inputs in the table
+                const focusables = Array.from(document.querySelectorAll('#medicineTable .t-input'))
+                                        .filter(el => !el.readOnly && !el.disabled);
+                
+                const currentIndex = focusables.indexOf(currentEl);
+                if (currentIndex > -1) {
+                    const isLastFocusable = currentIndex === focusables.length - 1;
+                    if (isLastFocusable) {
+                        // At the last input, trigger addRow
+                        const newId = addRow();
+                        if (newId) {
+                            setTimeout(() => document.getElementById('product_' + newId)?.focus(), 50);
+                        }
+                    } else {
+                        // Focus the next element
+                        focusables[currentIndex + 1].focus();
+                        focusables[currentIndex + 1].select(); // Auto-select text for easy typing
+                    }
+                }
+            }
+        });
+
+        /* ════════════════════════════════════════
            Medicine List — localStorage helpers
         ════════════════════════════════════════ */
         const ML_KEY = 'mm_medicine_list';
