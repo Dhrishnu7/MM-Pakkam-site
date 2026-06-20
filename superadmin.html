@@ -692,10 +692,15 @@ async function renderShopEditRequests() {
 }
 
 async function approveShopEdit(id, userId) {
-    const { error } = await sb.from('shop_edit_requests')
+    const { data, error } = await sb.from('shop_edit_requests')
         .update({ status: 'approved', reviewed_at: new Date().toISOString() })
-        .eq('id', id);
+        .eq('id', id)
+        .select();
     if (error) { alert('Error: ' + error.message); return; }
+    if (!data || data.length === 0) {
+        alert('⚠️ Update failed silently — this is usually caused by Row Level Security (RLS) on the shop_edit_requests table in Supabase.\n\nFix: Go to Supabase → Table Editor → shop_edit_requests → Disable RLS (or add a policy to allow updates).');
+        return;
+    }
     alert('✅ Approved! ' + userId + ' can now edit their shop details.');
     renderShopEditRequests();
 }
