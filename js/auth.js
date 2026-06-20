@@ -838,3 +838,123 @@ async function _autoMigrateLocalDataToSupabase(session) {
         console.error('[auth] Auto-migration failed:', e);
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL OFFLINE BANNER
+   Injected on every page via auth.js (loaded on all pages).
+   Listens for online/offline events and auto-syncs pending data.
+════════════════════════════════════════════════════════════ */
+
+function _getPendingCount() {
+    try {
+        const session = mmGetSession();
+        if (!session) return 0;
+        const user = session.tenant_id || session.username;
+        const sales     = JSON.parse(localStorage.getItem(`mm_${user}_pending_sales`)     || '[]');
+        const purchases = JSON.parse(localStorage.getItem(`mm_${user}_pending_purchases`) || '[]');
+        return sales.length + purchases.length;
+    } catch { return 0; }
+}
+
+function _injectOfflineBanner() {
+    if (document.getElementById('mm-offline-banner')) return;
+
+    const style = document.createElement('style');
+    style.id = 'mm-offline-banner-style';
+    style.textContent = `
+        #mm-offline-banner {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 99999;
+            padding: 9px 20px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            font-family: 'Inter', sans-serif; font-size: 0.83rem; font-weight: 700;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease;
+            transform: translateY(-110%); opacity: 0; pointer-events: none;
+        }
+        #mm-offline-banner.ob-visible {
+            transform: translateY(0); opacity: 1; pointer-events: all;
+        }
+        #mm-offline-banner.ob-offline { background: #1e1e2e; color: #f1f5f9; }
+        #mm-offline-banner.ob-syncing { background: #1d4ed8; color: white; }
+        #mm-offline-banner.ob-synced  { background: #065f46; color: white; }
+        .ob-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+        }
+        .ob-offline .ob-dot { background: #ef4444; animation: ob-pulse 1.2s infinite; }
+        .ob-syncing .ob-dot { background: #93c5fd; animation: ob-pulse 0.6s infinite; }
+        .ob-synced  .ob-dot { background: #6ee7b7; }
+        @keyframes ob-pulse { 0%,100% { opacity:1; } 50% { opacity:0.25; } }
+    `;
+    if (!document.getElementById('mm-offline-banner-style')) {
+        document.head.appendChild(style);
+    }
+
+    const banner = document.createElement('div');
+    banner.id = 'mm-offline-banner';
+    banner.innerHTML = `<span class="ob-dot"></span><span id="mm-ob-text">You are offline</span>`;
+    document.body.prepend(banner);
+}
+
+let _obHideTimer = null;
+
+function updateOfflineBanner() {
+    if (!document.body) return;
+    _injectOfflineBanner();
+    const banner = document.getElementById('mm-offline-banner');
+    const text   = document.getElementById('mm-ob-text');
+    if (!banner || !text) return;
+
+    const isOnline = navigator.onLine;
+    const pending  = _getPendingCount();
+
+    if (_obHideTimer) { clearTimeout(_obHideTimer); _obHideTimer = null; }
+
+    if (!isOnline) {
+        // ── OFFLINE ──
+        banner.className = 'ob-offline ob-visible';
+        text.textContent = pending > 0
+            ? `🔴 Offline — ${pending} record${pending !== 1 ? 's' : ''} waiting to sync`
+            : '🔴 You are offline — Billing will continue normally';
+
+    } else if (pending > 0) {
+        // ── BACK ONLINE, HAS PENDING — sync now ──
+        banner.className = 'ob-syncing ob-visible';
+        text.textContent = `⏳ Internet restored — Syncing ${pending} record${pending !== 1 ? 's' : ''}...`;
+
+        if (typeof window.dbSyncPendingOfflineData === 'function') {
+            window.dbSyncPendingOfflineData().then(result => {
+                const total = (result?.salesSynced || 0) + (result?.purchasesSynced || 0);
+                const stillPending = _getPendingCount();
+
+                if (stillPending === 0) {
+                    banner.className = 'ob-synced ob-visible';
+                    text.textContent = `✅ All synced! ${total > 0 ? total + ' record' + (total !== 1 ? 's' : '') + ' uploaded to cloud.' : 'Data is up to date.'}`;
+                    _obHideTimer = setTimeout(() => { banner.classList.remove('ob-visible'); }, 3500);
+                } else {
+                    banner.className = 'ob-offline ob-visible';
+                    text.textContent = `⚠️ Partial sync — ${stillPending} record${stillPending !== 1 ? 's' : ''} still pending`;
+                    _obHideTimer = setTimeout(() => { banner.classList.remove('ob-visible'); }, 5000);
+                }
+            });
+        }
+
+    } else {
+        // ── ONLINE, NOTHING PENDING — hide ──
+        banner.classList.remove('ob-visible');
+    }
+}
+
+// Expose globally so sales.html / purchase.html can call it after an offline save
+window.updateOfflineBanner = updateOfflineBanner;
+
+// Start listeners when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    _injectOfflineBanner();
+    setTimeout(updateOfflineBanner, 900); // check on load
+
+    window.addEventListener('offline', updateOfflineBanner);
+
+    window.addEventListener('online', () => {
+        setTimeout(updateOfflineBanner, 1200); // wait for network to stabilise
+    });
+});

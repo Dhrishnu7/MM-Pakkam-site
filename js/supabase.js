@@ -417,14 +417,16 @@ async function dbDeleteAllPurchases() {
 /* ─────────────────────────────────────────────────────
    OFFLINE PENDING SYNC
    Syncs queued offline saves — uses SCOPED keys only.
+   Returns { salesSynced, purchasesSynced } for UI feedback.
 ───────────────────────────────────────────────────── */
-(async function syncPendingOfflineData() {
+async function dbSyncPendingOfflineData() {
     const user = _currentUser();
-    if (!user) return;
+    if (!user) return { salesSynced: 0, purchasesSynced: 0 };
 
     // CRITICAL: Use scoped keys — never global 'mm_pending_sales'
     const pendingSalesKey     = `mm_${user}_pending_sales`;
     const pendingPurchasesKey = `mm_${user}_pending_purchases`;
+    let salesSynced = 0, purchasesSynced = 0;
 
     // Sync pending sales
     try {
@@ -435,13 +437,15 @@ async function dbDeleteAllPurchases() {
             for (const bill of pendingSales) {
                 const res = await dbSaveBill(bill);
                 if (!res.success) {
-                    console.error("[Offline Sync] Failed to sync bill:", bill.billNo, res.message);
+                    console.error('[Offline Sync] Failed to sync bill:', bill.billNo, res.message);
                     remaining.push(bill);
+                } else {
+                    salesSynced++;
                 }
             }
             localStorage.setItem(pendingSalesKey, JSON.stringify(remaining));
         }
-    } catch(e) { console.error("[Offline Sync] Sales sync failed:", e); }
+    } catch(e) { console.error('[Offline Sync] Sales sync failed:', e); }
 
     // Sync pending purchases
     try {
@@ -452,14 +456,25 @@ async function dbDeleteAllPurchases() {
             for (const p of pendingPurchases) {
                 const res = await dbAddPurchase(p);
                 if (!res.success) {
-                    console.error("[Offline Sync] Failed to sync purchase:", p.productName, res.message);
+                    console.error('[Offline Sync] Failed to sync purchase:', p.productName, res.message);
                     remaining.push(p);
+                } else {
+                    purchasesSynced++;
                 }
             }
             localStorage.setItem(pendingPurchasesKey, JSON.stringify(remaining));
         }
-    } catch(e) { console.error("[Offline Sync] Purchases sync failed:", e); }
-})();
+    } catch(e) { console.error('[Offline Sync] Purchases sync failed:', e); }
+
+    return { salesSynced, purchasesSynced };
+}
+
+// Expose globally for the offline banner and other pages to call
+window.dbSyncPendingOfflineData = dbSyncPendingOfflineData;
+
+// Run once on page load to catch any pending data from a previous offline session
+dbSyncPendingOfflineData();
+
 
 /* ─────────────────────────────────────────────────────
    SHOP PROFILE  (per-user store details for invoices)
