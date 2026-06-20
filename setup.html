@@ -588,10 +588,10 @@
             const result = await mmCreateOwner(username, password, shopInfo);
             if (result.success) {
                 setBtnDone('Account Created!');
-                // Redirect to shop setup page — fill details before pending approval
+                // Redirect straight to login page!
                 setTimeout(() => {
-                    window.location.href = 'shop-setup.html?tenant=' + encodeURIComponent(username);
-                }, 600);
+                    window.location.href = 'login.html';
+                }, 1000);
             } else {
                 showError(result.message);
                 resetBtn();
