@@ -333,6 +333,17 @@
         }
         .btn-print-report:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,0.4); }
 
+        .btn-export-excel {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 0.72rem 1.4rem; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 700; font-family: 'Inter', sans-serif;
+            cursor: pointer; border: none;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white; box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+            transition: all 0.25s ease; white-space: nowrap;
+        }
+        .btn-export-excel:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16,185,129,0.4); }
+
         .btn-backup {
             display: inline-flex; align-items: center; gap: 7px;
             padding: 0.72rem 1.4rem; border-radius: 10px;
@@ -929,6 +940,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M9 21h6v-5H9v5z"/>
                     </svg>
                     Print Report
+                </button>
+                <button class="btn-export-excel" onclick="exportGSTExcel()" title="Export data as CSV for GST filing">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export GST Excel
                 </button>
                 <button class="btn-backup" onclick="backupData()" title="Download all your data as a backup file">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -2652,6 +2669,67 @@
 <\/body>
 <\/html>`);
             printWin.document.close();
+        }
+
+        /* ── Export GST Excel Logic ── */
+        function exportGSTExcel() {
+            if (!currentData || currentData.length === 0) {
+                alert("No records to export for the selected period.");
+                return;
+            }
+
+            let csvContent = "Date,Bill No,Type,Product,Qty,Rate (Rs),GST %,Taxable Value (Rs),CGST (Rs),SGST (Rs),Total (Rs)\n";
+
+            currentData.forEach(r => {
+                const date = formatDate(r.date);
+                const billNo = r.billNo || '';
+                const type = r.type === 'sales' ? 'Sale' : 'Purchase';
+                const product = `"${(r.product || '').replace(/"/g, '""')}"`; // Escape quotes
+                const qty = r.qty || 0;
+                const rate = r.rate || 0;
+                const gst = r.gst || 0;
+                const total = r.total || 0;
+
+                // Reverse calculation to find exact taxable base if needed,
+                // but rate * qty is usually the base (excluding GST).
+                // Assuming Total = (Qty * Rate) * (1 + GST/100).
+                const baseValue = total / (1 + (gst / 100));
+                const totalTax = total - baseValue;
+                const cgst = totalTax / 2;
+                const sgst = totalTax / 2;
+
+                const row = [
+                    date,
+                    billNo,
+                    type,
+                    product,
+                    qty.toFixed(2),
+                    rate.toFixed(2),
+                    gst.toFixed(2),
+                    baseValue.toFixed(2),
+                    cgst.toFixed(2),
+                    sgst.toFixed(2),
+                    total.toFixed(2)
+                ].join(",");
+
+                csvContent += row + "\n";
+            });
+
+            // Create a blob and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            const from = document.getElementById('fromDate').value || 'all';
+            const to = document.getElementById('toDate').value || 'all';
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `GST_Report_${from}_to_${to}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast("✅ GST Excel Exported Successfully!", "success");
         }
 
         /* ── Search & Print Bills Logic ── */
