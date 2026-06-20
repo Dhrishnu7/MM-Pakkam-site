@@ -291,7 +291,7 @@
             </div>
 
             <!-- Add Worker -->
-            <div class="card">
+            <div class="card" id="addUserCard">
                 <div class="card-header">
                     <div class="card-title">
                         <div class="card-title-icon">
@@ -299,42 +299,76 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                             </svg>
                         </div>
-                        Add New User
+                        <span id="addUserCardTitle">Add New User</span>
                     </div>
                 </div>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="newUsername">Username</label>
-                        <input type="text" id="newUsername" placeholder="e.g. ravi_owner" autocomplete="off">
-                        <div class="inline-error" id="addError"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="newPassword">Password</label>
-                        <div class="input-wrap">
-                            <input type="password" id="newPassword" placeholder="Min 6 characters" autocomplete="new-password">
-                            <button type="button" class="pw-toggle-light" onclick="toggleNewPw()">
-                                <svg id="newEye" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
-                            </button>
+
+                <!-- Normal add form (shown when under limit) -->
+                <div id="normalAddForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="newUsername">Username</label>
+                            <input type="text" id="newUsername" placeholder="e.g. ravi_worker" autocomplete="off">
+                            <div class="inline-error" id="addError"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Password</label>
+                            <div class="input-wrap">
+                                <input type="password" id="newPassword" placeholder="Min 6 characters" autocomplete="new-password">
+                                <button type="button" class="pw-toggle-light" onclick="toggleNewPw()">
+                                    <svg id="newEye" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group" style="grid-column:1/-1;">
-                        <label for="newRole">Role</label>
-                        <select id="newRole" style="font-family:'Inter',sans-serif;font-size:0.92rem;color:#0f172a;background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:10px;padding:0.72rem 1rem;outline:none;width:100%;transition:all 0.22s ease;cursor:pointer;">
-                            <option value="worker">👷 Worker — can access billing &amp; reports</option>
-                            <option value="owner">👑 Owner — full access including user management</option>
-                        </select>
+                    <div class="form-actions-row">
+                        <button class="add-worker-btn" id="addWorkerBtn" onclick="addUser()">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+                            </svg>
+                            Add Worker
+                        </button>
                     </div>
                 </div>
-                <div class="form-actions-row">
-                    <button class="add-worker-btn" id="addWorkerBtn" onclick="addUser()">
-                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+
+                <!-- Extra user request form (shown when limit reached) -->
+                <div id="extraUserRequestForm" style="display:none;">
+                    <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:1.5px solid #f59e0b;border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;">
+                        <svg width="18" height="18" fill="none" stroke="#b45309" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
                         </svg>
-                        Add User
-                    </button>
+                        <div style="font-size:0.85rem;color:#92400e;line-height:1.5">
+                            <strong>Worker limit reached.</strong> Your store already has 1 worker. To add another, you need Super Admin approval. Fill in the details below to send a request.
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="reqUsername">Requested Username</label>
+                            <input type="text" id="reqUsername" placeholder="e.g. worker2_name" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="reqPassword">Password for New User</label>
+                            <div class="input-wrap">
+                                <input type="password" id="reqPassword" placeholder="Min 6 characters" autocomplete="new-password">
+                            </div>
+                        </div>
+                        <div class="form-group" style="grid-column:1/-1;">
+                            <label for="reqReason">Reason for Extra Worker</label>
+                            <textarea id="reqReason" placeholder="e.g. We need an extra worker to handle peak hours during the evening shift..." rows="3" style="width:100%;border:1.5px solid #e9d5ff;border-radius:10px;padding:0.72rem 1rem;font-family:'Inter',sans-serif;font-size:0.9rem;color:#0f172a;background:#faf5ff;resize:vertical;outline:none;"></textarea>
+                        </div>
+                    </div>
+                    <div class="inline-error" id="reqError"></div>
+                    <div class="form-actions-row">
+                        <button class="add-worker-btn" id="sendReqBtn" onclick="sendExtraUserRequest()" style="background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 14px rgba(245,158,11,0.35);">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                            Send Request to Super Admin
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -538,6 +572,21 @@
             const count = document.getElementById('userCount');
             count.textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
 
+            // Check worker limit and toggle add form
+            const workerCount = users.filter(u => u.role === 'worker').length;
+            const normalForm = document.getElementById('normalAddForm');
+            const extraForm  = document.getElementById('extraUserRequestForm');
+            const cardTitle  = document.getElementById('addUserCardTitle');
+            if (workerCount >= 1) {
+                normalForm.style.display = 'none';
+                extraForm.style.display  = '';
+                cardTitle.textContent = 'Request Extra Worker';
+            } else {
+                normalForm.style.display = '';
+                extraForm.style.display  = 'none';
+                cardTitle.textContent = 'Add New User';
+            }
+
             if (!users.length) {
                 list.innerHTML = `<div class="empty-state">
                     <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.356-3.712M9 20H4v-2a4 4 0 015.356-3.712M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 4a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -551,7 +600,7 @@
                 const isMe     = _session && u.username.toLowerCase() === _session.username.toLowerCase();
                 return `
                 <div class="user-row">
-                    <div class="user-avatar ${isOwner ? 'owner' : ''}">${initials}</div>
+                    <div class="user-avatar ${isOwner ? 'owner' : ''}"><span>${initials}</span></div>
                     <div class="user-info">
                         <div class="user-name">
                             ${u.username}
@@ -596,7 +645,6 @@
             const errDiv   = document.getElementById('addError');
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value;
-            const role     = document.getElementById('newRole').value;
             errDiv.classList.remove('show');
 
             if (username.length < 3) { errDiv.textContent='Username must be 3+ characters.'; return errDiv.classList.add('show'); }
@@ -605,23 +653,73 @@
             btn.disabled = true;
             btn.innerHTML = `<svg class="spinner" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Adding…`;
 
-            const result = role === 'owner'
-                ? await mmAddOwner(username, password)
-                : await mmAddWorker(username, password);
+            const result = await mmAddWorker(username, password);
 
             if (result.success) {
                 document.getElementById('newUsername').value = '';
                 document.getElementById('newPassword').value = '';
-                document.getElementById('newRole').value = 'worker';
                 await renderUsers();
-                showToast(`${role === 'owner' ? '👑 Owner' : '👷 Worker'} Added! ✓`, `"${username}" can now log in.`);
+                showToast('👷 Worker Added! ✓', `"${username}" can now log in.`);
             } else {
                 errDiv.textContent = result.message;
                 errDiv.classList.add('show');
             }
 
             btn.disabled = false;
-            btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg> Add User`;
+            btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg> Add Worker`;
+        }
+
+        async function sendExtraUserRequest() {
+            const btn      = document.getElementById('sendReqBtn');
+            const errDiv   = document.getElementById('reqError');
+            const username = document.getElementById('reqUsername').value.trim();
+            const password = document.getElementById('reqPassword').value;
+            const reason   = document.getElementById('reqReason').value.trim();
+            errDiv.classList.remove('show');
+
+            if (username.length < 3) { errDiv.textContent='Username must be 3+ characters.'; return errDiv.classList.add('show'); }
+            if (password.length < 6) { errDiv.textContent='Password must be 6+ characters.'; return errDiv.classList.add('show'); }
+            if (reason.length < 10) { errDiv.textContent='Please provide a reason (at least 10 characters).'; return errDiv.classList.add('show'); }
+
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="spinner" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Sending…`;
+
+            // Hash the password before storing the request
+            const hash = await mmHashPassword(password);
+            const session = mmGetSession();
+            const tenantId = session ? (session.tenant_id || session.username) : null;
+
+            const db = _supabase;
+            if (!db) {
+                errDiv.textContent = 'Database not connected. Please try again.';
+                errDiv.classList.add('show');
+                btn.disabled = false;
+                btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Request to Super Admin`;
+                return;
+            }
+
+            const { error } = await db.from('extra_user_requests').insert({
+                tenant_id: tenantId,
+                requested_username: username,
+                password_hash: hash,
+                reason: reason,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            });
+
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Request to Super Admin`;
+
+            if (error) {
+                errDiv.textContent = 'Failed to send request: ' + error.message;
+                errDiv.classList.add('show');
+                return;
+            }
+
+            document.getElementById('reqUsername').value = '';
+            document.getElementById('reqPassword').value = '';
+            document.getElementById('reqReason').value = '';
+            showToast('✅ Request Sent!', 'Your request has been sent to the Super Admin for approval.');
         }
 
         /* ── Delete Modal ── */
