@@ -610,6 +610,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/keyboard-nav.js"></script>
+    <script src="js/thermal-print.js"></script>
 </head>
 <body>
     <script>
@@ -730,6 +731,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m0 0l-6 0m6 0l0 6M3 3h2l.4 2M7 13h10l4-8H5.4"/>
                         </svg>
                     </div>
+                </div>
+
+                <!-- -- Printer Status Bar -- -->
+                <div id="printerBar" style="display:flex; align-items:center; gap:0.8rem; margin-bottom:1rem; padding:0.7rem 1rem; background:rgba(248,250,252,0.9); border:1.5px solid #e2e8f0; border-radius:12px; font-size:0.82rem; font-family:'Inter',sans-serif;">
+                    <span id="printerStatusDot" style="width:10px;height:10px;border-radius:50%;background:#cbd5e1;flex-shrink:0;"></span>
+                    <span id="printerStatusText" style="color:#64748b; font-weight:600;">No printer connected</span>
+                    <button type="button" id="connectPrinterBtn" onclick="handleConnectPrinter()" style="margin-left:auto; padding:0.4rem 0.9rem; border-radius:8px; border:1.5px solid #0ea5e9; background:white; color:#0ea5e9; font-weight:700; font-size:0.78rem; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s;" onmouseover="this.style.background='#0ea5e9';this.style.color='white';" onmouseout="this.style.background='white';this.style.color='#0ea5e9';">🖨️ Connect Printer</button>
+                    <button type="button" id="disconnectPrinterBtn" onclick="handleDisconnectPrinter()" style="display:none; padding:0.4rem 0.9rem; border-radius:8px; border:1.5px solid #ef4444; background:white; color:#ef4444; font-weight:700; font-size:0.78rem; cursor:pointer; font-family:'Inter',sans-serif;" onmouseover="this.style.background='#ef4444';this.style.color='white';" onmouseout="this.style.background='white';this.style.color='#ef4444';">✕ Disconnect</button>
                 </div>
 
                 <!-- -- Form Actions -- -->
@@ -1338,6 +1347,18 @@
             document.getElementById('successModal').classList.add('open');
             window.currentPrintBill = bill;
 
+            // ── Silent Print via WebUSB ──
+            if (ThermalPrinter.isConnected()) {
+                const shopProfile = window.mmShopProfile || null;
+                const printed = await ThermalPrinter.print(bill, shopProfile);
+                if (printed) {
+                    document.getElementById('toastTitle').textContent = '🖨️ Printed!';
+                    document.getElementById('toastSub').textContent   = 'Bill sent directly to printer.';
+                    document.getElementById('toast').classList.add('show');
+                    setTimeout(() => document.getElementById('toast').classList.remove('show'), 2500);
+                }
+            }
+
             if (result.success) {
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
             } else {
@@ -1372,6 +1393,66 @@
             const newId = addRow();
             if (newId) setTimeout(() => document.getElementById('product_' + newId)?.focus(), 50);
         };
+
+        /* ── Printer Status UI ── */
+        function updatePrinterStatus() {
+            const dot        = document.getElementById('printerStatusDot');
+            const txt        = document.getElementById('printerStatusText');
+            const connectBtn = document.getElementById('connectPrinterBtn');
+            const discBtn    = document.getElementById('disconnectPrinterBtn');
+            if (!dot) return;
+
+            if (!ThermalPrinter.isSupported()) {
+                dot.style.background = '#f59e0b';
+                txt.textContent = 'WebUSB not supported — use Chrome/Edge';
+                connectBtn.style.display = 'none';
+                return;
+            }
+
+            if (ThermalPrinter.isConnected()) {
+                dot.style.background = '#10b981';
+                const name = ThermalPrinter.getSavedPrinterName() || 'Thermal Printer';
+                txt.textContent = '● ' + name + ' — ready';
+                txt.style.color = '#065f46';
+                connectBtn.style.display = 'none';
+                discBtn.style.display    = '';
+            } else {
+                dot.style.background = '#cbd5e1';
+                txt.textContent = 'No printer connected — click to set up';
+                txt.style.color = '#64748b';
+                connectBtn.style.display = '';
+                discBtn.style.display    = 'none';
+            }
+        }
+
+        async function handleConnectPrinter() {
+            const btn = document.getElementById('connectPrinterBtn');
+            btn.textContent = 'Connecting...';
+            btn.disabled = true;
+            const ok = await ThermalPrinter.connect();
+            btn.disabled = false;
+            btn.textContent = '🖨️ Connect Printer';
+            updatePrinterStatus();
+            if (ok) {
+                document.getElementById('toastTitle').textContent = '🖨️ Printer Connected!';
+                document.getElementById('toastSub').textContent   = 'Bills will now print silently — no popups!';
+                document.getElementById('toast').classList.add('show');
+                setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
+            }
+        }
+
+        function handleDisconnectPrinter() {
+            ThermalPrinter.disconnect();
+            updatePrinterStatus();
+        }
+
+        // Load shop profile for receipt header
+        if (typeof dbGetShopProfile === 'function') {
+            dbGetShopProfile().then(p => { if (p) window.mmShopProfile = p; });
+        }
+
+        // Update status once printer module has had time to auto-reconnect
+        setTimeout(updatePrinterStatus, 600);
 
         /* ════════════════════════════════════════
            Medicine List — localStorage helpers
