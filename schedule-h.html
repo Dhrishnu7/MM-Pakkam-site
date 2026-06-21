@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -31,7 +31,7 @@
             color: #0f172a;
         }
 
-        /* â”€â”€ Navbar â”€â”€ */
+        /* ── Navbar ── */
         header {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(16px);
@@ -97,7 +97,7 @@
             transform: translateY(-1px);
         }
 
-        /* â”€â”€ Page Content â”€â”€ */
+        /* ── Page Content ── */
         .page-content {
             flex: 1;
             display: flex;
@@ -106,7 +106,7 @@
             padding: 2.5rem 1.5rem 4rem;
         }
 
-        /* â”€â”€ Page Header â”€â”€ */
+        /* ── Page Header ── */
         .page-header {
             text-align: center;
             margin-bottom: 2rem;
@@ -122,7 +122,7 @@
         }
         .page-header p { color: #64748b; margin-top: 0.4rem; font-size: 0.95rem; }
 
-        /* â”€â”€ Tab Pills â”€â”€ */
+        /* ── Tab Pills ── */
         .tab-bar {
             display: flex;
             gap: 0.5rem;
@@ -155,7 +155,7 @@
             box-shadow: 0 4px 16px rgba(220,38,38,0.35);
         }
 
-        /* â”€â”€ Form Card â”€â”€ */
+        /* ── Form Card ── */
         .form-card {
             background: rgba(255,255,255,0.88);
             backdrop-filter: blur(20px);
@@ -173,7 +173,7 @@
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
-        /* â”€â”€ Section Label â”€â”€ */
+        /* ── Section Label ── */
         .section-label {
             font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
             letter-spacing: 0.08em; color: #64748b; margin-bottom: 1rem;
@@ -184,7 +184,7 @@
             background: linear-gradient(90deg, #fecaca, transparent);
         }
 
-        /* â”€â”€ Grid Layout â”€â”€ */
+        /* ── Grid Layout ── */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -197,7 +197,7 @@
         }
         .full-width { grid-column: 1 / -1; }
 
-        /* â”€â”€ Form Groups â”€â”€ */
+        /* ── Form Groups ── */
         .form-group {
             display: flex;
             flex-direction: column;
@@ -243,7 +243,7 @@
             padding-right: 2.2rem;
         }
 
-        /* â”€â”€ Divider â”€â”€ */
+        /* ── Divider ── */
         .divider {
             grid-column: 1 / -1;
             height: 1.5px;
@@ -252,7 +252,7 @@
             border-radius: 2px;
         }
 
-        /* â”€â”€ Buttons â”€â”€ */
+        /* ── Buttons ── */
         .form-actions {
             display: flex;
             gap: 0.8rem;
@@ -284,7 +284,7 @@
         }
         .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
 
-        /* â”€â”€ Toast â”€â”€ */
+        /* ── Toast ── */
         .toast {
             position: fixed;
             bottom: 2rem; right: 2rem;
@@ -306,7 +306,7 @@
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
         }
 
-        /* â”€â”€ Search Bar â”€â”€ */
+        /* ── Search Bar ── */
         .search-bar {
             display: flex;
             align-items: center;
@@ -338,7 +338,7 @@
             white-space: nowrap;
         }
 
-        /* â”€â”€ Register Table â”€â”€ */
+        /* ── Register Table ── */
         .table-wrap {
             overflow-x: auto;
             border-radius: 14px;
@@ -404,7 +404,7 @@
         }
         .remove-row-btn:hover { background: #ef4444; color: white; transform: scale(1.15); }
 
-        /* â”€â”€ Drug List (Tab 2) â”€â”€ */
+        /* ── Drug List (Tab 2) ── */
         .add-drug-row {
             display: flex;
             gap: 0.8rem;
@@ -508,7 +508,7 @@
             margin-left: 0.5rem;
         }
 
-        /* â”€â”€ Import Modal â”€â”€ */
+        /* ── Import Modal ── */
         .modal-overlay {
             position:fixed; inset:0;
             background:rgba(15,23,42,0.55);
@@ -589,7 +589,7 @@
         }
         .btn-mcancel:hover { background:#f1f5f9; }
 
-        /* â”€â”€ Animations â”€â”€ */
+        /* ── Animations ── */
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(20px); }
             to   { opacity: 1; transform: translateY(0); }
@@ -600,7 +600,7 @@
             to   { opacity: 1; transform: translateX(0); }
         }
 
-        /* â”€â”€ Responsive â”€â”€ */
+        /* ── Responsive ── */
         @media (max-width: 700px) {
             header { padding: 0.8rem 1rem; }
             .logo-text { font-size: 0.95rem; }
@@ -629,7 +629,7 @@
     <!-- Navbar -->
     <header>
         <a class="logo" href="index.html">
-            <div class="logo-icon"><svg viewBox="0 0 100 100" width="32" height="32" xmlns="http://www.w3.org/2000/svg" style="z-index: 2;"><mask id="crossMask"><rect width="100" height="100" fill="white" /><path d="M 42 35 h 16 v 30 h -16 z M 35 42 h 30 v 16 h -30 z" fill="black" /></mask><g mask="url(#crossMask)" fill="#ffffff"><circle cx="50" cy="30" r="20" /><circle cx="50" cy="70" r="20" /><circle cx="30" cy="50" r="20" /><circle cx="70" cy="50" r="20" /><rect x="35" y="35" width="30" height="30" /></g></svg></div>
+            <div class="logo-icon"><svg viewBox="0 0 100 100" width="32" height="32" xmlns="http://www.w3.org/2000/svg" style="z-index: 2; position: relative;"><mask id="crossMask"><rect width="100" height="100" fill="white" /><path d="M 41 33 h 18 v 34 h -18 z M 33 41 h 34 v 18 h -34 z" fill="black" rx="2" /><line x1="15" y1="15" x2="85" y2="85" stroke="black" stroke-width="2.5" stroke-linecap="round" /><line x1="15" y1="85" x2="85" y2="15" stroke="black" stroke-width="2.5" stroke-linecap="round" /></mask><g mask="url(#crossMask)" fill="#ffffff"><path d="M 50 50 L 28 28 A 15.55 15.55 0 0 1 50 6 A 15.55 15.55 0 0 1 72 28 Z" /><path d="M 50 50 L 72 28 A 15.55 15.55 0 0 1 94 50 A 15.55 15.55 0 0 1 72 72 Z" /><path d="M 50 50 L 72 72 A 15.55 15.55 0 0 1 50 94 A 15.55 15.55 0 0 1 28 72 Z" /><path d="M 50 50 L 28 72 A 15.55 15.55 0 0 1 6 50 A 15.55 15.55 0 0 1 28 28 Z" /></g></svg></div>
             <span class="logo-text">Billware</span>
         </a>
         <a class="back-btn" href="index.html">&#8592; Back</a>
@@ -640,23 +640,23 @@
 
         <div class="page-header">
             <div class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Schedule H Register</div>
-            <h1>âš ï¸ Schedule H Drug Register</h1>
+            <h1>⚠️ Schedule H Drug Register</h1>
             <p>Maintain a mandatory register for restricted Schedule H drug sales</p>
         </div>
 
         <!-- Tab Pills -->
         <div class="tab-bar">
-            <button class="tab-pill active" onclick="switchTab('register')" id="tabRegister">ðŸ“‹ Drug Register</button>
-            <button class="tab-pill" onclick="switchTab('manage')" id="tabManage">ðŸ’Š Manage Drug List</button>
+            <button class="tab-pill active" onclick="switchTab('register')" id="tabRegister">📋 Drug Register</button>
+            <button class="tab-pill" onclick="switchTab('manage')" id="tabManage">💊 Manage Drug List</button>
         </div>
 
         <div class="form-card">
 
-            <!-- â•â•â• TAB 1: Drug Register â•â•â• -->
+            <!-- ═══ TAB 1: Drug Register ═══ -->
             <div class="tab-panel active" id="panelRegister">
                 <form id="registerForm" onsubmit="handleRegisterSubmit(event)" novalidate>
 
-                    <div class="section-label">ðŸ“ Sale Details</div>
+                    <div class="section-label">📝 Sale Details</div>
                     <div class="form-grid" style="margin-bottom: 1.5rem;">
                         <div class="form-group">
                             <label>Date</label>
@@ -668,7 +668,7 @@
                         </div>
                         <div class="form-group">
                             <label>Firm</label>
-                            <input type="text" id="firmName" placeholder="Supplier / Firm nameâ€¦">
+                            <input type="text" id="firmName" placeholder="Supplier / Firm name…">
                         </div>
                     </div>
 
@@ -676,11 +676,11 @@
 
 
 
-                    <div class="section-label">ðŸ’Š Drug Details</div>
+                    <div class="section-label">💊 Drug Details</div>
                     <div class="form-grid" style="margin-bottom: 1rem;">
                         <div class="form-group">
                             <label>Drug Name</label>
-                            <input type="text" id="drugName" list="drugList" placeholder="Select Schedule H drugâ€¦" autocomplete="off">
+                            <input type="text" id="drugName" list="drugList" placeholder="Select Schedule H drug…" autocomplete="off">
                             <datalist id="drugList"></datalist>
                         </div>
                         <div class="form-group">
@@ -702,11 +702,11 @@
                             <input type="number" id="qty" placeholder="0" min="1" step="1" oninput="calcTotal()">
                         </div>
                         <div class="form-group">
-                            <label>MRP (â‚¹)</label>
+                            <label>MRP (₹)</label>
                             <input type="number" id="mrp" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()">
                         </div>
                         <div class="form-group">
-                            <label>Rate (â‚¹)</label>
+                            <label>Rate (₹)</label>
                             <input type="number" id="rate" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()">
                         </div>
                         <div class="form-group">
@@ -716,7 +716,7 @@
                     </div>
                     <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:14px; padding:1rem 1.4rem; margin-bottom:0.5rem; display:flex; align-items:center; justify-content:space-between;">
                         <span style="font-size:0.85rem; font-weight:800; color:#991b1b; text-transform:uppercase; letter-spacing:0.06em;">Total Amount</span>
-                        <span id="totalDisplay" style="font-size:1.3rem; font-weight:800; color:#dc2626;">â‚¹ 0.00</span>
+                        <span id="totalDisplay" style="font-size:1.3rem; font-weight:800; color:#dc2626;">₹ 0.00</span>
                     </div>
 
                     <div class="form-actions">
@@ -732,10 +732,10 @@
 
                 <!-- Register Log -->
                 <div style="margin-top: 2.5rem;">
-                    <div class="section-label">ðŸ“„ Register Log</div>
+                    <div class="section-label">📄 Register Log</div>
 
                     <div class="search-bar">
-                        <input type="text" id="logSearch" placeholder="Search by patient, doctor, drug, batchâ€¦" oninput="renderRegisterLog()">
+                        <input type="text" id="logSearch" placeholder="Search by patient, doctor, drug, batch…" oninput="renderRegisterLog()">
                         <span class="search-count" id="logCount"></span>
                     </div>
 
@@ -769,12 +769,12 @@
                 </div>
             </div>
 
-            <!-- â•â•â• TAB 2: Manage Drug List â•â•â• -->
+            <!-- ═══ TAB 2: Manage Drug List ═══ -->
             <div class="tab-panel" id="panelManage">
 
-                <div class="section-label">âž• Add Schedule H Drug</div>
+                <div class="section-label">➕ Add Schedule H Drug</div>
                 <div class="add-drug-row">
-                    <input type="text" id="newDrugName" placeholder="Enter Schedule H drug nameâ€¦" onkeydown="if(event.key==='Enter'){event.preventDefault();addDrug();}">
+                    <input type="text" id="newDrugName" placeholder="Enter Schedule H drug name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addDrug();}">
                     <button type="button" class="btn-add-drug" onclick="addDrug()">
                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
@@ -785,20 +785,20 @@
 
                 <div class="drug-list-actions">
                     <button type="button" class="clear-btn-sm" onclick="clearAllDrugs()">
-                        ðŸ—‘ï¸ Clear All
+                        🗑️ Clear All
                     </button>
                     <button type="button" class="import-btn-sm" onclick="openImportModal()">
-                        ðŸ“‹ Import from Excel/CSV
+                        📋 Import from Excel/CSV
                     </button>
                 </div>
 
                 <div class="section-label">
-                    ðŸ“‹ Schedule H Drug List
+                    📋 Schedule H Drug List
                     <span class="drug-count-badge" id="drugCountBadge">0 drugs</span>
                 </div>
 
                 <div class="search-bar">
-                    <input type="text" id="drugSearch" placeholder="Search drugsâ€¦" oninput="renderDrugList()">
+                    <input type="text" id="drugSearch" placeholder="Search drugs…" oninput="renderDrugList()">
                 </div>
 
                 <div class="drug-grid" id="drugGrid">
@@ -806,7 +806,7 @@
                 </div>
 
                 <div id="drugEmptyState" class="empty-state" style="display:none;">
-                    <div class="es-icon">ðŸ’Š</div>
+                    <div class="es-icon">💊</div>
                     <div class="es-title">No Schedule H Drugs Added</div>
                     <div class="es-sub">Add drugs manually or import from Excel/CSV</div>
                 </div>
@@ -828,12 +828,12 @@
         </div>
     </div>
 
-    <!-- â”€â”€ Import Drug List Modal â”€â”€ -->
+    <!-- ── Import Drug List Modal ── -->
     <div class="modal-overlay" id="importModal">
         <div class="modal-card">
             <div class="modal-hd">
-                <h3>ðŸ“‹ Import Schedule H Drug List</h3>
-                <button class="modal-x" type="button" onclick="closeImportModal()">Ã—</button>
+                <h3>📋 Import Schedule H Drug List</h3>
+                <button class="modal-x" type="button" onclick="closeImportModal()">×</button>
             </div>
             <!-- Step 1: File Upload -->
             <div class="modal-bd" id="importStep1">
@@ -842,7 +842,7 @@
                      ondragleave="this.classList.remove('drag-over')"
                      ondrop="handleFileDrop(event)">
                     <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" multiple onchange="handleFileInput(event)">
-                    <div class="dz-ico">ðŸ“¥</div>
+                    <div class="dz-ico">📥</div>
                     <div class="dz-txt">Drop files here or click to browse</div>
                     <div class="dz-sub">Supports .xlsx, .xls, .csv &mdash; multiple files allowed</div>
                 </div>
@@ -858,16 +858,16 @@
             <div class="modal-ft">
                 <button class="btn-mcancel" type="button" onclick="closeImportModal()">Cancel</button>
                 <button class="btn-do-import" id="importConfirmBtn" type="button" onclick="doImport()" disabled>
-                    âœ“ Import Drugs
+                    ✓ Import Drugs
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ══════════════════════════════════════════════════════════════════
            Constants & Helpers
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        ══════════════════════════════════════════════════════════════════ */
         const SH_DRUGS_KEY    = 'mm_schedule_h_drugs';
         const SH_REGISTER_KEY = 'mm_schedule_h_register';
 
@@ -890,9 +890,9 @@
             setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ══════════════════════════════════════════════════════════════════
            Tab Switching
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        ══════════════════════════════════════════════════════════════════ */
         function switchTab(tab) {
             document.getElementById('panelRegister').classList.toggle('active', tab === 'register');
             document.getElementById('panelManage').classList.toggle('active', tab === 'manage');
@@ -900,9 +900,9 @@
             document.getElementById('tabManage').classList.toggle('active', tab === 'manage');
         }
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ══════════════════════════════════════════════════════════════════
            Datalist Builders
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        ══════════════════════════════════════════════════════════════════ */
         function refreshPatientList() {
             const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
             const sales     = JSON.parse(localStorage.getItem('mm_sales') || '[]');
@@ -945,7 +945,7 @@
             if (dl) dl.innerHTML = drugs.map(n => `<option value="${n.replace(/"/g, '&quot;')}">`).join('');
         }
 
-        /* â”€â”€ Auto-fill patient address from mm_customers â”€â”€ */
+        /* ── Auto-fill patient address from mm_customers ── */
         document.addEventListener('DOMContentLoaded', () => {
             const patientNameEl = document.getElementById('patientName');
             const patientAddrEl = document.getElementById('patientAddress');
@@ -978,9 +978,9 @@
             }
         });
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ══════════════════════════════════════════════════════════════════
            TAB 1: Register Form
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        ══════════════════════════════════════════════════════════════════ */
         // Default today
         document.getElementById('entryDate').valueAsDate = new Date();
 
@@ -990,13 +990,13 @@
             const gst  = parseFloat(document.getElementById('gst').value) || 0;
             const base = qty * rate;
             const total = base + (base * gst / 100);
-            document.getElementById('totalDisplay').textContent = 'â‚¹ ' + total.toFixed(2);
+            document.getElementById('totalDisplay').textContent = '₹ ' + total.toFixed(2);
         }
 
         function resetRegisterForm() {
             document.getElementById('registerForm').reset();
             document.getElementById('entryDate').valueAsDate = new Date();
-            document.getElementById('totalDisplay').textContent = 'â‚¹ 0.00';
+            document.getElementById('totalDisplay').textContent = '₹ 0.00';
         }
 
         function handleRegisterSubmit(e) {
@@ -1046,12 +1046,12 @@
             register.push(entry);
             setRegister(register);
 
-            showToast('Entry Saved!', `${drugName} â€” ${patientName}`);
+            showToast('Entry Saved!', `${drugName} — ${patientName}`);
             resetRegisterForm();
             renderRegisterLog();
         }
 
-        /* â”€â”€ Render Register Log â”€â”€ */
+        /* ── Render Register Log ── */
         function renderRegisterLog() {
             const register = getRegister();
             const searchTerm = (document.getElementById('logSearch').value || '').trim().toLowerCase();
@@ -1078,7 +1078,7 @@
                     <tr>
                         <td colspan="15">
                             <div class="empty-state">
-                                <div class="es-icon">ðŸ“‹</div>
+                                <div class="es-icon">📋</div>
                                 <div class="es-title">${register.length === 0 ? 'No Entries Yet' : 'No Matches Found'}</div>
                                 <div class="es-sub">${register.length === 0 ? 'Log a Schedule H drug sale above to get started' : 'Try a different search term'}</div>
                             </div>
@@ -1088,32 +1088,32 @@
             }
 
             tbody.innerHTML = filtered.map(entry => {
-                const dateStr = entry.date ? new Date(entry.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'â€”';
+                const dateStr = entry.date ? new Date(entry.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
                 return `
                 <tr style="animation: rowSlideIn 0.3s ease forwards;">
                     <td style="white-space:nowrap; font-weight:600; font-size:0.82rem;">${dateStr}</td>
-                    <td style="font-size:0.84rem; font-weight:600;">${esc(entry.billNo || 'â€”')}</td>
+                    <td style="font-size:0.84rem; font-weight:600;">${esc(entry.billNo || '—')}</td>
                     <td>
                         <div style="font-weight:600;">${esc(entry.patientName)}</div>
                         ${entry.patientAddress ? `<div style="font-size:0.73rem; color:#94a3b8;">${esc(entry.patientAddress)}</div>` : ''}
                     </td>
                     <td>
-                        <div style="font-weight:600;">${esc(entry.doctorName || 'â€”')}</div>
+                        <div style="font-weight:600;">${esc(entry.doctorName || '—')}</div>
                         ${entry.doctorAddress ? `<div style="font-size:0.73rem; color:#94a3b8;">${esc(entry.doctorAddress)}</div>` : ''}
                     </td>
                     <td style="font-weight:700; color:#991b1b;">${esc(entry.drugName)}</td>
-                    <td style="font-size:0.84rem;">${esc(entry.batchNo || 'â€”')}</td>
-                    <td style="font-size:0.84rem;">${esc(entry.expireDate || 'â€”')}</td>
-                    <td style="font-size:0.84rem;">${esc(entry.pack || 'â€”')}</td>
-                    <td style="font-weight:700;">${entry.qty || 'â€”'}</td>
-                    <td style="font-size:0.84rem;">â‚¹${(entry.mrp || 0).toFixed(2)}</td>
-                    <td style="font-size:0.84rem;">â‚¹${(entry.rate || 0).toFixed(2)}</td>
+                    <td style="font-size:0.84rem;">${esc(entry.batchNo || '—')}</td>
+                    <td style="font-size:0.84rem;">${esc(entry.expireDate || '—')}</td>
+                    <td style="font-size:0.84rem;">${esc(entry.pack || '—')}</td>
+                    <td style="font-weight:700;">${entry.qty || '—'}</td>
+                    <td style="font-size:0.84rem;">₹${(entry.mrp || 0).toFixed(2)}</td>
+                    <td style="font-size:0.84rem;">₹${(entry.rate || 0).toFixed(2)}</td>
                     <td style="font-size:0.84rem;">${entry.gst || 0}%</td>
-                    <td style="font-weight:700; color:#dc2626;">â‚¹${(entry.total || 0).toFixed(2)}</td>
-                    <td style="font-size:0.84rem;">${esc(entry.firmName || 'â€”')}</td>
+                    <td style="font-weight:700; color:#dc2626;">₹${(entry.total || 0).toFixed(2)}</td>
+                    <td style="font-size:0.84rem;">${esc(entry.firmName || '—')}</td>
 
                     <td>
-                        <button class="remove-row-btn" onclick="deleteEntry('${entry.id}')" title="Delete entry">âœ•</button>
+                        <button class="remove-row-btn" onclick="deleteEntry('${entry.id}')" title="Delete entry">✕</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -1133,9 +1133,9 @@
             showToast('Deleted', 'Entry removed from register.');
         }
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ══════════════════════════════════════════════════════════════════
            TAB 2: Manage Drug List
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        ══════════════════════════════════════════════════════════════════ */
         function addDrug() {
             const input = document.getElementById('newDrugName');
             const name = (input.value || '').trim();
@@ -1200,14 +1200,14 @@
             grid.innerHTML = filtered.map(name => `
                 <div class="drug-chip">
                     <span>${esc(name)}</span>
-                    <button class="del-chip" onclick="removeDrug('${name.replace(/'/g, "\\'")}')" title="Remove">âœ•</button>
+                    <button class="del-chip" onclick="removeDrug('${name.replace(/'/g, "\\'")}')" title="Remove">✕</button>
                 </div>
             `).join('');
         }
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ══════════════════════════════════════════════════════════════════
            Import Modal (Excel/CSV)
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        ══════════════════════════════════════════════════════════════════ */
         let _iRows = [], _iHdrs = [], _iCol = -1, _iNames = [], _iFileCount = 0;
 
         function openImportModal() {
@@ -1274,7 +1274,7 @@
             let autoIdx = -1;
             for (let i = 0; i < maxC; i++) {
                 const hdr = _iHdrs[i] ? String(_iHdrs[i]) : `Column ${i + 1}`;
-                const smp = _iRows.slice(0, 3).map(r => r[i] ? String(r[i]) : '').filter(Boolean).join(' Â· ');
+                const smp = _iRows.slice(0, 3).map(r => r[i] ? String(r[i]) : '').filter(Boolean).join(' · ');
                 const btn = document.createElement('button');
                 btn.type = 'button'; btn.className = 'col-pill'; btn.dataset.ci = i;
                 btn.innerHTML = `<b>${hdr}</b>${smp ? `<br><small style="opacity:.7">${smp}</small>` : ''}`;
@@ -1299,8 +1299,8 @@
             const pv = document.getElementById('importPreview');
             pv.style.display = 'block';
             pv.innerHTML = _iNames.slice(0, 25).map(n => `<div class="prev-item">${n}</div>`).join('')
-                + (_iNames.length > 25 ? `<div class="prev-more">+${_iNames.length - 25} moreâ€¦</div>` : '');
-            document.getElementById('importCount').textContent = `âœ“ ${_iNames.length} unique drug name(s) found`;
+                + (_iNames.length > 25 ? `<div class="prev-more">+${_iNames.length - 25} more…</div>` : '');
+            document.getElementById('importCount').textContent = `✓ ${_iNames.length} unique drug name(s) found`;
             document.getElementById('importConfirmBtn').disabled = _iNames.length === 0;
         }
 
@@ -1317,9 +1317,9 @@
             showToast(`${fresh.length} drug(s) imported!`, `${merged.length} total in Schedule H list.`);
         }
 
-        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        /* ══════════════════════════════════════════════════════════════════
            Initialize on Page Load
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        ══════════════════════════════════════════════════════════════════ */
         window.addEventListener('DOMContentLoaded', () => {
             refreshPatientList();
             refreshDoctorList();
@@ -1354,4 +1354,3 @@
     </script>
 </body>
 </html>
-

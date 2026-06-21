@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -253,7 +253,7 @@
             .dashboard-header h2 { font-size: 1.6rem; }
         }
 
-        /* â”€â”€ Bell Button â”€â”€ */
+        /* ── Bell Button ── */
         .bell-btn {
             position: relative;
             background: rgba(255,255,255,0.8);
@@ -292,7 +292,7 @@
             80%{transform:rotate(10deg)}
         }
 
-        /* â”€â”€ Inbox Drawer â”€â”€ */
+        /* ── Inbox Drawer ── */
         .inbox-overlay {
             position: fixed; inset: 0;
             background: rgba(15,23,42,0.35);
@@ -482,7 +482,7 @@
     <!-- Navbar -->
     <header>
         <div class="logo">
-            <div class="logo-icon"><svg viewBox="0 0 100 100" width="32" height="32" xmlns="http://www.w3.org/2000/svg" style="z-index: 2;"><mask id="crossMask"><rect width="100" height="100" fill="white" /><path d="M 42 35 h 16 v 30 h -16 z M 35 42 h 30 v 16 h -30 z" fill="black" /></mask><g mask="url(#crossMask)" fill="#ffffff"><circle cx="50" cy="30" r="20" /><circle cx="50" cy="70" r="20" /><circle cx="30" cy="50" r="20" /><circle cx="70" cy="50" r="20" /><rect x="35" y="35" width="30" height="30" /></g></svg></div>
+            <div class="logo-icon"><svg viewBox="0 0 100 100" width="32" height="32" xmlns="http://www.w3.org/2000/svg" style="z-index: 2; position: relative;"><mask id="crossMask"><rect width="100" height="100" fill="white" /><path d="M 41 33 h 18 v 34 h -18 z M 33 41 h 34 v 18 h -34 z" fill="black" rx="2" /><line x1="15" y1="15" x2="85" y2="85" stroke="black" stroke-width="2.5" stroke-linecap="round" /><line x1="15" y1="85" x2="85" y2="15" stroke="black" stroke-width="2.5" stroke-linecap="round" /></mask><g mask="url(#crossMask)" fill="#ffffff"><path d="M 50 50 L 28 28 A 15.55 15.55 0 0 1 50 6 A 15.55 15.55 0 0 1 72 28 Z" /><path d="M 50 50 L 72 28 A 15.55 15.55 0 0 1 94 50 A 15.55 15.55 0 0 1 72 72 Z" /><path d="M 50 50 L 72 72 A 15.55 15.55 0 0 1 50 94 A 15.55 15.55 0 0 1 28 72 Z" /><path d="M 50 50 L 28 72 A 15.55 15.55 0 0 1 6 50 A 15.55 15.55 0 0 1 28 28 Z" /></g></svg></div>
             <span class="logo-text">Billware</span>
         </div>
         <div class="header-right" id="headerRight" style="display: flex; align-items: center; gap: 1rem;">
@@ -516,19 +516,19 @@
         <div class="inbox-toolbar">
             <div class="inbox-filter-tabs">
                 <button class="inbox-tab active" id="tabAll" onclick="filterNotif('all')">All</button>
-                <button class="inbox-tab" id="tabMedicines" onclick="filterNotif('medicines')">ðŸ’Š Medicines</button>
-                <button class="inbox-tab" id="tabRequests" onclick="filterNotif('requests')">ðŸ“‹ Requests</button>
-                <button class="inbox-tab" id="tabBusiness" onclick="filterNotif('business')">ðŸ“Š Business</button>
-                <button class="inbox-tab" id="tabUpdates" onclick="filterNotif('updates')">ðŸ“¢ Updates</button>
+                <button class="inbox-tab" id="tabMedicines" onclick="filterNotif('medicines')">💊 Medicines</button>
+                <button class="inbox-tab" id="tabRequests" onclick="filterNotif('requests')">📋 Requests</button>
+                <button class="inbox-tab" id="tabBusiness" onclick="filterNotif('business')">📊 Business</button>
+                <button class="inbox-tab" id="tabUpdates" onclick="filterNotif('updates')">📢 Updates</button>
             </div>
             <div class="inbox-toolbar-actions">
-                <button class="mark-all-btn" onclick="markAllRead()">âœ“ Mark all read</button>
+                <button class="mark-all-btn" onclick="markAllRead()">✓ Mark all read</button>
             </div>
         </div>
         <div class="inbox-body" id="inboxBody">
             <div class="inbox-loading">
                 <svg class="spin" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
-                Loading alertsâ€¦
+                Loading alerts…
             </div>
         </div>
     </div>
@@ -633,7 +633,7 @@
 
     <!-- PWA Install Banner -->
     <div id="pwaInstallBanner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,#0d9488,#0891b2);color:white;padding:14px 24px;border-radius:50px;box-shadow:0 8px 32px rgba(13,148,136,0.45);display:none;align-items:center;gap:12px;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;white-space:nowrap;animation:pwaBounceIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards;">
-        <span style="font-size:1.2rem;">ðŸ“²</span>
+        <span style="font-size:1.2rem;">📲</span>
         <span>Install Billware as App</span>
         <span id="pwaInstallClose" style="margin-left:6px;opacity:0.7;font-size:1rem;padding:0 4px;" title="Dismiss">&times;</span>
     </div>
@@ -641,7 +641,7 @@
         @keyframes pwaBounceIn { from{opacity:0;transform:translateX(-50%) translateY(30px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
     </style>
     <script>
-        // â”€â”€ Service Worker â€” auto-reload on new version â”€â”€
+        // ── Service Worker — auto-reload on new version ──
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
@@ -664,7 +664,7 @@
             });
         }
 
-        // â”€â”€ PWA Install Prompt â”€â”€
+        // ── PWA Install Prompt ──
         let _pwaPrompt = null;
         window.addEventListener('beforeinstallprompt', e => {
             e.preventDefault();
@@ -721,21 +721,21 @@
     </script>
 
     <script>
-    // â”€â”€ Inbox / Notification System v2 â”€â”€
+    // ── Inbox / Notification System v2 ──
     let _allNotifs = [];
     let _activeFilter = 'all';
 
     // Category display config used in card rendering
     const CAT_META = {
-        medicines: { label: 'ðŸ’Š Medicine', bg: '#dcfce7', color: '#15803d' },
-        requests:  { label: 'ðŸ“‹ Request',  bg: '#dbeafe', color: '#1d4ed8' },
-        business:  { label: 'ðŸ“Š Business', bg: '#ede9fe', color: '#6d28d9' },
-        updates:   { label: 'ðŸ“¢ Update',   bg: '#fce7f3', color: '#be185d' },
+        medicines: { label: '💊 Medicine', bg: '#dcfce7', color: '#15803d' },
+        requests:  { label: '📋 Request',  bg: '#dbeafe', color: '#1d4ed8' },
+        business:  { label: '📊 Business', bg: '#ede9fe', color: '#6d28d9' },
+        updates:   { label: '📢 Update',   bg: '#fce7f3', color: '#be185d' },
     };
 
     async function loadNotifications() {
         try {
-            // Fetch all data sources independently â€” one failure won't break others
+            // Fetch all data sources independently — one failure won't break others
             const [purchases, bills] = await Promise.all([
                 dbGetPurchases().catch(() => []),
                 dbGetBills().catch(() => [])
@@ -846,11 +846,11 @@
 
         if (!filtered.length) {
             const emptyMsgs = {
-                all:       ['All Clear! ðŸŽ‰', 'No alerts right now. Everything looks good!'],
-                medicines: ['No Medicine Alerts ðŸ’š', 'No expiry or stock issues found.'],
-                requests:  ['No Requests ðŸ“‹', 'No approvals or rejections to show.'],
-                business:  ['No Business Data ðŸ“Š', 'Make some sales to see your summary here.'],
-                updates:   ['No Updates ðŸ“¢', 'No system announcements at the moment.'],
+                all:       ['All Clear! 🎉', 'No alerts right now. Everything looks good!'],
+                medicines: ['No Medicine Alerts 💚', 'No expiry or stock issues found.'],
+                requests:  ['No Requests 📋', 'No approvals or rejections to show.'],
+                business:  ['No Business Data 📊', 'Make some sales to see your summary here.'],
+                updates:   ['No Updates 📢', 'No system announcements at the moment.'],
             };
             const [h, p] = emptyMsgs[_activeFilter] || emptyMsgs.all;
             body.innerHTML = `
@@ -920,5 +920,4 @@
     });
     </script></body>
 </html>
-
 
