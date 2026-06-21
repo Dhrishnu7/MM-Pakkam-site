@@ -297,8 +297,8 @@ function mmInjectShopBranding() {
     const initials = shopName.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'BW';
 
     // Update navbar logo icon (the short 2-letter badge)
-    const logoIcon = document.querySelector('.logo-icon');
-    if (logoIcon) logoIcon.textContent = initials;
+    // const logoIcon = document.querySelector('.logo-icon');
+    // if (logoIcon) logoIcon.textContent = initials;
 
     // Update navbar logo full name
     const logoText = document.querySelector('.logo-text');
