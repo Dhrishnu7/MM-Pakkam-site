@@ -919,16 +919,22 @@
                         return;
                     }
 
-                    const changeRes = await mmChangeUserPassword(user, newPwd);
-                    if (changeRes.success) {
-                        await dbMarkResetCompleted(user, pin);
-                        alert('Password successfully changed! You can now log in.');
-                        document.getElementById('forgotPwdModal').style.display = 'none';
-                        document.getElementById('username').value = user;
-                        document.getElementById('password').value = '';
-                    } else {
-                        alert(changeRes.message);
+                    // Update password in mm_users
+                    const { error } = await _supabase
+                        .from('mm_users')
+                        .update({ password: newPwd })
+                        .eq('username', user.toLowerCase());
+                        
+                    if (error) {
+                        alert('Failed to change password: ' + error.message);
+                        return;
                     }
+
+                    await dbMarkResetCompleted(user, pin);
+                    alert('Password successfully changed! You can now log in.');
+                    document.getElementById('forgotPwdModal').style.display = 'none';
+                    document.getElementById('username').value = user;
+                    document.getElementById('password').value = '';
                 } catch(e) {
                     alert('Error: ' + e.message);
                 } finally {
