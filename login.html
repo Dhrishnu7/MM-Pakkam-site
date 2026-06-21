@@ -875,60 +875,68 @@
             }
 
             async function submitFpRequest() {
+                const btn = event.target;
                 const user = document.getElementById('fpReqUsername').value.trim();
                 const reason = document.getElementById('fpReqReason').value.trim();
                 if(!user || !reason) return alert('Please enter both username and reason.');
                 
-                const origText = event.target.innerText;
-                event.target.innerText = 'Submitting...';
-                event.target.disabled = true;
+                const origText = btn.innerText;
+                btn.innerText = 'Submitting...';
+                btn.disabled = true;
 
-                const res = await dbCreatePasswordResetRequest(user, reason);
-                event.target.innerText = origText;
-                event.target.disabled = false;
-
-                if (res) {
-                    alert('Reset request submitted successfully! Please contact your super admin to get your PIN.');
-                    showFpPinSection();
-                    document.getElementById('fpPinUsername').value = user;
-                } else {
-                    alert('Failed to submit request. Are you online?');
+                try {
+                    const res = await dbCreatePasswordResetRequest(user, reason);
+                    if (res) {
+                        alert('Reset request submitted successfully! Please contact your super admin to get your PIN.');
+                        showFpPinSection();
+                        document.getElementById('fpPinUsername').value = user;
+                    } else {
+                        alert('Failed to submit request. Are you online?');
+                    }
+                } catch(e) {
+                    alert('Error: ' + e.message);
+                } finally {
+                    btn.innerText = origText;
+                    btn.disabled = false;
                 }
             }
 
-            async function submitFpPin() {
+                        async function submitFpPin() {
+                const btn = event.target;
                 const user = document.getElementById('fpPinUsername').value.trim();
                 const pin = document.getElementById('fpPinCode').value.trim();
                 const newPwd = document.getElementById('fpPinNewPwd').value;
                 if(!user || !pin || !newPwd) return alert('Please fill all fields.');
 
-                const origText = event.target.innerText;
-                event.target.innerText = 'Verifying...';
-                event.target.disabled = true;
+                const origText = btn.innerText;
+                btn.innerText = 'Verifying...';
+                btn.disabled = true;
 
-                const isValid = await dbCheckResetPin(user, pin);
-                if (!isValid) {
-                    event.target.innerText = origText;
-                    event.target.disabled = false;
-                    return alert('Invalid or expired PIN for this username.');
-                }
+                try {
+                    const isValid = await dbCheckResetPin(user, pin);
+                    if (!isValid) {
+                        alert('Invalid or expired PIN for this username.');
+                        return;
+                    }
 
-                // PIN is valid! Change password.
-                const changeRes = await mmChangeUserPassword(user, newPwd);
-                if (changeRes.success) {
-                    await dbMarkResetCompleted(user, pin);
-                    alert('Password successfully changed! You can now log in.');
-                    document.getElementById('forgotPwdModal').style.display = 'none';
-                    document.getElementById('username').value = user;
-                    document.getElementById('password').value = '';
-                    document.getElementById('password').focus();
-                } else {
-                    alert('Failed to change password: ' + changeRes.message);
+                    const changeRes = await mmChangeUserPassword(user, newPwd);
+                    if (changeRes.success) {
+                        await dbMarkResetCompleted(user, pin);
+                        alert('Password successfully changed! You can now log in.');
+                        document.getElementById('forgotPwdModal').style.display = 'none';
+                        document.getElementById('username').value = user;
+                        document.getElementById('password').value = '';
+                    } else {
+                        alert(changeRes.message);
+                    }
+                } catch(e) {
+                    alert('Error: ' + e.message);
+                } finally {
+                    btn.innerText = origText;
+                    btn.disabled = false;
                 }
-                
-                event.target.innerText = origText;
-                event.target.disabled = false;
             }
         </script>
     </body>
 </html>
+
