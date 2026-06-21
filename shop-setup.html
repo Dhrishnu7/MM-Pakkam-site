@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -269,7 +269,7 @@
         <p>This information will appear on your invoices and bills</p>
         <div class="step-bar">
             <div class="step done">
-                <div class="step-num">✓</div>
+                <div class="step-num">âœ“</div>
                 <div class="step-label">Account</div>
             </div>
             <div class="step-line done"></div>
@@ -304,7 +304,7 @@
                 <div class="field">
                     <label>Invoice Prefix <span>*</span></label>
                     <input type="text" id="invoicePrefix" placeholder="e.g. SL" maxlength="6">
-                    <div class="hint">Bills will be numbered: SL-001, SL-002…</div>
+                    <div class="hint">Bills will be numbered: SL-001, SL-002â€¦</div>
                 </div>
                 <div class="field">
                     <label>Phone Number <span>*</span></label>
@@ -383,15 +383,15 @@
 
     <!-- PENDING SCREEN -->
     <div class="card" id="pendingScreen">
-        <div class="pending-icon">⏳</div>
+        <div class="pending-icon">â³</div>
         <div class="pending-title">Request Submitted!</div>
-        <div class="pending-badge">⏳ Awaiting Admin Approval</div>
+        <div class="pending-badge">â³ Awaiting Admin Approval</div>
         <div class="pending-msg">
             Your account and shop details have been submitted.<br>
             The administrator will review and approve your account.<br>
             Once approved, you'll be able to log in and start billing.
         </div>
-        <a href="login.html" class="go-login-btn">Go to Login →</a>
+        <a href="login.html" class="go-login-btn">Go to Login â†’</a>
     </div>
 </div>
 
@@ -420,7 +420,7 @@ if (isEditMode) {
     document.querySelector('.page-header p').textContent = 'Update your store details and invoice information';
     document.querySelector('.step-bar').style.display = 'none';
 
-    // Show overlay IMMEDIATELY — blocks all interaction before async check
+    // Show overlay IMMEDIATELY â€” blocks all interaction before async check
     document.getElementById('formOverlay').style.display = 'block';
 
     // Disable all inputs as extra safety
@@ -433,7 +433,7 @@ if (isEditMode) {
     btnArea.innerHTML = `
         <div id="permLoading" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 22px;text-align:center;color:#64748b;font-size:.87rem;">
             <svg style="animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px" width="15" height="15" fill="none" stroke="#0d9488" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a9 9 0 0114.13-3.36M20 15a9 9 0 01-14.13 3.36"/></svg>
-            Checking permissions…
+            Checking permissionsâ€¦
         </div>
     `;
 
@@ -442,12 +442,12 @@ if (isEditMode) {
 
 
 
-// ── EDIT MODE: populate data and finalise permissions (form is already locked) ──
+// â”€â”€ EDIT MODE: populate data and finalise permissions (form is already locked) â”€â”€
 async function initEditMode() {
     try {
         const session = JSON.parse(localStorage.getItem('mm_auth_session') || sessionStorage.getItem('mm_auth_session') || 'null');
         if (!session) {
-            unlockFormFirstTime(); // no session — show empty form for setup
+            unlockFormFirstTime(); // no session â€” show empty form for setup
             return;
         }
         const userId = session.tenant_id || session.username;
@@ -456,12 +456,12 @@ async function initEditMode() {
         const { data: profile } = await sb.from('shop_profiles').select('*').eq('user_id', userId).maybeSingle();
 
         if (!profile || !profile.shop_name) {
-            // No profile yet — first time filling, unlock the form
+            // No profile yet â€” first time filling, unlock the form
             unlockFormFirstTime();
             return;
         }
 
-        // Profile exists — populate fields (still disabled/locked)
+        // Profile exists â€” populate fields (still disabled/locked)
         populateForm(profile);
 
         // Check for an approved edit request
@@ -474,10 +474,10 @@ async function initEditMode() {
             .maybeSingle();
 
         if (!reqErr && req) {
-            // Approved — unlock the form for editing
+            // Approved â€” unlock the form for editing
             unlockFormApproved(profile);
         } else {
-            // No approval — check if request is pending
+            // No approval â€” check if request is pending
             const { data: pending } = await sb.from('shop_edit_requests')
                 .select('*')
                 .eq('user_id', userId)
@@ -515,7 +515,7 @@ function unlockFormFirstTime() {
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             Save Changes
         </button>
-        <span class="skip-link" onclick="window.location.href='index.html'">← Back to Dashboard</span>
+        <span class="skip-link" onclick="window.location.href='index.html'">â† Back to Dashboard</span>
     `;
 }
 
@@ -535,13 +535,13 @@ function unlockFormApproved(profile) {
     const btnWrapper = loadingEl ? loadingEl.parentElement : document.getElementById('submitBtn').parentElement;
     btnWrapper.innerHTML = `
         <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;padding:12px 18px;margin-bottom:14px;font-size:.85rem;font-weight:600;color:#10b981;">
-            ✅ Your edit request was approved. Make your changes and save.
+            âœ… Your edit request was approved. Make your changes and save.
         </div>
         <button class="submit-btn" id="submitBtn" onclick="saveAndContinue()">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             Save Changes
         </button>
-        <span class="skip-link" onclick="window.location.href='index.html'">← Back to Dashboard</span>
+        <span class="skip-link" onclick="window.location.href='index.html'">â† Back to Dashboard</span>
     `;
 }
 
@@ -570,7 +570,7 @@ function lockForm(profile, pendingReq) {
     // Populate with existing data (read-only view)
     populateForm(profile);
 
-    // Disable all inputs — user can see but not type
+    // Disable all inputs â€” user can see but not type
     document.querySelectorAll('#setupCard input, #setupCard textarea').forEach(el => {
         el.setAttribute('disabled', 'true');
         el.style.background = '#f8fafc';
@@ -587,24 +587,24 @@ function lockForm(profile, pendingReq) {
             background:#fff7ed; border:1.5px solid #fed7aa; border-radius:14px;
             padding:18px 22px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
         ">
-            <div style="font-size:1.8rem;flex-shrink:0;">⏳</div>
+            <div style="font-size:1.8rem;flex-shrink:0;">â³</div>
             <div style="flex:1; min-width:200px;">
                 <div style="font-weight:800;font-size:.95rem;color:#9a3412;margin-bottom:3px;">Edit Request Pending</div>
                 <div style="font-size:.82rem;color:#c2410c;line-height:1.5;">
-                    Awaiting Super Admin approval · Submitted ${new Date(pendingReq.created_at).toLocaleString('en-IN', {dateStyle:'medium',timeStyle:'short'})}
+                    Awaiting Super Admin approval Â· Submitted ${new Date(pendingReq.created_at).toLocaleString('en-IN', {dateStyle:'medium',timeStyle:'short'})}
                 </div>
             </div>
-            <a href="index.html" style="font-size:.83rem;color:#9a3412;font-weight:700;text-decoration:underline;white-space:nowrap;">← Dashboard</a>
+            <a href="index.html" style="font-size:.83rem;color:#9a3412;font-weight:700;text-decoration:underline;white-space:nowrap;">â† Dashboard</a>
         </div>
     ` : `
-        <!-- Locked — no request yet -->
+        <!-- Locked â€” no request yet -->
         <div id="lockedFooter" style="
             background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px;
             padding:18px 22px;
         ">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:1.3rem;">🔒</span>
+                    <span style="font-size:1.3rem;">ðŸ”’</span>
                     <div>
                         <div style="font-weight:700;font-size:.9rem;color:#334155;">Editing is locked</div>
                         <div style="font-size:.78rem;color:#64748b;">Send a request to Super Admin to unlock editing</div>
@@ -622,7 +622,7 @@ function lockForm(profile, pendingReq) {
                 </button>
             </div>
 
-            <!-- Hidden request form — revealed on button click -->
+            <!-- Hidden request form â€” revealed on button click -->
             <div id="reqFormPanel" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid #e2e8f0;">
                 <label style="font-size:.78rem;font-weight:700;color:#334155;letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:8px;">
                     Reason for editing <span style="color:#ef4444">*</span>
@@ -654,36 +654,36 @@ function lockForm(profile, pendingReq) {
             </div>
         </div>
         <div style="margin-top:12px;text-align:center;">
-            <a href="index.html" style="font-size:.83rem;color:#64748b;font-weight:600;text-decoration:underline;">← Back to Dashboard</a>
+            <a href="index.html" style="font-size:.83rem;color:#64748b;font-weight:600;text-decoration:underline;">â† Back to Dashboard</a>
         </div>
     `;
 }
 
-// Called by initEditMode — shows the locked footer (pending or plain lock)
+// Called by initEditMode â€” shows the locked footer (pending or plain lock)
 function showLockedFooter(pendingReq) {
     // The wrapper now contains the permLoading div (submitBtn was replaced)
     const loadingEl = document.getElementById('permLoading');
     const btnWrapper = loadingEl ? loadingEl.parentElement : null;
     if (!btnWrapper) return;
 
-    // Hide the overlay — inputs are already disabled, the footer needs to be clickable
+    // Hide the overlay â€” inputs are already disabled, the footer needs to be clickable
     const overlay = document.getElementById('formOverlay');
     if (overlay) overlay.style.display = 'none';
 
     btnWrapper.innerHTML = pendingReq ? `
         <div style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:14px;padding:18px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-            <div style="font-size:1.8rem;flex-shrink:0;">⏳</div>
+            <div style="font-size:1.8rem;flex-shrink:0;">â³</div>
             <div style="flex:1;min-width:200px;">
                 <div style="font-weight:800;font-size:.95rem;color:#9a3412;margin-bottom:3px;">Edit Request Pending</div>
-                <div style="font-size:.82rem;color:#c2410c;line-height:1.5;">Awaiting Super Admin approval · Submitted ${new Date(pendingReq.created_at).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}</div>
+                <div style="font-size:.82rem;color:#c2410c;line-height:1.5;">Awaiting Super Admin approval Â· Submitted ${new Date(pendingReq.created_at).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'})}</div>
             </div>
-            <a href="index.html" style="font-size:.83rem;color:#9a3412;font-weight:700;text-decoration:underline;white-space:nowrap;">← Dashboard</a>
+            <a href="index.html" style="font-size:.83rem;color:#9a3412;font-weight:700;text-decoration:underline;white-space:nowrap;">â† Dashboard</a>
         </div>
     ` : `
         <div id="lockedFooter" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:18px 22px;">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:1.3rem;">🔒</span>
+                    <span style="font-size:1.3rem;">ðŸ”’</span>
                     <div>
                         <div style="font-weight:700;font-size:.9rem;color:#334155;">Editing is locked</div>
                         <div style="font-size:.78rem;color:#64748b;">Send a request to Super Admin to unlock editing</div>
@@ -708,7 +708,7 @@ function showLockedFooter(pendingReq) {
             </div>
         </div>
         <div style="margin-top:12px;text-align:center;">
-            <a href="index.html" style="font-size:.83rem;color:#64748b;font-weight:600;text-decoration:underline;">← Back to Dashboard</a>
+            <a href="index.html" style="font-size:.83rem;color:#64748b;font-weight:600;text-decoration:underline;">â† Back to Dashboard</a>
         </div>
     `;
 }
@@ -745,7 +745,7 @@ async function sendEditRequest() {
         msg.style.display = 'block';
         msg.style.background = '#fef2f2';
         msg.style.color = '#dc2626';
-        msg.textContent = '⚠️ Please enter a reason for your edit request.';
+        msg.textContent = 'âš ï¸ Please enter a reason for your edit request.';
         return;
     }
     const btn = document.getElementById('sendReqBtn');
@@ -774,7 +774,7 @@ async function sendEditRequest() {
     } else {
         msg.style.background = '#f0fdf4';
         msg.style.color = '#10b981';
-        msg.textContent = '✅ Request sent! You\'ll be able to edit once the Super Admin approves it.';
+        msg.textContent = 'âœ… Request sent! You\'ll be able to edit once the Super Admin approves it.';
         btn.style.display = 'none';
         document.getElementById('editReason').setAttribute('disabled', 'true');
     }
@@ -876,3 +876,4 @@ function skipSetup() {
 </style>
 </body>
 </html>
+

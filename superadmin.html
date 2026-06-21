@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billware — Super Admin</title>
+    <title>Billware â€” Super Admin</title>
     <meta name="robots" content="noindex, nofollow">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -203,17 +203,17 @@
     <div class="login-card">
         <div style="text-align:center;margin-bottom:28px">
             <div style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(79,70,229,.2));border:1px solid rgba(124,58,237,.4);border-radius:50px;padding:8px 18px;margin-bottom:14px">
-                <span>⚡</span><strong style="color:var(--purple2);font-size:.85rem;letter-spacing:.05em">SUPERADMIN</strong>
+                <span>âš¡</span><strong style="color:var(--purple2);font-size:.85rem;letter-spacing:.05em">SUPERADMIN</strong>
             </div>
             <h1 style="font-size:1.4rem;font-weight:700">Billware Control</h1>
-            <p style="font-size:.75rem;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.1em">Restricted Access — Creator Only</p>
+            <p style="font-size:.75rem;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.1em">Restricted Access â€” Creator Only</p>
         </div>
         <label class="lbl">Username</label>
         <input class="inp" type="text" id="saU" placeholder="Super Admin Username" autocomplete="off">
         <label class="lbl">Password</label>
-        <input class="inp" type="password" id="saP" placeholder="••••••••••••" autocomplete="off">
+        <input class="inp" type="password" id="saP" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="off">
         <button class="login-btn" onclick="doLogin()">Enter Portal</button>
-        <div class="login-err" id="lerr">❌ Access denied. Invalid credentials.</div>
+        <div class="login-err" id="lerr">âŒ Access denied. Invalid credentials.</div>
     </div>
 </div>
 
@@ -235,12 +235,12 @@
 
     <!-- TABS -->
     <div class="tab-bar">
-        <button class="tab active" onclick="switchTab('overview',this)">👀 Overview</button>
-        <button class="tab" onclick="switchTab('accounts',this)">👥 Accounts <span class="badge green" id="tabAcctCount">0</span></button>
-        <button class="tab" onclick="switchTab('shops',this)">🏪 Shops <span class="badge blue" id="tabShopCount" style="background:#3b82f6;">0</span></button>
-        <button class="tab" onclick="switchTab('requests',this)">📩 Requests <span class="badge" id="tabPendCount">0</span></button>
-        <button class="tab" onclick="switchTab('pwdresets',this)">🔑 Resets <span class="badge" id="tabPwdResetCount" style="background:rgba(234,179,8,.2); border-color:rgba(234,179,8,.4); color:#fde047;">0</span></button>
-        <button class="tab" onclick="switchTab('activity',this)">⚡ Activity</button>
+        <button class="tab active" onclick="switchTab('overview',this)">ðŸ‘€ Overview</button>
+        <button class="tab" onclick="switchTab('accounts',this)">ðŸ‘¥ Accounts <span class="badge green" id="tabAcctCount">0</span></button>
+        <button class="tab" onclick="switchTab('shops',this)">ðŸª Shops <span class="badge blue" id="tabShopCount" style="background:#3b82f6;">0</span></button>
+        <button class="tab" onclick="switchTab('requests',this)">ðŸ“© Requests <span class="badge" id="tabPendCount">0</span></button>
+        <button class="tab" onclick="switchTab('pwdresets',this)">ðŸ”‘ Resets <span class="badge" id="tabPwdResetCount" style="background:rgba(234,179,8,.2); border-color:rgba(234,179,8,.4); color:#fde047;">0</span></button>
+        <button class="tab" onclick="switchTab('activity',this)">âš¡ Activity</button>
     </div>
 
     <!-- TAB: OVERVIEW -->
@@ -248,27 +248,27 @@
         <div class="stat-grid" id="statGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
         <div class="info-row" id="infoRow"></div>
 
-        <div class="sh"><span>🟢</span><h2>Currently Online</h2><span class="cnt" id="onCnt">0</span></div>
+        <div class="sh"><span>ðŸŸ¢</span><h2>Currently Online</h2><span class="cnt" id="onCnt">0</span></div>
         <div class="online-wrap" id="onlineList"><div style="color:var(--text3);font-size:.82rem">Checking...</div></div>
 
         <div class="two-col">
             <div>
-                <div class="sh"><span>🏆</span><h2>Top Stores by Revenue</h2></div>
+                <div class="sh"><span>ðŸ†</span><h2>Top Stores by Revenue</h2></div>
                 <div class="cw"><div class="ch"><span>Revenue Leaderboard</span></div><div id="revChart" style="padding:10px 0"><div class="ld"><div class="sp"></div></div></div></div>
             </div>
             <div>
-                <div class="sh"><span>👥</span><h2>Customer Count by Store</h2></div>
+                <div class="sh"><span>ðŸ‘¥</span><h2>Customer Count by Store</h2></div>
                 <div class="cw"><div class="ch"><span>Top Stores</span></div><div id="custChart" style="padding:10px 0"><div class="ld"><div class="sp"></div></div></div></div>
             </div>
         </div>
 
-        <div class="sh"><span>⚙️</span><h2>System Info</h2></div>
+        <div class="sh"><span>âš™ï¸</span><h2>System Info</h2></div>
         <div class="cw" style="margin-bottom:0">
             <div style="padding:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px">
                 <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Supabase Project</div><div style="font-size:.82rem;color:var(--cyan)">jwyyjdwlbgjijmwillow</div></div>
                 <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Firebase Hosting</div><div style="font-size:.82rem;color:var(--cyan)">mmpakkam.web.app</div></div>
-                <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Local Time (IST)</div><div style="font-size:.82rem;color:var(--text)" id="sysTime">—</div></div>
-                <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Portal Version</div><div style="font-size:.82rem;color:var(--purple2)">v2.0 — Dhrishnu Darshan</div></div>
+                <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Local Time (IST)</div><div style="font-size:.82rem;color:var(--text)" id="sysTime">â€”</div></div>
+                <div><div style="font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Portal Version</div><div style="font-size:.82rem;color:var(--purple2)">v2.0 â€” Dhrishnu Darshan</div></div>
             </div>
         </div>
     </div>
@@ -277,8 +277,8 @@
     <div class="tab-panel" id="tab-accounts">
         <div class="tw">
             <div class="tbar">
-                <input class="tsearch" id="acctSearch" placeholder="🔍 Search store name..." oninput="filterAccounts()">
-                <button class="rbtn" onclick="loadAll()">↻ Refresh</button>
+                <input class="tsearch" id="acctSearch" placeholder="ðŸ” Search store name..." oninput="filterAccounts()">
+                <button class="rbtn" onclick="loadAll()">â†» Refresh</button>
                 <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--text2);cursor:pointer">
                     <input type="checkbox" id="showWorkers" onchange="filterAccounts()" style="accent-color:var(--purple)">
                     Show Workers
@@ -292,7 +292,7 @@
                         <th>Role</th>
                         <th>Team</th>
                         <th>Bills</th>
-                        <th>Revenue (₹)</th>
+                        <th>Revenue (â‚¹)</th>
                         <th>Purchases</th>
                         <th>Customers</th>
                         <th>Medicines</th>
@@ -317,25 +317,25 @@
 
     <!-- TAB: REQUESTS -->
     <div class="tab-panel" id="tab-requests">
-        <div class="sh"><span>⏳</span><h2>Pending Approval Requests</h2><span class="cnt red" id="pendCnt">0</span></div>
+        <div class="sh"><span>â³</span><h2>Pending Approval Requests</h2><span class="cnt red" id="pendCnt">0</span></div>
         <div class="pending-grid" id="pendingGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
 
-        <div class="sh" style="margin-top:8px"><span>❌</span><h2>Rejected Accounts</h2></div>
+        <div class="sh" style="margin-top:8px"><span>âŒ</span><h2>Rejected Accounts</h2></div>
         <div class="pending-grid" id="rejectedGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
 
-        <div class="sh" style="margin-top:8px"><span>✅</span><h2>Recently Approved</h2></div>
+        <div class="sh" style="margin-top:8px"><span>âœ…</span><h2>Recently Approved</h2></div>
         <div class="pending-grid" id="approvedGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
 
         <!-- Shop Edit Requests -->
         <div class="sh" style="margin-top:16px">
-            <span>🔒</span><h2>Shop Edit Requests</h2>
+            <span>ðŸ”’</span><h2>Shop Edit Requests</h2>
             <span class="cnt red" id="editReqBadge" style="display:none"></span>
         </div>
         <div id="shopEditReqGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
 
         <!-- Extra User Requests -->
         <div class="sh" style="margin-top:24px">
-            <span>👷</span><h2>Extra Worker Requests</h2>
+            <span>ðŸ‘·</span><h2>Extra Worker Requests</h2>
             <span class="cnt red" id="extraUserReqBadge" style="display:none"></span>
         </div>
         <div id="extraUserReqGrid"><div class="ld"><div class="sp"></div>Loading...</div></div>
@@ -343,7 +343,7 @@
 
     <!-- TAB: PASSWORD RESETS -->
     <div class="tab-panel" id="tab-pwdresets">
-        <div class="sh"><span>🔑</span><h2>Password Reset Requests</h2><span class="cnt" id="pwdResetCnt">0</span></div>
+        <div class="sh"><span>ðŸ”‘</span><h2>Password Reset Requests</h2><span class="cnt" id="pwdResetCnt">0</span></div>
         <p style="font-size:0.85rem; color:var(--text3); margin-bottom:20px;">Approve requests to generate a 6-digit PIN. Provide this PIN to the owner so they can reset their password.</p>
         <div class="pending-grid" id="pwdResetGrid">
             <div class="ld"><div class="sp"></div>Loading...</div>
@@ -354,11 +354,11 @@
     <div class="tab-panel" id="tab-activity">
         <div class="two-col">
             <div>
-                <div class="sh"><span>📋</span><h2>Recent Bills (All Stores)</h2><span class="cnt" id="billTotalCnt">0</span></div>
+                <div class="sh"><span>ðŸ“‹</span><h2>Recent Bills (All Stores)</h2><span class="cnt" id="billTotalCnt">0</span></div>
                 <div class="cw"><div class="ch"><span>Latest Transactions</span></div><div class="al" id="actFeed"><div class="ld"><div class="sp"></div></div></div></div>
             </div>
             <div>
-                <div class="sh"><span>🆕</span><h2>Recent Signups</h2></div>
+                <div class="sh"><span>ðŸ†•</span><h2>Recent Signups</h2></div>
                 <div class="cw"><div class="ch"><span>Latest 10 accounts</span></div><div class="al" id="signupFeed"><div class="ld"><div class="sp"></div></div></div></div>
             </div>
         </div>
@@ -372,7 +372,7 @@ const SB_URL = 'https://jwyyjdwlbgjijmwillow.supabase.co';
 const SB_KEY = 'sb_publishable_sY9QwFEMckky9KDJoc1O_w_zN7qY0mo';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
-// ── AUTH ──
+// â”€â”€ AUTH â”€â”€
 function doLogin() {
     const u = document.getElementById('saU').value.trim();
     const p = document.getElementById('saP').value;
@@ -396,7 +396,7 @@ function boot() {
 if (sessionStorage.getItem('sa_ok')==='1') boot();
 document.addEventListener('keydown', e => { if (e.key==='Enter' && document.getElementById('saP')===document.activeElement) doLogin(); });
 
-// ── TABS ──
+// â”€â”€ TABS â”€â”€
 function switchTab(id, el) {
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -404,7 +404,7 @@ function switchTab(id, el) {
     el.classList.add('active');
 }
 
-// ── CLOCK ──
+// â”€â”€ CLOCK â”€â”€
 function startClock() {
     const el = document.getElementById('sysTime');
     const ts = document.getElementById('ts');
@@ -416,7 +416,7 @@ function startClock() {
     tick(); setInterval(tick, 1000);
 }
 
-// ── DATA ──
+// â”€â”€ DATA â”€â”€
 let allUsers=[], allBills=[], allPurchases=[], allCustomers=[], allMedicines=[];
 
 async function loadAll() {
@@ -449,7 +449,7 @@ async function loadAll() {
     renderShopEditRequests(); renderExtraUserRequests(); renderPasswordResets();
 }
 
-// ── STATS ──
+// â”€â”€ STATS â”€â”€
 function renderStats() {
     const owners=allUsers.filter(u=>u.role==='owner');
     const online=allUsers.filter(u=>u.active_session_token);
@@ -459,13 +459,13 @@ function renderStats() {
     const todayB=allBills.filter(b=>b.date===today);
     const todayR=todayB.reduce((s,b)=>s+(parseFloat(b.grand_total)||0),0);
     const cards=[
-        {icon:'🏪',val:owners.length,lbl:'Total Stores',sub:`${allUsers.filter(u=>u.role==='worker').length} workers`,acc:'linear-gradient(90deg,#7c3aed,#4f46e5)'},
-        {icon:'💰',val:'₹'+fmt(rev),lbl:'Total Revenue',sub:`₹${fmt(todayR)} today`,acc:'linear-gradient(90deg,#f59e0b,#f97316)'},
-        {icon:'🧾',val:allBills.length,lbl:'Total Bills',sub:`${todayB.length} bills today`,acc:'linear-gradient(90deg,#10b981,#06b6d4)'},
-        {icon:'💳',val:paid.length+'/'+owners.length,lbl:'Paid Accounts',sub:`${owners.length-paid.length} unpaid`,acc:'linear-gradient(90deg,#a855f7,#ec4899)'},
-        {icon:'📦',val:allPurchases.length,lbl:'Purchases Logged',sub:'Stock entries',acc:'linear-gradient(90deg,#06b6d4,#3b82f6)'},
-        {icon:'🧑‍⚕️',val:allCustomers.length,lbl:'Total Customers',sub:'Across all stores',acc:'linear-gradient(90deg,#ef4444,#f97316)'},
-        {icon:'🟢',val:online.length,lbl:'Online Now',sub:'Active sessions',acc:'linear-gradient(90deg,#10b981,#06b6d4)'},
+        {icon:'ðŸª',val:owners.length,lbl:'Total Stores',sub:`${allUsers.filter(u=>u.role==='worker').length} workers`,acc:'linear-gradient(90deg,#7c3aed,#4f46e5)'},
+        {icon:'ðŸ’°',val:'â‚¹'+fmt(rev),lbl:'Total Revenue',sub:`â‚¹${fmt(todayR)} today`,acc:'linear-gradient(90deg,#f59e0b,#f97316)'},
+        {icon:'ðŸ§¾',val:allBills.length,lbl:'Total Bills',sub:`${todayB.length} bills today`,acc:'linear-gradient(90deg,#10b981,#06b6d4)'},
+        {icon:'ðŸ’³',val:paid.length+'/'+owners.length,lbl:'Paid Accounts',sub:`${owners.length-paid.length} unpaid`,acc:'linear-gradient(90deg,#a855f7,#ec4899)'},
+        {icon:'ðŸ“¦',val:allPurchases.length,lbl:'Purchases Logged',sub:'Stock entries',acc:'linear-gradient(90deg,#06b6d4,#3b82f6)'},
+        {icon:'ðŸ§‘â€âš•ï¸',val:allCustomers.length,lbl:'Total Customers',sub:'Across all stores',acc:'linear-gradient(90deg,#ef4444,#f97316)'},
+        {icon:'ðŸŸ¢',val:online.length,lbl:'Online Now',sub:'Active sessions',acc:'linear-gradient(90deg,#10b981,#06b6d4)'},
     ];
     document.getElementById('statGrid').innerHTML=cards.map(c=>`
         <div class="sc" style="--acc:${c.acc}">
@@ -486,15 +486,15 @@ function renderInfoRow() {
     const owners=allUsers.filter(u=>u.role==='owner');
     const avg=owners.length?(allBills.reduce((s,b)=>s+(parseFloat(b.grand_total)||0),0)/owners.length):0;
     document.getElementById('infoRow').innerHTML=`
-        <div class="im"><div class="im-l">Top Store</div><div class="im-v" style="color:var(--gold)">${top?top[0]:'—'}</div></div>
-        <div class="im"><div class="im-l">Top Revenue</div><div class="im-v" style="color:var(--green)">₹${top?fmt(top[1]):0}</div></div>
-        <div class="im"><div class="im-l">Avg Rev/Store</div><div class="im-v">₹${fmt(avg)}</div></div>
+        <div class="im"><div class="im-l">Top Store</div><div class="im-v" style="color:var(--gold)">${top?top[0]:'â€”'}</div></div>
+        <div class="im"><div class="im-l">Top Revenue</div><div class="im-v" style="color:var(--green)">â‚¹${top?fmt(top[1]):0}</div></div>
+        <div class="im"><div class="im-l">Avg Rev/Store</div><div class="im-v">â‚¹${fmt(avg)}</div></div>
         <div class="im"><div class="im-l">This Month Bills</div><div class="im-v">${mB.length}</div></div>
-        <div class="im"><div class="im-l">This Month Revenue</div><div class="im-v" style="color:var(--cyan)">₹${fmt(mR)}</div></div>
+        <div class="im"><div class="im-l">This Month Revenue</div><div class="im-v" style="color:var(--cyan)">â‚¹${fmt(mR)}</div></div>
     `;
 }
 
-// ── ONLINE ──
+// â”€â”€ ONLINE â”€â”€
 function renderOnline() {
     const online=allUsers.filter(u=>u.active_session_token);
     document.getElementById('onCnt').textContent=online.length;
@@ -503,7 +503,7 @@ function renderOnline() {
         :'<div style="color:var(--text3);font-size:.82rem">No users currently online.</div>';
 }
 
-// ── ACCOUNTS ──
+// â”€â”€ ACCOUNTS â”€â”€
 function renderAccounts() { filterAccounts(); }
 function filterAccounts() {
     const q=document.getElementById('acctSearch').value.toLowerCase();
@@ -522,10 +522,10 @@ function filterAccounts() {
         const team=allUsers.filter(u2=>(u2.tenant_id||u2.username)===scope).length;
         const isPaid=u.payment_status==='paid';
         const statusBadge=u.approval_status==='pending'
-            ?'<span style="color:#fbbf24;font-size:.7rem">⏳ Pending</span>'
+            ?'<span style="color:#fbbf24;font-size:.7rem">â³ Pending</span>'
             :u.approval_status==='rejected'
-                ?'<span style="color:#fca5a5;font-size:.7rem">❌ Rejected</span>'
-                :'<span style="color:#6ee7b7;font-size:.7rem">✅ Approved</span>';
+                ?'<span style="color:#fca5a5;font-size:.7rem">âŒ Rejected</span>'
+                :'<span style="color:#6ee7b7;font-size:.7rem">âœ… Approved</span>';
         const onlineSt=u.active_session_token?'<span class="son">Online</span>':'<span class="soff">Offline</span>';
         return `<tr>
             <td style="color:var(--text3);font-size:.72rem">${i+1}</td>
@@ -533,24 +533,24 @@ function filterAccounts() {
             <td><span class="rp ${u.role==='owner'?'ro':'rw'}">${u.role}</span></td>
             <td class="mv">${team}</td>
             <td class="mv">${bills.length}</td>
-            <td class="gv">₹${fmt(rev)}</td>
+            <td class="gv">â‚¹${fmt(rev)}</td>
             <td class="mv">${purch}</td>
             <td class="mv">${custs}</td>
             <td class="mv">${meds}</td>
             <td>
-                <label class="pay-toggle" title="${isPaid?'Paid — click to mark unpaid':'Unpaid — click to mark paid'}">
+                <label class="pay-toggle" title="${isPaid?'Paid â€” click to mark unpaid':'Unpaid â€” click to mark paid'}">
                     <input type="checkbox" ${isPaid?'checked':''} onchange="togglePayment('${u.id}','${u.username}',this.checked)">
                     <span class="pay-slider"></span>
                 </label>
             </td>
             <td>${onlineSt}</td>
             <td style="font-size:.72rem;color:var(--text2)">${parseDate(u.createdAt)}<br>${statusBadge}</td>
-            <td><button class="del-btn" onclick="deleteAccount('${u.username}','${u.id}')">🗑️ Delete</button></td>
+            <td><button class="del-btn" onclick="deleteAccount('${u.username}','${u.id}')">ðŸ—‘ï¸ Delete</button></td>
         </tr>`;
     }).join('');
 }
 
-// ── PAYMENT TOGGLE ──
+// â”€â”€ PAYMENT TOGGLE â”€â”€
 async function togglePayment(id, username, paid) {
     const status = paid ? 'paid' : 'unpaid';
     const {error} = await sb.from('mm_users').update({payment_status: status}).eq('id', id);
@@ -560,7 +560,7 @@ async function togglePayment(id, username, paid) {
     renderStats(); // update paid count
 }
 
-// ── REQUESTS ──
+// â”€â”€ REQUESTS â”€â”€
 async function renderRequests() {
     const pending=allUsers.filter(u=>u.approval_status==='pending');
     const rejected=allUsers.filter(u=>u.approval_status==='rejected');
@@ -575,10 +575,10 @@ async function renderRequests() {
                 <div>
                     <div class="pcard-name">${u.username}</div>
                     ${window.currentShopProfiles[u.username] ? `
-                        <div style="font-size:0.85rem; color:#10b981; font-weight:700; margin-top:3px;">🏪 ${window.currentShopProfiles[u.username].shop_name || 'No Shop Name'}</div>
-                        <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:4px;">📞 ${window.currentShopProfiles[u.username].phone || 'No Phone'}</div>
+                        <div style="font-size:0.85rem; color:#10b981; font-weight:700; margin-top:3px;">ðŸª ${window.currentShopProfiles[u.username].shop_name || 'No Shop Name'}</div>
+                        <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:4px;">ðŸ“ž ${window.currentShopProfiles[u.username].phone || 'No Phone'}</div>
                     ` : ''}
-                    <div class="pcard-meta">Role: ${u.role} • Joined: ${parseDate(u.createdAt)}</div>
+                    <div class="pcard-meta">Role: ${u.role} â€¢ Joined: ${parseDate(u.createdAt)}</div>
                 </div>
             </div>
             ${actions}
@@ -587,23 +587,23 @@ async function renderRequests() {
     document.getElementById('pendingGrid').innerHTML=pending.length
         ?pending.map(u=>mkCard(u,`
             <div class="pcard-actions">
-                <button class="approve-btn" style="background:var(--card);color:var(--text);border-color:var(--border);" onclick="openShopModal('${u.username}')">🔍 View Full Shop Info</button>
+                <button class="approve-btn" style="background:var(--card);color:var(--text);border-color:var(--border);" onclick="openShopModal('${u.username}')">ðŸ” View Full Shop Info</button>
                 <div style="display:flex; gap:10px; width:100%; margin-top:8px;">
-                    <button class="approve-btn" style="flex:1;" onclick="approveAccount('${u.id}')">✓ Accept</button>
-                    <button class="reject-btn" style="flex:1;" onclick="rejectAccount('${u.id}')">✗ Reject</button>
+                    <button class="approve-btn" style="flex:1;" onclick="approveAccount('${u.id}')">âœ“ Accept</button>
+                    <button class="reject-btn" style="flex:1;" onclick="rejectAccount('${u.id}')">âœ— Reject</button>
                 </div>
             </div>`)).join('')
-        :'<div class="no-pending">✨ No pending requests</div>';
+        :'<div class="no-pending">âœ¨ No pending requests</div>';
 
     document.getElementById('rejectedGrid').innerHTML=rejected.length
         ?rejected.map(u=>mkCard(u,`
             <div class="pcard-actions">
-                <button class="approve-btn" onclick="approveAccount('${u.id}')">↩️ Re-approve</button>
+                <button class="approve-btn" onclick="approveAccount('${u.id}')">â†©ï¸ Re-approve</button>
             </div>`)).join('')
         :'<div class="no-pending">No rejected accounts</div>';
 
     document.getElementById('approvedGrid').innerHTML=approved.length
-        ?approved.map(u=>mkCard(u,'<div style="font-size:.78rem;color:#6ee7b7">✅ Approved & Active</div>')).join('')
+        ?approved.map(u=>mkCard(u,'<div style="font-size:.78rem;color:#6ee7b7">âœ… Approved & Active</div>')).join('')
         :'<div class="no-pending">No approved accounts yet</div>';
 }
 
@@ -613,22 +613,22 @@ function renderShops() {
     if (!grid) return;
     
     if (shops.length === 0) {
-        grid.innerHTML = '<div class="no-pending">✨ No registered shops found</div>';
+        grid.innerHTML = '<div class="no-pending">âœ¨ No registered shops found</div>';
         return;
     }
     
     const mkShopCard = (s) => `
         <div class="pcard">
             <div class="pcard-top">
-                <div class="pcard-avatar" style="background:#0f172a;color:#10b981;">🏪</div>
+                <div class="pcard-avatar" style="background:#0f172a;color:#10b981;">ðŸª</div>
                 <div>
                     <div class="pcard-name">${s.shop_name || 'Unnamed Shop'}</div>
-                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">📞 ${s.phone || 'No Phone'}</div>
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-top:4px;">ðŸ“ž ${s.phone || 'No Phone'}</div>
                     <div class="pcard-meta" style="margin-top:6px;">Owner: <strong>${s.user_id}</strong></div>
                 </div>
             </div>
             <div class="pcard-actions">
-                <button class="approve-btn" style="background:var(--card);color:var(--text);border-color:var(--border);" onclick="openShopModal('${s.user_id}')">🔍 View Full Details</button>
+                <button class="approve-btn" style="background:var(--card);color:var(--text);border-color:var(--border);" onclick="openShopModal('${s.user_id}')">ðŸ” View Full Details</button>
             </div>
         </div>
     `;
@@ -636,22 +636,22 @@ function renderShops() {
     grid.innerHTML = shops.map(s => mkShopCard(s)).join('');
 }
 
-// ── SHOP EDIT REQUESTS ──
+// â”€â”€ SHOP EDIT REQUESTS â”€â”€
 async function renderShopEditRequests() {
     const grid = document.getElementById('shopEditReqGrid');
     const badge = document.getElementById('editReqBadge');
     if (!grid) return;
-    grid.innerHTML = '<div class="ld"><div class="sp"></div>Loading…</div>';
+    grid.innerHTML = '<div class="ld"><div class="sp"></div>Loadingâ€¦</div>';
 
     const { data: reqs, error } = await sb.from('shop_edit_requests')
         .select('*').order('created_at', { ascending: false });
 
     if (error) {
-        grid.innerHTML = `<div class="no-pending" style="color:#f87171">⚠️ Table not found. Run SQL to create shop_edit_requests.<br><small>${error.message}</small></div>`;
+        grid.innerHTML = `<div class="no-pending" style="color:#f87171">âš ï¸ Table not found. Run SQL to create shop_edit_requests.<br><small>${error.message}</small></div>`;
         return;
     }
     if (!reqs || reqs.length === 0) {
-        grid.innerHTML = '<div class="no-pending">✨ No shop edit requests</div>';
+        grid.innerHTML = '<div class="no-pending">âœ¨ No shop edit requests</div>';
         badge.style.display = 'none';
         return;
     }
@@ -668,12 +668,12 @@ async function renderShopEditRequests() {
     }
 
     if (!visible.length) {
-        grid.innerHTML = '<div class="no-pending">✨ No shop edit requests</div>';
+        grid.innerHTML = '<div class="no-pending">âœ¨ No shop edit requests</div>';
         return;
     }
 
     const statusColor = { pending: '#fbbf24', approved: '#34d399', rejected: '#f87171' };
-    const statusLabel = { pending: '⏳ Pending', approved: '✅ Approved', rejected: '❌ Rejected' };
+    const statusLabel = { pending: 'â³ Pending', approved: 'âœ… Approved', rejected: 'âŒ Rejected' };
 
     grid.innerHTML = visible.map(req => {
         const isPending = req.status === 'pending';
@@ -684,7 +684,7 @@ async function renderShopEditRequests() {
                 <div class="pcard-avatar" style="background:linear-gradient(135deg,#0d9488,#0891b2)">${(req.shop_name||req.user_id||'?').slice(0,2).toUpperCase()}</div>
                 <div>
                     <div class="pcard-name">${req.shop_name || req.user_id}</div>
-                    <div class="pcard-meta">👤 ${req.user_id} · 📅 ${dateStr}</div>
+                    <div class="pcard-meta">ðŸ‘¤ ${req.user_id} Â· ðŸ“… ${dateStr}</div>
                 </div>
                 <span style="margin-left:auto;font-size:.72rem;font-weight:700;color:${statusColor[req.status]};white-space:nowrap;">${statusLabel[req.status] || req.status}</span>
             </div>
@@ -694,8 +694,8 @@ async function renderShopEditRequests() {
             </div>
             ${isPending ? `
             <div class="pcard-actions">
-                <button class="approve-btn" onclick="approveShopEdit('${req.id}','${req.user_id}')">✅ Approve Edit</button>
-                <button class="reject-btn" onclick="rejectShopEdit('${req.id}','${req.user_id}')">❌ Reject</button>
+                <button class="approve-btn" onclick="approveShopEdit('${req.id}','${req.user_id}')">âœ… Approve Edit</button>
+                <button class="reject-btn" onclick="rejectShopEdit('${req.id}','${req.user_id}')">âŒ Reject</button>
             </div>` : ''}
         </div>`;
     }).join('');
@@ -708,10 +708,10 @@ async function approveShopEdit(id, userId) {
         .select();
     if (error) { alert('Error: ' + error.message); return; }
     if (!data || data.length === 0) {
-        alert('⚠️ Update failed silently — this is usually caused by Row Level Security (RLS) on the shop_edit_requests table in Supabase.\n\nFix: Go to Supabase → Table Editor → shop_edit_requests → Disable RLS (or add a policy to allow updates).');
+        alert('âš ï¸ Update failed silently â€” this is usually caused by Row Level Security (RLS) on the shop_edit_requests table in Supabase.\n\nFix: Go to Supabase â†’ Table Editor â†’ shop_edit_requests â†’ Disable RLS (or add a policy to allow updates).');
         return;
     }
-    alert('✅ Approved! ' + userId + ' can now edit their shop details.');
+    alert('âœ… Approved! ' + userId + ' can now edit their shop details.');
     renderShopEditRequests();
 }
 
@@ -724,7 +724,7 @@ async function rejectShopEdit(id, userId) {
     renderShopEditRequests();
 }
 
-// 👷 EXTRA USER REQUESTS
+// ðŸ‘· EXTRA USER REQUESTS
 async function renderExtraUserRequests() {
     const grid = document.getElementById('extraUserReqGrid');
     const badge = document.getElementById('extraUserReqBadge');
@@ -735,11 +735,11 @@ async function renderExtraUserRequests() {
         .select('*').order('created_at', { ascending: false });
 
     if (error) {
-        grid.innerHTML = `<div class="no-pending" style="color:#f87171">⚠️ Table not found. Run SQL to create extra_user_requests.<br><small>${error.message}</small></div>`;
+        grid.innerHTML = `<div class="no-pending" style="color:#f87171">âš ï¸ Table not found. Run SQL to create extra_user_requests.<br><small>${error.message}</small></div>`;
         return;
     }
     if (!reqs || reqs.length === 0) {
-        grid.innerHTML = '<div class="no-pending">✅ No extra worker requests</div>';
+        grid.innerHTML = '<div class="no-pending">âœ… No extra worker requests</div>';
         badge.style.display = 'none';
         return;
     }
@@ -752,12 +752,12 @@ async function renderExtraUserRequests() {
     badge.style.display = pendingCount > 0 ? '' : 'none';
 
     if (!visibleExtra.length) {
-        grid.innerHTML = '<div class="no-pending">✅ No extra worker requests</div>';
+        grid.innerHTML = '<div class="no-pending">âœ… No extra worker requests</div>';
         return;
     }
 
     const statusColor2 = { pending: '#fbbf24', approved: '#34d399', rejected: '#f87171' };
-    const statusLabel2 = { pending: '⏳ Pending', approved: '✅ Approved', rejected: '❌ Rejected' };
+    const statusLabel2 = { pending: 'â³ Pending', approved: 'âœ… Approved', rejected: 'âŒ Rejected' };
 
     grid.innerHTML = visibleExtra.map(req => {
         const isPending = req.status === 'pending';
@@ -766,18 +766,18 @@ async function renderExtraUserRequests() {
         <div class="pcard" style="border-left:3px solid ${statusColor2[req.status] || '#6b7280'}">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
                 <div>
-                    <div style="font-weight:700;font-size:0.95rem;">👷 ${req.requested_username}</div>
-                    <div style="font-size:0.78rem;color:#94a3b8;margin-top:2px;">Shop: <b>${req.tenant_id}</b> &nbsp;·&nbsp; ${dateStr}</div>
+                    <div style="font-weight:700;font-size:0.95rem;">ðŸ‘· ${req.requested_username}</div>
+                    <div style="font-size:0.78rem;color:#94a3b8;margin-top:2px;">Shop: <b>${req.tenant_id}</b> &nbsp;Â·&nbsp; ${dateStr}</div>
                     <div style="font-size:0.82rem;margin-top:8px;color:#e2e8f0;background:rgba(255,255,255,0.05);border-radius:8px;padding:8px 12px;border:1px solid rgba(255,255,255,0.1);">
-                        <span style="color:#94a3b8;font-size:0.75rem;">Reason:</span><br>${req.reason || '—'}
+                        <span style="color:#94a3b8;font-size:0.75rem;">Reason:</span><br>${req.reason || 'â€”'}
                     </div>
                 </div>
                 <span style="font-size:0.75rem;color:${statusColor2[req.status]};white-space:nowrap;font-weight:600;">${statusLabel2[req.status] || req.status}</span>
             </div>
             ${isPending ? `
             <div class="pcard-actions" style="margin-top:12px;">
-                <button class="approve-btn" onclick="approveExtraUser('${req.id}','${req.tenant_id}','${req.requested_username}','${req.password_hash}')">✅ Approve & Create User</button>
-                <button class="reject-btn" onclick="rejectExtraUser('${req.id}')">❌ Reject</button>
+                <button class="approve-btn" onclick="approveExtraUser('${req.id}','${req.tenant_id}','${req.requested_username}','${req.password_hash}')">âœ… Approve & Create User</button>
+                <button class="reject-btn" onclick="rejectExtraUser('${req.id}')">âŒ Reject</button>
             </div>` : ''}
         </div>`;
     }).join('');
@@ -797,7 +797,7 @@ async function approveExtraUser(id, tenantId, username, passwordHash) {
     const { error } = await sb.from('extra_user_requests')
         .update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', id);
     if (error) { alert('Error updating request: ' + error.message); return; }
-    alert(`✅ Worker "${username}" created and added to "${tenantId}"!`);
+    alert(`âœ… Worker "${username}" created and added to "${tenantId}"!`);
     renderExtraUserRequests();
 }
 
@@ -875,7 +875,7 @@ async function approveAccount(id) {
     const u=allUsers.find(u=>u.id===id);
     if(u) u.approval_status='approved';
     renderRequests(); renderAccounts(); renderStats();
-    alert('✅ Account approved! They can now log in.');
+    alert('âœ… Account approved! They can now log in.');
 }
 async function rejectAccount(id) {
     if(!confirm('Reject this account? They will not be able to log in.')) return;
@@ -886,14 +886,14 @@ async function rejectAccount(id) {
     renderRequests(); renderAccounts();
 }
 
-// ── CHARTS ──
+// â”€â”€ CHARTS â”€â”€
 function renderRevChart() {
     const rev={};
     allBills.forEach(b=>{rev[b.user_id]=(rev[b.user_id]||0)+(parseFloat(b.grand_total)||0);});
     const sorted=Object.entries(rev).sort((a,b)=>b[1]-a[1]).slice(0,8);
     const max=sorted[0]?.[1]||1;
     document.getElementById('revChart').innerHTML=sorted.length?sorted.map(([n,v])=>`
-        <div class="bi"><div class="bl"><span>${n}</span><span style="color:#6ee7b7">₹${fmt(v)}</span></div>
+        <div class="bi"><div class="bl"><span>${n}</span><span style="color:#6ee7b7">â‚¹${fmt(v)}</span></div>
         <div class="bt"><div class="bf" style="width:${(v/max*100).toFixed(1)}%"></div></div></div>`).join('')
         :'<div class="empty">No revenue data</div>';
 }
@@ -908,17 +908,17 @@ function renderCustChart() {
         :'<div class="empty">No customer data</div>';
 }
 
-// ── ACTIVITY ──
+// â”€â”€ ACTIVITY â”€â”€
 function renderActivity() {
     document.getElementById('billTotalCnt').textContent=allBills.length;
     document.getElementById('actFeed').innerHTML=allBills.slice(0,60).map(b=>`
         <div class="ai">
             <div class="adot"></div>
             <div class="ab">
-                <div class="at"><strong>${b.user_id}</strong> — ${b.customer_name||'Walk-in'}${b.doctor_name?' · Dr. '+b.doctor_name:''}</div>
-                <div class="am">Bill ${b.bill_no} · ${b.date||'—'}</div>
+                <div class="at"><strong>${b.user_id}</strong> â€” ${b.customer_name||'Walk-in'}${b.doctor_name?' Â· Dr. '+b.doctor_name:''}</div>
+                <div class="am">Bill ${b.bill_no} Â· ${b.date||'â€”'}</div>
             </div>
-            <div class="aa">₹${fmt(parseFloat(b.grand_total)||0)}</div>
+            <div class="aa">â‚¹${fmt(parseFloat(b.grand_total)||0)}</div>
         </div>`).join('')||'<div class="empty">No bills found</div>';
 }
 function renderSignups() {
@@ -928,14 +928,14 @@ function renderSignups() {
             <div class="adot" style="background:var(--cyan)"></div>
             <div class="ab">
                 <div class="at"><strong>${u.username}</strong> <span class="rp ${u.role==='owner'?'ro':'rw'}" style="font-size:.62rem">${u.role}</span></div>
-                <div class="am">Joined: ${parseDate(u.createdAt)} · ${u.approval_status==='pending'?'⏳ Pending':u.approval_status==='rejected'?'❌ Rejected':'✅ Active'}</div>
+                <div class="am">Joined: ${parseDate(u.createdAt)} Â· ${u.approval_status==='pending'?'â³ Pending':u.approval_status==='rejected'?'âŒ Rejected':'âœ… Active'}</div>
             </div>
         </div>`).join('');
 }
 
-// ── DELETE ──
+// â”€â”€ DELETE â”€â”€
 async function deleteAccount(username,id) {
-    if(!confirm(`⚠️ PERMANENTLY DELETE "${username}"?\n\nThis will:\n• Delete their account\n• Remove all their bills, purchases, customers & medicines\n• Block their login immediately\n\nThis CANNOT be undone.`)) return;
+    if(!confirm(`âš ï¸ PERMANENTLY DELETE "${username}"?\n\nThis will:\nâ€¢ Delete their account\nâ€¢ Remove all their bills, purchases, customers & medicines\nâ€¢ Block their login immediately\n\nThis CANNOT be undone.`)) return;
     try {
         const scope=username;
         const billIds=allBills.filter(b=>b.user_id===scope).map(b=>b.id);
@@ -947,12 +947,12 @@ async function deleteAccount(username,id) {
             sb.from('medicines').delete().eq('user_id',scope),
         ]);
         await sb.from('mm_users').delete().eq('id',id);
-        alert(`✅ Account "${username}" fully deleted. Their access is now blocked.`);
+        alert(`âœ… Account "${username}" fully deleted. Their access is now blocked.`);
         loadAll();
     } catch(e) { alert('Delete error: '+e.message); }
 }
 
-// ── HELPERS ──
+// â”€â”€ HELPERS â”€â”€
 function fmt(n) {
     if(!n||isNaN(n)) return '0';
     if(n>=1e7) return (n/1e7).toFixed(2)+' Cr';
@@ -962,7 +962,7 @@ function fmt(n) {
 function parseTs(v){if(!v) return 0;if(!isNaN(v)) return parseInt(v);return new Date(v).getTime()||0;}
 function parseDate(v){if(!v) return '-';const ts=parseTs(v);if(!ts||isNaN(ts)) return '-';return new Date(ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
 
-// ── SHOP INFO MODAL ──
+// â”€â”€ SHOP INFO MODAL â”€â”€
 function openShopModal(username) {
     const p = window.currentShopProfiles ? window.currentShopProfiles[username] : null;
     const body = document.getElementById('shopModalBody');
@@ -988,8 +988,8 @@ function closeShopModal() {
 <div id="shopModal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>🏪 Full Shop Details</h3>
-            <button onclick="closeShopModal()">×</button>
+            <h3>ðŸª Full Shop Details</h3>
+            <button onclick="closeShopModal()">Ã—</button>
         </div>
         <div class="modal-body" id="shopModalBody"></div>
     </div>
@@ -997,3 +997,4 @@ function closeShopModal() {
 
 </body>
 </html>
+
