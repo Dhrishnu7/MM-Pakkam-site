@@ -708,7 +708,7 @@
                 if (result.success) {
                     setBtnSuccess(result.user.username);
                     if (typeof dbSyncDown === 'function') {
-                        document.getElementById('loginBtnText').textContent = 'Syncing Data...';
+                        document.getElementById('btnText').textContent = 'Syncing Data...';
                         await dbSyncDown();
                     }
                     setTimeout(() => window.location.replace('index.html'), 400);
@@ -721,7 +721,7 @@
                         if (forceResult.success) {
                             setBtnSuccess(forceResult.user.username);
                             if (typeof dbSyncDown === 'function') {
-                                document.getElementById('loginBtnText').textContent = 'Syncing Data...';
+                                document.getElementById('btnText').textContent = 'Syncing Data...';
                                 await dbSyncDown();
                             }
                             setTimeout(() => window.location.replace('index.html'), 400);
