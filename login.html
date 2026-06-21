@@ -919,14 +919,9 @@
                         return;
                     }
 
-                    // Update password in mm_users
-                    const { error } = await _supabase
-                        .from('mm_users')
-                        .update({ password: newPwd })
-                        .eq('username', user.toLowerCase());
-                        
-                    if (error) {
-                        alert('Failed to change password: ' + error.message);
+                    const changeRes = await mmResetPassword(user, newPwd);
+                    if (!changeRes.success) {
+                        alert('Failed to change password: ' + changeRes.message);
                         return;
                     }
 
