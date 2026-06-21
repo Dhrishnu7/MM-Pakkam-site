@@ -928,8 +928,8 @@
                     await dbMarkResetCompleted(user, pin);
                     alert('Password successfully changed! You can now log in.');
                     document.getElementById('forgotPwdModal').style.display = 'none';
-                    document.getElementById('username').value = user;
-                    document.getElementById('password').value = '';
+                    document.getElementById('loginUsername').value = user;
+                    document.getElementById('loginPassword').value = '';
                 } catch(e) {
                     alert('Error: ' + e.message);
                 } finally {
