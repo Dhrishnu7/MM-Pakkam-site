@@ -561,12 +561,24 @@ async function togglePayment(id, username, paid) {
 }
 
 // ── REQUESTS ──
+function updateTabPendBadge() {
+    const a = parseInt(document.getElementById('pendCnt')?.textContent) || 0;
+    const b = parseInt(document.getElementById('editReqBadge')?.textContent) || 0;
+    const c = parseInt(document.getElementById('extraUserReqBadge')?.textContent) || 0;
+    const total = a + b + c;
+    const badge = document.getElementById('tabPendCount');
+    if (badge) {
+        badge.textContent = total;
+        badge.style.display = total > 0 ? '' : 'none';
+    }
+}
+
 async function renderRequests() {
     const pending=allUsers.filter(u=>u.approval_status==='pending');
     const rejected=allUsers.filter(u=>u.approval_status==='rejected');
     const approved=allUsers.filter(u=>!u.approval_status||u.approval_status==='approved').filter(u=>u.role==='owner').slice(-6).reverse();
     document.getElementById('pendCnt').textContent=pending.length;
-    document.getElementById('tabPendCount').textContent=pending.length;
+    updateTabPendBadge();
 
     const mkCard=(u,actions)=>`
         <div class="pcard">
@@ -660,12 +672,9 @@ async function renderShopEditRequests() {
     const visible = reqs.filter(r => r.status === 'pending' || new Date(r.created_at).getTime() > oneWeekAgo);
 
     const pendingCount = visible.filter(r => r.status === 'pending').length;
-    if (pendingCount > 0) {
-        badge.textContent = pendingCount;
-        badge.style.display = '';
-    } else {
-        badge.style.display = 'none';
-    }
+    badge.textContent = pendingCount;
+    badge.style.display = pendingCount > 0 ? '' : 'none';
+    updateTabPendBadge();
 
     if (!visible.length) {
         grid.innerHTML = '<div class="no-pending">✨ No shop edit requests</div>';
@@ -750,6 +759,7 @@ async function renderExtraUserRequests() {
     const pendingCount = visibleExtra.filter(r => r.status === 'pending').length;
     badge.textContent = pendingCount;
     badge.style.display = pendingCount > 0 ? '' : 'none';
+    updateTabPendBadge();
 
     if (!visibleExtra.length) {
         grid.innerHTML = '<div class="no-pending">✅ No extra worker requests</div>';
