@@ -764,11 +764,10 @@
         }
 
         // Close modals on overlay click / Escape
-        document.getElementById('resetModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeResetModal(); });
-        document.getElementById('renameModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeRenameModal(); });
+
         document.getElementById('deleteModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeDeleteModal(); });
         document.getElementById('deleteAccountModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeDeleteAccountModal(); });
-        document.addEventListener('keydown', e => { if(e.key==='Escape') { closeResetModal(); closeRenameModal(); closeDeleteModal(); closeDeleteAccountModal(); } });
+        document.addEventListener('keydown', e => { if(e.key==='Escape') { closeDeleteModal(); closeDeleteAccountModal(); } });
 
         // ── Edit Requests ──
         const sb = _supabase; // alias for brevity
