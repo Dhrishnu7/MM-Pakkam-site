@@ -656,7 +656,11 @@
             btn.innerHTML = `<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Request to Super Admin`;
 
             if (error) {
-                errDiv.textContent = 'Failed to send request: ' + error.message;
+                console.error('[ExtraUserReq] Insert failed:', error);
+                let msg = error.message || 'Unknown error';
+                if (error.code === '42P01') msg = 'Table "extra_user_requests" does not exist in Supabase. Please create it first.';
+                else if (error.code === '42501') msg = 'Permission denied. Check Supabase RLS policies on extra_user_requests.';
+                errDiv.textContent = '❌ Failed to send request: ' + msg;
                 errDiv.classList.add('show');
                 return;
             }

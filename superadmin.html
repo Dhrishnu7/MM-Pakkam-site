@@ -744,7 +744,31 @@ async function renderExtraUserRequests() {
         .select('*').order('created_at', { ascending: false });
 
     if (error) {
-        grid.innerHTML = `<div class="no-pending" style="color:#f87171">⚠️ Table not found. Run SQL to create extra_user_requests.<br><small>${error.message}</small></div>`;
+        const sql = `-- Run this SQL in Supabase SQL Editor to create the table:
+CREATE TABLE IF NOT EXISTS extra_user_requests (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  tenant_id text NOT NULL,
+  requested_username text NOT NULL,
+  password_hash text NOT NULL,
+  reason text,
+  status text DEFAULT 'pending',
+  created_at timestamptz DEFAULT now(),
+  reviewed_at timestamptz
+);
+ALTER TABLE extra_user_requests ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON extra_user_requests FOR ALL USING (true) WITH CHECK (true);`;
+        grid.innerHTML = `<div class="no-pending" style="color:#f87171;text-align:left;max-width:600px;margin:0 auto;">
+            ⚠️ <strong>Table "extra_user_requests" not found in Supabase.</strong><br><br>
+            <span style="color:#94a3b8;font-size:.82rem;">Go to your Supabase Dashboard → SQL Editor and run this SQL:</span><br><br>
+            <pre style="background:#0f172a;color:#86efac;padding:12px;border-radius:8px;font-size:.72rem;overflow-x:auto;text-align:left;">${sql}</pre>
+            <button onclick="navigator.clipboard.writeText(\`${sql.replace(/`/g,'\\`')}\`).then(()=>this.textContent='✅ Copied!').catch(()=>this.textContent='Copy failed')"
+                style="margin-top:8px;padding:7px 16px;background:#0d9488;border:none;border-radius:8px;color:white;font-size:.82rem;font-weight:700;cursor:pointer;">
+                📋 Copy SQL
+            </button>
+            <button onclick="renderExtraUserRequests()" style="margin-top:8px;margin-left:8px;padding:7px 16px;background:#6366f1;border:none;border-radius:8px;color:white;font-size:.82rem;font-weight:700;cursor:pointer;">
+                🔄 Retry
+            </button>
+        </div>`;
         return;
     }
     if (!reqs || reqs.length === 0) {
