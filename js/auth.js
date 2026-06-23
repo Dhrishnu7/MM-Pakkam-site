@@ -679,7 +679,10 @@ function mmInjectUserBar() {
         const style = document.createElement('style');
         style.id = 'mm-auth-styles';
         style.textContent = `
-            .mm-user-bar { display: flex; align-items: center; gap: 10px; }
+            header .back-btn { margin-right: auto !important; margin-left: 15px !important; }
+            @media (max-width: 600px) { header .back-btn { margin-left: 8px !important; } }
+            
+            .mm-user-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
             .mm-user-pill {
                 display: inline-flex; align-items: center; gap: 8px;
                 background: rgba(255,255,255,0.7);
