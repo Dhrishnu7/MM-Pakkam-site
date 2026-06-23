@@ -819,14 +819,20 @@ CREATE POLICY "Allow all" ON extra_user_requests FOR ALL USING (true) WITH CHECK
 
 async function approveExtraUser(id, tenantId, username, passwordHash) {
     if (!confirm(`Approve extra worker "${username}" for shop "${tenantId}"?`)) return;
-    const { error: userErr } = await sb.from('mm_users').insert({
+
+    // Build composite id exactly like _saveUser does in auth.js
+    const userId = tenantId + ':' + username;
+
+    const { error: userErr } = await sb.from('mm_users').upsert({
+        id: userId,
         username: username,
         passwordHash: passwordHash,
         role: 'worker',
         tenant_id: tenantId,
         createdAt: Date.now(),
         approval_status: 'approved'
-    });
+    }, { onConflict: 'id' });
+
     if (userErr) { alert('Failed to create user: ' + userErr.message); return; }
     const { error } = await sb.from('extra_user_requests')
         .update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', id);
