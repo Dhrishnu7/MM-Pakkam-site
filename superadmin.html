@@ -1099,7 +1099,7 @@ CREATE POLICY "Allow all" ON customer_issues FOR ALL USING (true) WITH CHECK (tr
                 </div>
                 <div class="det" style="margin-top:8px;">
                     <span class="lbl">Issue Description</span>
-                    <span class="val" style="white-space:pre-wrap; background:#f8fafc; padding:10px; border-radius:6px; border:1px solid #e2e8f0; margin-top:4px;">${iss.issue_text}</span>
+                    <span class="val" style="white-space:pre-wrap; background:rgba(255,255,255,0.05); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); margin-top:4px; display:block;">${iss.issue_text}</span>
                 </div>
                 <div class="act" style="justify-content:flex-end;">
                     <button class="approve-btn" style="background:#0ea5e9" onclick="resolveSupportIssue('${iss.id}')">✔️ Mark Resolved</button>
