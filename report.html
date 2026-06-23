@@ -1966,7 +1966,12 @@
 
                 // Top Sellers aggregation
                 const pName = s.product || 'Unknown';
-                if (!productSales[pName]) productSales[pName] =             // 2. Prepare Trend Data (Group by Date)
+                if (!productSales[pName]) productSales[pName] = { qty: 0, revenue: 0 };
+                productSales[pName].qty += s.qty;
+                productSales[pName].revenue += saleRevenue;
+            });
+
+            // 2. Prepare Trend Data (Group by Date)
             const dateMap = {};
             data.forEach(r => {
                 if (!r.date) return;
