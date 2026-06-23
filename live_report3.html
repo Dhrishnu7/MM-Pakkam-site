@@ -1267,9 +1267,9 @@
         }
 
         // ── Set default dates (this month) ──
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        document.getElementById('toDate').valueAsDate   = today;
+        const reportToday = new Date();
+        const firstDay = new Date(reportToday.getFullYear(), reportToday.getMonth(), 1);
+        document.getElementById('toDate').valueAsDate = reportToday;
         document.getElementById('fromDate').valueAsDate = firstDay;
 
         // ── Load real data from localStorage ──
@@ -2440,8 +2440,8 @@
             const months = customVal !== '' ? Math.max(0, parseInt(customVal) || 0) : _expiryMonths;
 
             const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
-            const today = new Date();
-            const thisYM = today.getFullYear() * 12 + today.getMonth(); // numeric month index
+            const reportToday = new Date();
+            const thisYM = reportToday.getFullYear() * 12 + reportToday.getMonth(); // numeric month index
 
             let expired = [], thisMonth = [], soon = [], ok = [];
 

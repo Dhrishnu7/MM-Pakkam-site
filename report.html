@@ -1267,9 +1267,9 @@
         }
 
         // ── Set default dates (this month) ──
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        document.getElementById('toDate').valueAsDate   = today;
+        const reportToday = new Date();
+        const firstDay = new Date(reportToday.getFullYear(), reportToday.getMonth(), 1);
+        document.getElementById('toDate').valueAsDate   = reportToday;
         document.getElementById('fromDate').valueAsDate = firstDay;
 
         // ── Load real data from localStorage ──
