@@ -720,12 +720,8 @@ function mmInjectUserBar() {
             }
             .mm-logout-btn:hover { background: #ef4444; color: white; border-color: #ef4444; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
 
-            /* Perfectly center the back button in the header on desktop */
-            @media (min-width: 850px) {
-                header { position: relative; }
-                .back-btn { position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; }
-                .back-btn:hover { transform: translate(-50%, -1px) !important; }
-            }
+            /* Give the back button breathing room away from the user bar buttons */
+            .back-btn { margin-right: 12px !important; }
         `;
         document.head.appendChild(style);
     }
@@ -843,8 +839,9 @@ function mmInjectUserBar() {
                 leftGroup.className = 'mm-header-left';
                 leftGroup.style.display = 'flex';
                 leftGroup.style.alignItems = 'center';
-                leftGroup.style.gap = '15px';
+                leftGroup.style.gap = '12px';
                 leftGroup.style.flexShrink = '0';
+                leftGroup.style.marginRight = 'auto'; // push user bar to the right
                 
                 header.insertBefore(leftGroup, logo);
                 leftGroup.appendChild(logo);
