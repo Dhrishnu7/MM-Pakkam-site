@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1171,63 +1171,126 @@
         }
 
         function _parseOCRText(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
             if (lines.length < 2) {
                 showToast('No Text Found', 'The image had no readable text. Try a clearer photo.');
                 return;
             }
 
-            // Heuristic: find rows that look like medicine entries
-            // A medicine row typically has: name + numbers (qty, price, batch etc.)
+            // Patterns that flag a line as NOT a product row
+            const SKIP_LINE = [
+                /distributor|wholesaler|medical store|pharmacy|chemist|drug house|supplier/i,
+                /pvt\.?\s*ltd|limited|llp|& co\b/i,
+                /\b(road|street|nagar|colony|district|dist|pin\s*code|state|city)\b/i,
+                /\b(ph|mob|mobile|phone|tel|fax|email|website|www\.)/i,
+                /\b(gstin|gst\s*no|dl\s*no|drug\s*lic|pan\s*no|cin\b)/i,
+                /invoice\s*(no|number|#|date)|bill\s*(no|number)|order\s*(no|number)/i,
+                /^(date|to\s*:|from\s*:|buyer|seller|ship\s*to|bill\s*to|consignee)/i,
+                /sub[\s-]?total|grand\s*total|net\s*(amount|total)|discount|sgst|cgst|igst|cess/i,
+                /^(thank|terms|e\.?&\.?o\.?e|note:|bank\s*details|upi|ifsc|account)/i,
+                /\b(address|landmark)\b/i,
+            ];
+
+            const HDR_KEYS = ['product','medicine','item','description','drug','particulars',
+                              'batch','expiry','exp','qty','quantity','mrp','rate','gst','hsn','pack'];
+
+            // Find table header line
+            let headerIdx = -1;
+            let colMap = {};
+
+            for (let i = 0; i < lines.length; i++) {
+                const lower = lines[i].toLowerCase();
+                const hits = HDR_KEYS.filter(k => lower.includes(k)).length;
+                if (hits >= 2) {
+                    headerIdx = i;
+                    const words = lower.split(/\s{2,}|\t+|[|]/).map(w => w.trim());
+                    words.forEach((w, idx) => {
+                        if (/product|medicine|item|description|drug|particular/.test(w)) colMap[idx] = 'name';
+                        else if (/batch/.test(w))         colMap[idx] = 'batch';
+                        else if (/exp/.test(w))           colMap[idx] = 'expiry';
+                        else if (/qty|quantity/.test(w))  colMap[idx] = 'qty';
+                        else if (/mrp/.test(w))           colMap[idx] = 'mrp';
+                        else if (/rate|ptr|pts/.test(w))  colMap[idx] = 'rate';
+                        else if (/gst|tax/.test(w))       colMap[idx] = 'gst';
+                        else if (/pack|pcs/.test(w))      colMap[idx] = 'pack';
+                    });
+                    break;
+                }
+            }
+
+            const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
             const dataRows = [];
-            const numRe = /\d/;
-            const expiryRe = /\b(\d{2}[\/-]\d{2,4}|\d{4}-\d{2})\b/;
-            const priceRe = /\b\d+\.?\d{0,2}\b/g;
-            const batchRe = /\b([A-Z]{1,4}\d{4,}|\d{4,}[A-Z]{0,4})\b/;
-            const gstRe = /\b(5|12|18|28)\s*%?\s*(gst|tax)?/i;
 
-            for (const line of lines) {
-                if (!numRe.test(line)) continue; // skip lines with no numbers
-                const expiryMatch = line.match(expiryRe);
-                const batchMatch  = line.match(batchRe);
-                const nums = [...(line.match(priceRe) || [])];
-                const gstMatch = line.match(gstRe);
+            const EXPIRY_RE = /\b(\d{2}[\/\-]\d{2,4}|\d{4}[\-\/]\d{2})\b/;
+            const BATCH_RE  = /\b([A-Z]{1,5}\d{2,}|\d{2,}[A-Z]{1,5}|[A-Z0-9]{5,12})\b/;
+            const NUM_RE    = /\b\d+(\.\d{1,2})?\b/g;
+            const GST_RE    = /\b(5|12|18|28)\s*(%|$|\s)/;
 
-                // Strip out known numbers to isolate product name
-                let namePart = line
-                    .replace(expiryRe, '')
-                    .replace(batchRe, '')
-                    .replace(/\b\d+([.,]\d+)?\b/g, '')
-                    .replace(/[^a-zA-Z\s\-\.]/g, ' ')
-                    .replace(/\s{2,}/g, ' ')
-                    .trim();
+            for (let i = startIdx; i < lines.length; i++) {
+                const line = lines[i];
+                if (SKIP_LINE.some(p => p.test(line))) continue;
+                if (!/\d/.test(line)) continue;
+                if (/^[\d\s\.\,\-]+$/.test(line)) continue;
+                if (line.replace(/\s/g,'').length < 4) continue;
 
-                if (namePart.length < 3) continue; // skip if no meaningful name
+                let name='', batch='', expiry='', qty='', mrp='', rate='', gst='', pack='';
+                const parts = line.split(/\t+|\s{3,}|[|]/).map(p => p.trim()).filter(p => p);
 
-                const qty  = nums.find(n => parseFloat(n) < 1000 && parseFloat(n) >= 1 && !n.includes('.')) || '';
-                const mrp  = nums.find(n => parseFloat(n) > 1 && n.includes('.')) || nums.find(n => parseFloat(n) > 10) || '';
-                const rate = nums.filter(n => n !== mrp && parseFloat(n) > 1).slice(-1)[0] || '';
+                if (parts.length >= 3 && Object.keys(colMap).length >= 2) {
+                    parts.forEach((part, idx) => {
+                        const f = colMap[idx];
+                        if      (f === 'name')   name   = part;
+                        else if (f === 'batch')  batch  = part;
+                        else if (f === 'expiry') expiry = part;
+                        else if (f === 'qty')    qty    = part;
+                        else if (f === 'mrp')    mrp    = part;
+                        else if (f === 'rate')   rate   = part;
+                        else if (f === 'gst')    gst    = part;
+                        else if (f === 'pack')   pack   = part;
+                    });
+                    if (!name) name = parts.find(p => !/^\d+(\.\d+)?$/.test(p)) || '';
+                } else {
+                    const expiryM = line.match(EXPIRY_RE);
+                    const batchM  = line.match(BATCH_RE);
+                    const nums    = [...(line.match(NUM_RE) || [])];
+                    const gstM    = line.match(GST_RE);
+                    if (expiryM) expiry = expiryM[0];
+                    if (batchM)  batch  = batchM[1];
+                    if (gstM)    gst    = gstM[1];
+                    name = line
+                        .replace(EXPIRY_RE, '')
+                        .replace(BATCH_RE, '')
+                        .replace(GST_RE, '')
+                        .replace(/\b\d+(\.\d{1,2})?\b/g, '')
+                        .replace(/[^a-zA-Z0-9\s\-\.\/]/g, ' ')
+                        .replace(/\s{2,}/g, ' ')
+                        .trim();
+                    const decimals = nums.filter(n => n.includes('.') && parseFloat(n) > 0);
+                    const integers = nums.filter(n => !n.includes('.') && parseInt(n) > 0 && parseInt(n) < 10000);
+                    qty  = integers.find(n => parseInt(n) <= 999) || '';
+                    mrp  = decimals.sort((a,b) => parseFloat(b)-parseFloat(a))[0] || '';
+                    rate = decimals.filter(n => n !== mrp).sort((a,b) => parseFloat(b)-parseFloat(a))[0] || '';
+                }
 
-                dataRows.push([
-                    namePart,
-                    batchMatch ? batchMatch[1] : '',
-                    expiryMatch ? expiryMatch[0] : '',
-                    qty,
-                    mrp,
-                    rate,
-                    gstMatch ? gstMatch[1] : '',
-                    ''
-                ]);
+                if (!name || name.length < 3) continue;
+                if (SKIP_LINE.some(p => p.test(name))) continue;
+                if (/^[\d\s\.\-\/]+$/.test(name)) continue;
+                if (/^(s\.?\s*no|sl\.?\s*no|sr\.?\s*no|\d{1,3})$/i.test(name.trim())) continue;
+
+                dataRows.push([name, batch, expiry, qty, mrp, rate, gst, pack]);
             }
 
             if (dataRows.length === 0) {
-                showToast('Could Not Parse', 'Text was found but no medicine rows detected. Try a better quality image.');
+                showToast('Could Not Parse',
+                    headerIdx < 0
+                        ? 'No product table detected. Make sure the invoice table is clearly visible.'
+                        : 'Could not extract product rows. Try a clearer, higher-resolution image.');
                 return;
             }
 
             _invHdrs = ['Product Name','Batch No','Expiry','Quantity','MRP','Rate','GST%','Pack'];
             _invRows = dataRows;
-            showToast('OCR Complete ✓', `Found ${dataRows.length} item(s). Please verify the column mapping.`);
+            showToast('OCR Complete', 'Found ' + dataRows.length + ' product(s). Verify the mapping below.');
             showInvMapper();
         }
 
