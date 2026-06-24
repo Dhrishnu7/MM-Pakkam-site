@@ -508,6 +508,7 @@
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="js/auth.js?v=3"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
@@ -1066,14 +1067,18 @@
         function closeInvoiceImportModal() { document.getElementById('invImportModal').classList.remove('open'); }
 
         function handleInvFile(e) {
-            const files=[...e.target.files].filter(f=>/\.(csv|xlsx|xls)$/i.test(f.name));
-            if(files.length) readInvFile(files[0]);
+            const file = e.target.files[0];
+            if (!file) return;
+            if (/\.(csv|xlsx|xls)$/i.test(file.name)) { readInvFile(file); }
+            else if (/\.(pdf|jpg|jpeg|png|webp|bmp|tiff?)$/i.test(file.name)) { readInvOCR(file); }
         }
         function handleInvDrop(e) {
             e.preventDefault();
             document.getElementById('invDropZone').classList.remove('drag-over');
-            const files=[...e.dataTransfer.files].filter(f=>/\.(csv|xlsx|xls)$/i.test(f.name));
-            if(files.length) readInvFile(files[0]);
+            const file = e.dataTransfer.files[0];
+            if (!file) return;
+            if (/\.(csv|xlsx|xls)$/i.test(file.name)) { readInvFile(file); }
+            else if (/\.(pdf|jpg|jpeg|png|webp|bmp|tiff?)$/i.test(file.name)) { readInvOCR(file); }
         }
 
         function readInvFile(file) {
@@ -1091,6 +1096,139 @@
                 } catch(err){ showToast('Read Error','Could not read file.'); }
             };
             file.name.toLowerCase().endsWith('.csv')?rdr.readAsText(file):rdr.readAsArrayBuffer(file);
+        }
+
+        /* ── OCR path: PDF / Photo ── */
+        async function readInvOCR(file) {
+            // Show scanning UI
+            const dz = document.getElementById('invDropZone');
+            const origHTML = dz.innerHTML;
+            dz.innerHTML = `
+                <div style="padding:2rem;text-align:center;">
+                    <div style="font-size:2.5rem;margin-bottom:0.8rem;">🔍</div>
+                    <div style="font-weight:700;color:#0ea5e9;font-size:0.95rem;">Scanning invoice with OCR…</div>
+                    <div id="ocrProgress" style="font-size:0.8rem;color:#64748b;margin-top:0.4rem;">Starting…</div>
+                    <div style="margin-top:1rem;background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden;">
+                        <div id="ocrBar" style="height:100%;width:0%;background:linear-gradient(90deg,#0ea5e9,#10b981);transition:width 0.3s;"></div>
+                    </div>
+                </div>`;
+
+            let imageSource = file;
+
+            // If PDF, convert first page to image via canvas
+            if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                try {
+                    imageSource = await _pdfToImageBlob(file);
+                } catch(e) {
+                    dz.innerHTML = origHTML;
+                    showToast('PDF Error', 'Could not read this PDF. Try saving as an image instead.');
+                    return;
+                }
+            }
+
+            try {
+                const result = await Tesseract.recognize(imageSource, 'eng', {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            const pct = Math.round((m.progress || 0) * 100);
+                            const bar = document.getElementById('ocrBar');
+                            const prog = document.getElementById('ocrProgress');
+                            if (bar) bar.style.width = pct + '%';
+                            if (prog) prog.textContent = `Reading text… ${pct}%`;
+                        }
+                    }
+                });
+                const text = result.data.text;
+                dz.innerHTML = origHTML;
+                _parseOCRText(text);
+            } catch(err) {
+                dz.innerHTML = origHTML;
+                showToast('OCR Failed', 'Could not scan the file. Please try a clearer image.');
+                console.error('OCR error:', err);
+            }
+        }
+
+        async function _pdfToImageBlob(file) {
+            // Load pdf.js dynamically if not loaded
+            if (!window.pdfjsLib) {
+                await new Promise((res, rej) => {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+                    s.onload = res; s.onerror = rej;
+                    document.head.appendChild(s);
+                });
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+            }
+            const arrayBuf = await file.arrayBuffer();
+            const pdf = await window.pdfjsLib.getDocument({ data: arrayBuf }).promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 2.0 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width; canvas.height = viewport.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            return new Promise(res => canvas.toBlob(res, 'image/png'));
+        }
+
+        function _parseOCRText(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+            if (lines.length < 2) {
+                showToast('No Text Found', 'The image had no readable text. Try a clearer photo.');
+                return;
+            }
+
+            // Heuristic: find rows that look like medicine entries
+            // A medicine row typically has: name + numbers (qty, price, batch etc.)
+            const dataRows = [];
+            const numRe = /\d/;
+            const expiryRe = /\b(\d{2}[\/-]\d{2,4}|\d{4}-\d{2})\b/;
+            const priceRe = /\b\d+\.?\d{0,2}\b/g;
+            const batchRe = /\b([A-Z]{1,4}\d{4,}|\d{4,}[A-Z]{0,4})\b/;
+            const gstRe = /\b(5|12|18|28)\s*%?\s*(gst|tax)?/i;
+
+            for (const line of lines) {
+                if (!numRe.test(line)) continue; // skip lines with no numbers
+                const expiryMatch = line.match(expiryRe);
+                const batchMatch  = line.match(batchRe);
+                const nums = [...(line.match(priceRe) || [])];
+                const gstMatch = line.match(gstRe);
+
+                // Strip out known numbers to isolate product name
+                let namePart = line
+                    .replace(expiryRe, '')
+                    .replace(batchRe, '')
+                    .replace(/\b\d+([.,]\d+)?\b/g, '')
+                    .replace(/[^a-zA-Z\s\-\.]/g, ' ')
+                    .replace(/\s{2,}/g, ' ')
+                    .trim();
+
+                if (namePart.length < 3) continue; // skip if no meaningful name
+
+                const qty  = nums.find(n => parseFloat(n) < 1000 && parseFloat(n) >= 1 && !n.includes('.')) || '';
+                const mrp  = nums.find(n => parseFloat(n) > 1 && n.includes('.')) || nums.find(n => parseFloat(n) > 10) || '';
+                const rate = nums.filter(n => n !== mrp && parseFloat(n) > 1).slice(-1)[0] || '';
+
+                dataRows.push([
+                    namePart,
+                    batchMatch ? batchMatch[1] : '',
+                    expiryMatch ? expiryMatch[0] : '',
+                    qty,
+                    mrp,
+                    rate,
+                    gstMatch ? gstMatch[1] : '',
+                    ''
+                ]);
+            }
+
+            if (dataRows.length === 0) {
+                showToast('Could Not Parse', 'Text was found but no medicine rows detected. Try a better quality image.');
+                return;
+            }
+
+            _invHdrs = ['Product Name','Batch No','Expiry','Quantity','MRP','Rate','GST%','Pack'];
+            _invRows = dataRows;
+            showToast('OCR Complete ✓', `Found ${dataRows.length} item(s). Please verify the column mapping.`);
+            showInvMapper();
         }
 
         function showInvMapper() {
@@ -1263,16 +1401,16 @@
             <!-- Step 1: Upload File -->
             <div class="modal-bd" id="invStep1">
                 <div style="font-size:0.82rem;color:#64748b;margin-bottom:0.8rem;">
-                    Upload your distributor's Excel or CSV invoice. Billware will read all columns and fill in the purchase form automatically.
+                    Upload your distributor's Excel, CSV, PDF or photo invoice. Billware will read all columns and fill in the purchase form automatically.
                 </div>
                 <div class="drop-zone" id="invDropZone"
                      ondragover="event.preventDefault();this.classList.add('drag-over')"
                      ondragleave="this.classList.remove('drag-over')"
                      ondrop="handleInvDrop(event)">
-                    <input type="file" id="invFileInput" accept=".csv,.xlsx,.xls" onchange="handleInvFile(event)">
+                    <input type="file" id="invFileInput" accept=".csv,.xlsx,.xls,.pdf,.jpg,.jpeg,.png,.webp,.bmp,.tif,.tiff" onchange="handleInvFile(event)">
                     <div class="dz-ico">📊</div>
                     <div class="dz-txt">Drop invoice file here or click to browse</div>
-                    <div class="dz-sub">Supports .xlsx, .xls, .csv — one file at a time</div>
+                    <div class="dz-sub">Excel / CSV → auto-mapped &nbsp;|&nbsp; 📷 Photo / PDF → OCR scanned</div>
                 </div>
             </div>
 
