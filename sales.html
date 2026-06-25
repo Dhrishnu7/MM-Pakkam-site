@@ -1363,13 +1363,13 @@
             sales.push(bill);
             localStorage.setItem('mm_sales', JSON.stringify(sales));
 
-            // Update Customer Balance if Credit
+            // Update Customer Balance if Credit (localStorage + Supabase)
             if (paymentMode === 'credit' && customerName) {
                 const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
                 let cust = customers.find(c => (c.name || '').toLowerCase() === customerName.toLowerCase());
                 
                 // Get numeric total
-                const numTotal = parseFloat(grandTotal.replace(/[^\d.]/g, '')) || 0;
+                const numTotal = parseFloat(grandTotal.replace(/[^0-9.]/g, '')) || 0;
 
                 if (cust) {
                     cust.balance = (cust.balance || 0) + numTotal;
@@ -1378,6 +1378,13 @@
                     customers.push(cust);
                 }
                 localStorage.setItem('mm_customers', JSON.stringify(customers));
+
+                // ── Sync credit balance to Supabase so Khata page always shows correct data ──
+                try {
+                    if (typeof dbUpdateCustomerBalance === 'function') {
+                        await dbUpdateCustomerBalance(cust.name, cust.phone || '', cust.address || '', numTotal);
+                    }
+                } catch(e) { console.warn('Balance sync failed:', e); }
             }
 
             // Show Success Modal

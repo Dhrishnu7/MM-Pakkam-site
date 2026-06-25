@@ -208,18 +208,47 @@
 
     <script>
         let currentCustIndex = -1;
+        let _khataCustomers = []; // working copy (from Supabase or localStorage)
 
-        function renderKhata() {
-            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
-            
-            // Filter customers who owe money (>0)
-            const debtors = customers.filter(c => parseFloat(c.balance || 0) > 0);
-            
-            // Sort by highest balance first
-            debtors.sort((a, b) => b.balance - a.balance);
-
+        async function loadAndRenderKhata() {
             const grid = document.getElementById('khataGrid');
             const totalEl = document.getElementById('totalOutstanding');
+            grid.innerHTML = `<div style="text-align:center;padding:3rem;color:#94a3b8;grid-column:1/-1;">Loading...</div>`;
+
+            let debtors = [];
+
+            // ── Try Supabase first ──
+            try {
+                if (typeof dbGetKhataData === 'function') {
+                    const rows = await dbGetKhataData();
+                    if (rows && rows.length > 0) {
+                        debtors = rows.map(r => ({
+                            id:      r.id,
+                            name:    r.name    || '',
+                            phone:   r.phone   || '',
+                            address: r.address || '',
+                            balance: parseFloat(r.balance) || 0,
+                        }));
+                    }
+                }
+            } catch(e) { console.warn('Supabase khata load failed, falling back to localStorage', e); }
+
+            // ── Fallback: localStorage ──
+            if (debtors.length === 0) {
+                const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+                debtors = customers
+                    .filter(c => parseFloat(c.balance || 0) > 0)
+                    .map(c => ({ id: null, name: c.name, phone: c.phone || '', address: c.address || '', balance: parseFloat(c.balance) }));
+            }
+
+            _khataCustomers = debtors.sort((a, b) => b.balance - a.balance);
+            renderKhata();
+        }
+
+        function renderKhata() {
+            const grid = document.getElementById('khataGrid');
+            const totalEl = document.getElementById('totalOutstanding');
+            const debtors = _khataCustomers;
 
             if (debtors.length === 0) {
                 totalEl.textContent = '₹ 0.00';
@@ -236,32 +265,28 @@
             let total = 0;
             grid.innerHTML = '';
 
-            debtors.forEach(cust => {
+            debtors.forEach((cust, idx) => {
                 total += cust.balance;
-                
-                // Find original index in mm_customers to update later
-                const origIndex = customers.findIndex(c => c.name === cust.name && c.phone === cust.phone);
-
                 const card = document.createElement('div');
                 card.className = 'customer-card';
-                card.innerHTML = \`
+                card.innerHTML = `
                     <div>
                         <div class="c-header">
                             <div>
-                                <div class="c-name">\${cust.name}</div>
-                                <div class="c-phone">\${cust.phone || 'No phone added'}</div>
+                                <div class="c-name">${cust.name}</div>
+                                <div class="c-phone">${cust.phone || 'No phone added'}</div>
                             </div>
                         </div>
                         <div>
                             <div class="c-bal-label">Pending Balance</div>
-                            <div class="c-bal-value">₹ \${cust.balance.toFixed(2)}</div>
+                            <div class="c-bal-value">₹ ${cust.balance.toFixed(2)}</div>
                         </div>
                     </div>
-                    <button class="btn-settle" onclick="openSettleModal(\${origIndex}, '\${cust.name.replace(/'/g, "\\'")}', \${cust.balance})">
+                    <button class="btn-settle" onclick="openSettleModal(${idx}, '${cust.name.replace(/'/g, "\\'")}', ${cust.balance})">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                         Settle Dues
                     </button>
-                \`;
+                `;
                 grid.appendChild(card);
             });
 
@@ -270,11 +295,10 @@
 
         function openSettleModal(index, name, currentBalance) {
             currentCustIndex = index;
-            document.getElementById('modalTitle').textContent = \`Settle: \${name}\`;
-            document.getElementById('modalSub').textContent = \`Current Balance: ₹\${currentBalance.toFixed(2)}\`;
+            document.getElementById('modalTitle').textContent = `Settle: ${name}`;
+            document.getElementById('modalSub').textContent = `Current Balance: ₹${currentBalance.toFixed(2)}`;
             const amtInput = document.getElementById('settleAmount');
-            amtInput.value = currentBalance.toFixed(2); // Default to full settlement
-            
+            amtInput.value = currentBalance.toFixed(2);
             document.getElementById('settleModal').classList.add('open');
             setTimeout(() => { amtInput.focus(); amtInput.select(); }, 100);
         }
@@ -284,49 +308,47 @@
             currentCustIndex = -1;
         }
 
-        function confirmSettle() {
+        async function confirmSettle() {
             if (currentCustIndex < 0) return;
             
-            const amountInput = document.getElementById('settleAmount').value;
-            const amount = parseFloat(amountInput);
-
+            const amount = parseFloat(document.getElementById('settleAmount').value);
             if (isNaN(amount) || amount <= 0) {
                 alert("Please enter a valid amount greater than 0.");
                 return;
             }
 
-            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
-            const cust = customers[currentCustIndex];
-
+            const cust = _khataCustomers[currentCustIndex];
             if (!cust) return;
 
             if (amount > cust.balance) {
-                if(!confirm(\`The amount (₹\${amount}) is greater than the pending balance (₹\${cust.balance}). This will result in a negative balance (Advance Payment). Continue?\`)) {
-                    return;
-                }
+                if (!confirm(`The amount (₹${amount}) is greater than the pending balance (₹${cust.balance}). This will result in an advance payment. Continue?`)) return;
             }
 
-            // Deduct balance
-            cust.balance -= amount;
-            
-            // Fix floating point math issues (e.g., 0.000000001)
-            if (Math.abs(cust.balance) < 0.01) cust.balance = 0;
+            const newBalance = Math.max(0, cust.balance - amount);
+            if (Math.abs(newBalance) < 0.01) cust.balance = 0;
+            else cust.balance = newBalance;
 
-            localStorage.setItem('mm_customers', JSON.stringify(customers));
-            
-            // Sync with Supabase if function exists
+            // ── Sync to Supabase ──
             try {
-                if (typeof dbAddCustomer === 'function') {
-                    dbAddCustomer(cust.name, cust.phone, cust.address, cust.balance);
+                if (cust.id && typeof _supabase !== 'undefined') {
+                    await _supabase.from('customers').update({ balance: cust.balance }).eq('id', cust.id);
                 }
-            } catch(e) {}
+            } catch(e) { console.warn('Settle sync failed:', e); }
+
+            // ── Also update localStorage ──
+            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+            const lc = customers.find(c => (c.name || '').toLowerCase() === cust.name.toLowerCase());
+            if (lc) { lc.balance = cust.balance; localStorage.setItem('mm_customers', JSON.stringify(customers)); }
+
+            // Remove from list if fully settled
+            if (cust.balance <= 0) _khataCustomers.splice(currentCustIndex, 1);
 
             closeModal();
-            renderKhata(); // Re-render grid
+            renderKhata();
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', renderKhata);
+        // Initialize — load from Supabase
+        document.addEventListener('DOMContentLoaded', loadAndRenderKhata);
     </script>
 </body>
 </html>
