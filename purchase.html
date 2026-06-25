@@ -1181,7 +1181,7 @@
             }
 
             // ── Step 1: Group words into rows by Y-position ──
-            const ROW_TOL = 8; // pixels — words within 8px vertically = same row
+            const ROW_TOL = 12; // pixels — words within 12px vertically = same row
             const rows = [];
             for (const word of words) {
                 const midY = (word.bbox.y0 + word.bbox.y1) / 2;
@@ -1232,12 +1232,33 @@
                         }
                         if (type) colDefs.push({ type, x0: hw.bbox.x0, x1: hw.bbox.x1, midX: (hw.bbox.x0+hw.bbox.x1)/2 });
                     }
-                    // Sort by X, set boundaries as midpoints between adjacent columns
+                    // Sort colDefs by X position
                     colDefs.sort((a,b) => a.x0 - b.x0);
-                    for (let c = 0; c < colDefs.length; c++) {
-                        const left  = c === 0 ? 0 : (colDefs[c-1].x1 + colDefs[c].x0) / 2;
-                        const right = c === colDefs.length-1 ? 99999 : (colDefs[c].x1 + colDefs[c+1].x0) / 2;
-                        columns.push({ type: colDefs[c].type, left, right });
+
+                    // ── Deduplicate column types ──
+                    // e.g. "Old MRP" header produces TWO 'mrp' entries — keep rightmost for
+                    // numeric cols (real data col comes AFTER the "old" prefix col);
+                    // keep leftmost for 'name' (product name starts at leftmost).
+                    const typeMap = new Map();
+                    for (const cd of colDefs) {
+                        if (!typeMap.has(cd.type)) {
+                            typeMap.set(cd.type, cd);
+                        } else {
+                            const ex = typeMap.get(cd.type);
+                            if (cd.type === 'name') {
+                                if (cd.x0 < ex.x0) typeMap.set(cd.type, cd); // keep leftmost
+                            } else {
+                                if (cd.x0 > ex.x0) typeMap.set(cd.type, cd); // keep rightmost
+                            }
+                        }
+                    }
+                    const dedupedDefs = [...typeMap.values()].sort((a,b) => a.x0 - b.x0);
+
+                    // Set column boundaries as midpoints between adjacent deduplicated columns
+                    for (let c = 0; c < dedupedDefs.length; c++) {
+                        const left  = c === 0 ? 0 : (dedupedDefs[c-1].x1 + dedupedDefs[c].x0) / 2;
+                        const right = c === dedupedDefs.length-1 ? 99999 : (dedupedDefs[c].x1 + dedupedDefs[c+1].x0) / 2;
+                        columns.push({ type: dedupedDefs[c].type, left, right });
                     }
                     break;
                 }
@@ -1297,11 +1318,22 @@
                     if (VALID_GST.has(g)) gst = g;
                 }
 
-                // Validate numbers
-                const cleanNum = v => v ? v.replace(/[^\d\.]/g,'') : '';
+                // ── Fix: split date out of batch if expiry is empty ──
+                const DATE_RE = /\b(\d{2}[\/-]\d{2,4})\b/;
+                if (!expiry && batch) {
+                    const dm = batch.match(DATE_RE);
+                    if (dm) { expiry = dm[1]; batch = batch.replace(dm[0],'').replace(/\s{2,}/g,' ').trim(); }
+                }
+                // Clean any stray date from batch field
+                if (expiry && batch) {
+                    batch = batch.replace(DATE_RE,'').replace(/\s{2,}/g,' ').trim();
+                }
+
+                // ── Fix: extract numbers from qty/mrp/rate if they contain mixed text ──
+                const cleanNum = v => v ? String(v).replace(/[^\d\.]/g,'') : '';
                 mrp  = cleanNum(mrp);
                 rate = cleanNum(rate);
-                qty  = cleanNum(qty).replace(/\.\d+/,''); // qty is integer
+                qty  = cleanNum(qty).replace(/\.\d+/,''); // qty must be integer
 
                 if (!name || name.length < 2) continue;
                 if (SKIP_ROW.some(p => p.test(name))) continue;
