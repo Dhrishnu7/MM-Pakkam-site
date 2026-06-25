@@ -1312,21 +1312,37 @@
                 // Strip old MRP from name (after pipe)
                 name = name.replace(/\s*\|\s*[\d\.]+.*$/, '').trim();
 
+                // ── Fix: Find Expiry Date if it bled into other columns ──
+                const DATE_RE = /\b(\d{2}[\/-]\d{2,4})\b/;
+                if (!expiry) {
+                    // Look in fields from right-to-left or adjacent to where expiry usually is
+                    const candidates = [
+                        { val: batch, set: v => batch = v },
+                        { val: mrp,   set: v => mrp = v },
+                        { val: qty,   set: v => qty = v },
+                        { val: pack,  set: v => pack = v },
+                        { val: name,  set: v => name = v }
+                    ];
+                    for (const c of candidates) {
+                        const dm = c.val.match(DATE_RE);
+                        if (dm) {
+                            expiry = dm[1];
+                            c.set(c.val.replace(dm[0], '').replace(/\s{2,}/g, ' ').trim());
+                            break;
+                        }
+                    }
+                }
+                
+                // Clean any stray date from batch just in case it got duplicated
+                if (expiry && batch) {
+                    batch = batch.replace(DATE_RE, '').replace(/\s{2,}/g, ' ').trim();
+                }
+
                 // Validate GST
                 if (cell.gst) {
                     const g = String(Math.round(parseFloat(cell.gst)));
+                    const VALID_GST = new Set(['0','5','12','18','28']);
                     if (VALID_GST.has(g)) gst = g;
-                }
-
-                // ── Fix: split date out of batch if expiry is empty ──
-                const DATE_RE = /\b(\d{2}[\/-]\d{2,4})\b/;
-                if (!expiry && batch) {
-                    const dm = batch.match(DATE_RE);
-                    if (dm) { expiry = dm[1]; batch = batch.replace(dm[0],'').replace(/\s{2,}/g,' ').trim(); }
-                }
-                // Clean any stray date from batch field
-                if (expiry && batch) {
-                    batch = batch.replace(DATE_RE,'').replace(/\s{2,}/g,' ').trim();
                 }
 
                 // ── Fix: extract numbers from qty/mrp/rate if they contain mixed text ──
