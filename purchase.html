@@ -1,195 +1,3 @@
-﻿        function _parseOCRText(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 1);
-            if (lines.length < 2) {
-                showToast('No Text Found','The image had no readable text. Try a clearer photo.');
-                return;
-            }
-
-            // Lines that are definitely NOT product rows
-            const SKIP_LINE = [
-                /distributor|wholesaler|medical store|pharmacy|chemist|drug house|supplier/i,
-                /pvt\.?\s*ltd|limited|llp|& co\b/i,
-                /\b(road|street|nagar|colony|district|dist|pin\s*code|state|city)\b/i,
-                /\b(ph|mob|mobile|phone|tel|fax|email|website|www\.)/i,
-                /\b(gstin|gst\s*no|dl\s*no|drug\s*lic|pan\s*no|cin\b)/i,
-                /invoice\s*(no|number|#|date)|bill\s*(no|number)|order\s*(no|number)/i,
-                /^(date|to\s*:|from\s*:|buyer|seller|ship\s*to|bill\s*to|consignee)/i,
-                /sub[\s-]?total|grand\s*total|net\s*(amount|total)|discount|sgst|cgst|igst|cess/i,
-                /^(thank|terms|e\.?&\.?o\.?e|note:|bank\s*details|upi|ifsc|account)/i,
-                /\b(address|landmark)\b/i,
-            ];
-
-            // Find table header line
-            const HDR_KEYS = ['product','medicine','batch','exp','qty','mrp','rate','gst','hsn','pack'];
-            let headerIdx = -1;
-            for (let i = 0; i < lines.length; i++) {
-                if (HDR_KEYS.filter(k => lines[i].toLowerCase().includes(k)).length >= 3) {
-                    headerIdx = i; break;
-                }
-            }
-
-            const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
-            const dataRows = [];
-
-            // ── Regex patterns ──
-            // Pack: "75GM","75 GM","1X10","1 X 10","200ML","1NOS","10GM" etc.
-            const PACK_RE   = /\b(\d+(?:\.\d+)?)\s*[Xx]\s*(\d+[A-Z0-9]*)\b|\b(\d+(?:\.\d+)?)\s*(GM|ML|MG|MCG|IU|NOS|TAB|CAP|VL|AMP|SACHET|SYP|INJ|OINT|CREAM|GEL|DROP|SUPP|LOZENGE)\b/i;
-            // Expiry: MM/YY or MM/YYYY
-            const EXPIRY_RE = /\b(\d{2}[\/\-]\d{2,4})\b/;
-            // Batch: 2-5 uppercase letters + 4+ digits, or 7-15 char alphanumeric
-            const BATCH_RE  = /\b([A-Z]{1,5}\d{4,}[A-Z0-9]*|\d{4,}[A-Z]{1,5}[A-Z0-9]*|Z-\d{4,})\b/;
-            // Valid GST values in India
-            const VALID_GST = new Set(['0','5','12','18','28']);
-
-            function fmtPack(m) {
-                if (!m) return '';
-                // Group 1+2 = 1X10 form, Group 3+4 = 75GM form
-                if (m[1] && m[2]) return (m[1]+'X'+m[2]).toUpperCase();
-                if (m[3] && m[4]) return (m[3]+m[4]).toUpperCase();
-                return m[0].replace(/\s+/g,'').toUpperCase();
-            }
-
-            // Smart numeric field extractor (characteristics-based, not positional)
-            function pickFields(nums) {
-                let mrp='', qty='', rate='', gst='';
-                if (!nums.length) return {mrp,qty,rate,gst};
-
-                // MRP: first number with decimal >= 1.0  (invoice MRP is always > 1)
-                let mrpIdx = -1;
-                for (let i=0;i<nums.length;i++) {
-                    if (nums[i].includes('.') && parseFloat(nums[i]) >= 1) {
-                        mrp = nums[i]; mrpIdx = i; break;
-                    }
-                }
-                if (mrpIdx < 0) { mrp = nums[0]; mrpIdx = 0; }
-
-                // Qty: first INTEGER (no dot) between 1-9999 after MRP
-                let qtyIdx = mrpIdx;
-                for (let i=mrpIdx+1;i<nums.length;i++) {
-                    const v = parseFloat(nums[i]);
-                    if (!nums[i].includes('.') && v>=1 && v<=9999) {
-                        qty = nums[i]; qtyIdx = i; break;
-                    }
-                }
-
-                // Free column is usually right after qty (integer 0 or small) — skip it
-                // Rate: next decimal > 0 after Free (qtyIdx+2); if not found, try qtyIdx+1
-                let rateIdx = qtyIdx;
-                for (let skip=2; skip>=1; skip--) {
-                    for (let i=qtyIdx+skip;i<nums.length;i++) {
-                        const v = parseFloat(nums[i]);
-                        if (v > 0 && nums[i] !== mrp) {
-                            rate = nums[i]; rateIdx = i; break;
-                        }
-                    }
-                    if (rate) break;
-                }
-
-                // GST: scan all remaining numbers after rate for 5 / 12 / 18 / 28
-                for (let i=rateIdx+1;i<nums.length;i++) {
-                    const rounded = String(Math.round(parseFloat(nums[i])));
-                    if (VALID_GST.has(rounded)) { gst = rounded; break; }
-                }
-                // Fallback GST scan from beginning if still empty
-                if (!gst) {
-                    for (let i=0;i<nums.length;i++) {
-                        const rounded = String(Math.round(parseFloat(nums[i])));
-                        if (VALID_GST.has(rounded) && nums[i] !== mrp && nums[i] !== rate && nums[i] !== qty) {
-                            gst = rounded; break;
-                        }
-                    }
-                }
-
-                return {mrp, qty, rate, gst};
-            }
-
-            for (let i = startIdx; i < lines.length; i++) {
-                const line = lines[i];
-                if (SKIP_LINE.some(p => p.test(line))) continue;
-                if (!/\d/.test(line)) continue;
-                if (/^[\d\s\.\,\-\/]+$/.test(line)) continue;
-                if (line.replace(/\s/g,'').length < 5) continue;
-
-                // Strip leading serial number  "1." "1)" "1 " "1. "
-                let work = line.replace(/^\s*\d{1,3}\s*[\.\)]\s*/, '');
-
-                // ── Product Name ──
-                // Indian invoices: "Product Name | Old MRP" split on pipe
-                let name = '';
-                const pipeIdx = work.search(/\s*\|\s*/);
-                if (pipeIdx > 2) {
-                    name = work.substring(0, pipeIdx).trim();
-                    work = work.substring(pipeIdx).replace(/^\s*\|\s*[\d\.]+\s*/, ''); // strip old MRP
-                } else {
-                    // No pipe: find name boundary before pack or batch or expiry
-                    let cutAt = work.length;
-                    const p2 = work.match(PACK_RE);
-                    const b2 = work.match(BATCH_RE);
-                    const e2 = work.match(EXPIRY_RE);
-                    const candidates = [p2,b2,e2].filter(Boolean).map(m=>work.indexOf(m[0])).filter(c=>c>2);
-                    if (candidates.length) cutAt = Math.min(...candidates);
-                    name = cutAt > 2 ? work.substring(0, cutAt).trim() : '';
-                    // Last resort: take all alpha text from the start
-                    if (!name || name.length < 3) {
-                        const alphaM = work.match(/^([A-Za-z][A-Za-z0-9\s\-\.\/\(\)]{2,50}?)(?=\s*\d|\s*[A-Z]{2,5}\d|$)/);
-                        name = alphaM ? alphaM[1].trim() : '';
-                    }
-                }
-
-                // Clean name
-                name = name.replace(/[^a-zA-Z0-9\s\-\.\/\(\)]/g,' ').replace(/\s{2,}/g,' ').trim();
-                if (!name || name.length < 3) continue;
-                if (SKIP_LINE.some(p => p.test(name))) continue;
-                if (/^[\d\s\.\-\/]+$/.test(name)) continue;
-                if (/^(s\.?\s*no|sl|sr\b|\d{1,3})$/i.test(name)) continue;
-
-                // ── Pack ──
-                const packM = work.match(PACK_RE);
-                const pack  = fmtPack(packM);
-                if (packM) work = work.replace(packM[0], ' ');
-
-                // ── Batch ──
-                const batchM = work.match(BATCH_RE);
-                const batch  = batchM ? batchM[0] : '';
-                if (batchM) work = work.replace(batchM[0], ' ');
-
-                // ── Expiry ──
-                const expiryM = work.match(EXPIRY_RE);
-                const expiry  = expiryM ? expiryM[0] : '';
-
-                // ── Numeric fields: MRP, Qty, Rate, GST ──
-                let afterExpiry = work;
-                if (expiryM) {
-                    const pos = work.indexOf(expiryM[0]) + expiryM[0].length;
-                    afterExpiry = work.substring(pos);
-                }
-                const nums = [...(afterExpiry.match(/\b\d+(?:\.\d+)?\b/g) || [])];
-                const {mrp, qty, rate, gst} = pickFields(nums);
-
-                dataRows.push([name, batch, expiry, qty, mrp, rate, gst, pack]);
-            }
-
-            if (dataRows.length === 0) {
-                showToast('Could Not Parse',
-                    headerIdx < 0
-                        ? 'No product table detected. Ensure the table is clearly visible in the image.'
-                        : 'Could not read product rows. Try a clearer/higher-resolution image.');
-                return;
-            }
-
-            _invHdrs = ['Product Name','Batch No','Expiry','Quantity','MRP','Rate','GST%','Pack'];
-            _invRows = dataRows;
-
-            const issues = _checkOCRQuality(dataRows);
-            if (issues.blocked) {
-                _showOCRWarning(issues.messages, true);
-            } else if (issues.messages.length > 0) {
-                _showOCRWarning(issues.messages, false);
-            } else {
-                showToast('OCR Complete', 'Found ' + dataRows.length + ' product(s). Verify mapping below.');
-                showInvMapper();
-            }
-        }
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1369,7 +1177,7 @@
                 return;
             }
 
-            // Lines to skip (company/address/footer)
+            // Lines that are definitely NOT product rows (company/address/footer)
             const SKIP_LINE = [
                 /distributor|wholesaler|medical store|pharmacy|chemist|drug house|supplier/i,
                 /pvt\.?\s*ltd|limited|llp|& co\b/i,
@@ -1383,125 +1191,142 @@
                 /\b(address|landmark)\b/i,
             ];
 
-            // Header keywords to locate the table start
-            const HDR_KEYS = ['product','medicine','batch','exp','qty','mrp','rate','gst','hsn','pack'];
+            const HDR_KEYS = ['product','medicine','item','description','drug','particulars',
+                              'batch','expiry','exp','qty','quantity','mrp','rate','gst','hsn','pack'];
+
+            // Find table header line
             let headerIdx = -1;
             for (let i = 0; i < lines.length; i++) {
-                const lower = lines[i].toLowerCase();
-                if (HDR_KEYS.filter(k => lower.includes(k)).length >= 3) { headerIdx = i; break; }
+                if (HDR_KEYS.filter(k => lines[i].toLowerCase().includes(k)).length >= 3) {
+                    headerIdx = i; break;
+                }
             }
 
             const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
             const dataRows = [];
 
-            // Indian pharma pack patterns: 1X10, 75GM, 200ML, 1NOS, 1X10G, 10GM, 60ML, 21.5GM etc.
-            const PACK_RE   = /\b(\d+[Xx]\d+[A-Z0-9]*|\d+(?:\.\d+)?(?:GM|ML|MG|MCG|IU|NOS|TAB|CAP|VL|AMP|SACHET|SYP|INJ|OINT|CREAM|GEL|DROP|SUPP|LOZENGE|G(?=\b)))\b/i;
-            // Batch: alphanumeric 6+ chars (after manufacturer)
-            const BATCH_RE  = /\b([A-Z]{1,5}\d{4,}[A-Z0-9]*|\d{4,}[A-Z]{1,5}[A-Z0-9]*|[A-Z][A-Z0-9]{5,14})\b/;
-            // Expiry: MM/YY or MM/YYYY
+            // Pack: "75GM","75 GM","1X10","1 X 10","200ML","1NOS","10GM" etc.
+            const PACK_RE   = /\b(\d+(?:\.\d+)?)\s*[Xx]\s*(\d+[A-Z0-9]*)\b|\b(\d+(?:\.\d+)?)\s*(GM|ML|MG|MCG|IU|NOS|TAB|CAP|VL|AMP|SACHET|SYP|INJ|OINT|CREAM|GEL|DROP|SUPP|LOZENGE)\b/i;
             const EXPIRY_RE = /\b(\d{2}[\/\-]\d{2,4})\b/;
-            // Valid GST values in India for pharma
+            // Batch: letters+digits or digits+letters, 6+ chars; also handles Z-26094 style
+            const BATCH_RE  = /\b([A-Z]{1,5}\d{4,}[A-Z0-9]*|\d{4,}[A-Z]{1,5}[A-Z0-9]*|Z-\d{4,}|[A-Z][A-Z0-9]{5,14})\b/;
             const VALID_GST = new Set(['0','5','12','18','28']);
+
+            function fmtPack(m) {
+                if (!m) return '';
+                if (m[1] && m[2]) return (m[1]+'X'+m[2]).toUpperCase();
+                if (m[3] && m[4]) return (m[3]+m[4]).toUpperCase();
+                return m[0].replace(/\s+/g,'').toUpperCase();
+            }
+
+            // Characteristics-based numeric picker (not fixed-position)
+            function pickFields(nums) {
+                let mrp='', qty='', rate='', gst='';
+                if (!nums.length) return {mrp,qty,rate,gst};
+                // MRP: first decimal >= 1.0
+                let mrpIdx = -1;
+                for (let i=0;i<nums.length;i++) {
+                    if (nums[i].includes('.') && parseFloat(nums[i]) >= 1) {
+                        mrp = nums[i]; mrpIdx = i; break;
+                    }
+                }
+                if (mrpIdx < 0) { mrp = nums[0]; mrpIdx = 0; }
+                // Qty: first INTEGER 1-9999 after MRP
+                let qtyIdx = mrpIdx;
+                for (let i=mrpIdx+1;i<nums.length;i++) {
+                    const v = parseFloat(nums[i]);
+                    if (!nums[i].includes('.') && v>=1 && v<=9999) {
+                        qty = nums[i]; qtyIdx = i; break;
+                    }
+                }
+                // Rate: next decimal > 0 after Free column (skip 2 from qty, or 1 as fallback)
+                let rateIdx = qtyIdx;
+                for (let skip=2; skip>=1; skip--) {
+                    for (let i=qtyIdx+skip;i<nums.length;i++) {
+                        if (parseFloat(nums[i]) > 0 && nums[i] !== mrp) {
+                            rate = nums[i]; rateIdx = i; break;
+                        }
+                    }
+                    if (rate) break;
+                }
+                // GST: scan after rate for 5/12/18/28
+                for (let i=rateIdx+1;i<nums.length;i++) {
+                    const r = String(Math.round(parseFloat(nums[i])));
+                    if (VALID_GST.has(r)) { gst = r; break; }
+                }
+                // Fallback GST scan from full list
+                if (!gst) {
+                    for (let i=0;i<nums.length;i++) {
+                        const r = String(Math.round(parseFloat(nums[i])));
+                        if (VALID_GST.has(r) && nums[i]!==mrp && nums[i]!==rate && nums[i]!==qty) {
+                            gst = r; break;
+                        }
+                    }
+                }
+                return {mrp,qty,rate,gst};
+            }
 
             for (let i = startIdx; i < lines.length; i++) {
                 const line = lines[i];
                 if (SKIP_LINE.some(p => p.test(line))) continue;
                 if (!/\d/.test(line)) continue;
-                if (/^[\d\s\.\,\-]+$/.test(line)) continue;
+                if (/^[\d\s\.\,\-\/]+$/.test(line)) continue;
                 if (line.replace(/\s/g,'').length < 5) continue;
 
-                // Strip leading serial number (1. or 1) or 1.)
-                let work = line.replace(/^\d{1,3}[\.\)\s]\s*/, '');
+                // Strip leading serial number
+                let work = line.replace(/^\s*\d{1,3}\s*[\.)\s]\s*/, '');
 
-                // ── Step 1: Extract Product Name ──
-                // Indian invoices: "Product Name | Old MRP" — split on pipe
+                // ── Product Name: split on pipe ("Name | Old MRP") ──
                 let name = '';
-                const pipeIdx = work.indexOf('|');
+                const pipeIdx = work.search(/\s*\|\s*/);
                 if (pipeIdx > 2) {
                     name = work.substring(0, pipeIdx).trim();
-                    work = work.substring(pipeIdx + 1); // skip old MRP
-                    // Remove the old MRP number right after the pipe
-                    work = work.replace(/^\s*[\d\.]+\s*/, '');
+                    work = work.substring(pipeIdx).replace(/^\s*\|\s*[\d\.]+\s*/, '');
                 } else {
-                    // No pipe: name is all text before the first pack pattern or batch
-                    const packTest = work.match(PACK_RE);
-                    const batchTest = work.match(BATCH_RE);
+                    // No pipe: find name boundary before pack/batch/expiry
                     let cutAt = work.length;
-                    if (packTest)  cutAt = Math.min(cutAt, work.indexOf(packTest[0]));
-                    if (batchTest) cutAt = Math.min(cutAt, work.indexOf(batchTest[0]));
-                    // Don't cut too early — name needs at least 3 chars
-                    if (cutAt > 2) name = work.substring(0, cutAt).trim();
+                    const p2 = work.match(PACK_RE);
+                    const b2 = work.match(BATCH_RE);
+                    const e2 = work.match(EXPIRY_RE);
+                    [p2,b2,e2].filter(Boolean).forEach(m => {
+                        const idx = work.indexOf(m[0]);
+                        if (idx > 2) cutAt = Math.min(cutAt, idx);
+                    });
+                    name = cutAt > 2 ? work.substring(0, cutAt).trim() : '';
                     if (!name || name.length < 3) {
-                        // Fallback: grab text before first standalone number
-                        const firstNumIdx = work.search(/\s\d+[\s\.]/);
-                        if (firstNumIdx > 2) name = work.substring(0, firstNumIdx).trim();
-                        else name = work.split(/\s+/).slice(0, 3).join(' ');
+                        const am = work.match(/^([A-Za-z][A-Za-z0-9\s\-\.\/\(\)]{2,50}?)(?=\s*\d|\s*[A-Z]{2,5}\d|$)/);
+                        name = am ? am[1].trim() : '';
                     }
                 }
 
-                // Clean name: remove trailing symbols, standalone numbers
-                name = name
-                    .replace(/\|\s*[\d\.]+/g, '')
-                    .replace(/[^a-zA-Z0-9\s\-\.\/\(\)]/g, ' ')
-                    .replace(/\s{2,}/g, ' ')
-                    .trim();
-
-                // Reject bad names
+                name = name.replace(/[^a-zA-Z0-9\s\-\.\/\(\)]/g,' ').replace(/\s{2,}/g,' ').trim();
                 if (!name || name.length < 3) continue;
                 if (SKIP_LINE.some(p => p.test(name))) continue;
                 if (/^[\d\s\.\-\/]+$/.test(name)) continue;
-                if (/^(s\.?\s*no|sl|sr\b|\d{1,3})$/i.test(name.trim())) continue;
+                if (/^(s\.?\s*no|sl|sr\b|\d{1,3})$/i.test(name)) continue;
 
-                // ── Step 2: Extract Pack ──
+                // ── Pack ──
                 const packM = work.match(PACK_RE);
-                const pack  = packM ? packM[0].toUpperCase() : '';
+                const pack  = fmtPack(packM);
                 if (packM) work = work.replace(packM[0], ' ');
 
-                // ── Step 3: Extract Batch ──
-                // Skip manufacturer code (3-5 uppercase letters alone), find longer alphanumeric
+                // ── Batch ──
                 const batchM = work.match(BATCH_RE);
                 const batch  = batchM ? batchM[0] : '';
                 if (batchM) work = work.replace(batchM[0], ' ');
 
-                // ── Step 4: Extract Expiry ──
+                // ── Expiry ──
                 const expiryM = work.match(EXPIRY_RE);
                 const expiry  = expiryM ? expiryM[0] : '';
 
-                // ── Step 5: Positional number extraction AFTER expiry ──
-                // Invoice column order after expiry: MRP | Qty | Free | Rate | Dis | S.Dis | GST | Amount | HSN
+                // ── Numeric fields after expiry ──
                 let afterExpiry = work;
                 if (expiryM) {
                     const pos = work.indexOf(expiryM[0]) + expiryM[0].length;
                     afterExpiry = work.substring(pos);
                 }
-
                 const nums = [...(afterExpiry.match(/\b\d+(?:\.\d+)?\b/g) || [])];
-                let mrp='', qty='', rate='', gst='';
-
-                if (nums.length >= 7) {
-                    // Full format: MRP[0], Qty[1], Free[2](skip), Rate[3], Dis[4](skip), S.Dis[5](skip), GST[6]
-                    mrp  = nums[0] || '';
-                    qty  = nums[1] || '';
-                    rate = nums[3] || '';
-                    const gstRaw = String(Math.round(parseFloat(nums[6] || '0')));
-                    if (VALID_GST.has(gstRaw)) gst = gstRaw;
-                } else if (nums.length >= 4) {
-                    // Partial: MRP[0], Qty[1], Free[2](skip), Rate[3]
-                    mrp  = nums[0] || '';
-                    qty  = nums[1] || '';
-                    rate = nums[3] || nums[2] || '';
-                    // Check last number for GST
-                    const lastG = String(Math.round(parseFloat(nums[nums.length-1] || '0')));
-                    if (VALID_GST.has(lastG) && nums[nums.length-1] !== rate) gst = lastG;
-                } else if (nums.length >= 2) {
-                    mrp = nums[0] || '';
-                    qty = nums[1] || '';
-                } else if (nums.length === 1) {
-                    mrp = nums[0] || '';
-                }
-
-                // Sanity-check qty: must be positive integer <= 9999
-                if (qty && (parseFloat(qty) > 9999 || parseFloat(qty) <= 0 || qty.includes('.'))) qty = '';
+                const {mrp, qty, rate, gst} = pickFields(nums);
 
                 dataRows.push([name, batch, expiry, qty, mrp, rate, gst, pack]);
             }
@@ -1509,8 +1334,8 @@
             if (dataRows.length === 0) {
                 showToast('Could Not Parse',
                     headerIdx < 0
-                        ? 'No product table detected in image. Make sure invoice table is clearly visible.'
-                        : 'Product rows could not be extracted. Try a clearer, higher-resolution image.');
+                        ? 'No product table detected. Ensure the table is clearly visible.'
+                        : 'Product rows could not be read. Try a clearer, higher-resolution image.');
                 return;
             }
 
@@ -1527,6 +1352,9 @@
                 showInvMapper();
             }
         }
+
+
+        /* ── OCR Quality Check ── */
         function _checkOCRQuality(rows) {
             const issues = [];
             let blocked = false;
