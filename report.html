@@ -2094,12 +2094,12 @@
                 if (trendChartInstance) trendChartInstance.destroy();
                 
                 // Create gradients
-                const gradientRev = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 300);
-                gradientRev.addColorStop(0, 'rgba(14, 165, 233, 0.4)');
+                const gradientRev = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 350);
+                gradientRev.addColorStop(0, 'rgba(14, 165, 233, 0.6)');
                 gradientRev.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
                 
-                const gradientProf = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 300);
-                gradientProf.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+                const gradientProf = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 350);
+                gradientProf.addColorStop(0, 'rgba(16, 185, 129, 0.6)');
                 gradientProf.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
 
                 trendChartInstance = new Chart(ctxTrend, {
@@ -2112,28 +2112,34 @@
                                 data: salesData.length ? salesData : [0],
                                 borderColor: '#0ea5e9',
                                 backgroundColor: gradientRev,
-                                borderWidth: 3,
+                                borderWidth: 4,
                                 fill: true,
                                 tension: 0.4,
+                                cubicInterpolationMode: 'monotone',
                                 pointBackgroundColor: '#ffffff',
                                 pointBorderColor: '#0ea5e9',
-                                pointBorderWidth: 2,
+                                pointBorderWidth: 3,
                                 pointRadius: 4,
-                                pointHoverRadius: 6
+                                pointHoverRadius: 8,
+                                pointHoverBorderWidth: 4,
+                                pointHoverBackgroundColor: '#ffffff'
                             },
                             {
                                 label: 'Est. Net Profit (₹)',
                                 data: profitData.length ? profitData : [0],
                                 borderColor: '#10b981',
                                 backgroundColor: gradientProf,
-                                borderWidth: 3,
+                                borderWidth: 4,
                                 fill: true,
                                 tension: 0.4,
+                                cubicInterpolationMode: 'monotone',
                                 pointBackgroundColor: '#ffffff',
                                 pointBorderColor: '#10b981',
-                                pointBorderWidth: 2,
+                                pointBorderWidth: 3,
                                 pointRadius: 4,
-                                pointHoverRadius: 6
+                                pointHoverRadius: 8,
+                                pointHoverBorderWidth: 4,
+                                pointHoverBackgroundColor: '#ffffff'
                             }
                         ]
                     },
@@ -2147,33 +2153,44 @@
                         plugins: { 
                             legend: { 
                                 position: 'top',
+                                align: 'end',
                                 labels: {
                                     usePointStyle: true,
+                                    pointStyle: 'circle',
                                     padding: 20,
-                                    font: { family: "'Inter', sans-serif", size: 12, weight: '500' }
+                                    font: { family: "'Inter', sans-serif", size: 13, weight: '600' },
+                                    color: '#475569'
                                 }
                             },
                             tooltip: {
-                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                                titleFont: { family: "'Inter', sans-serif", size: 13 },
-                                bodyFont: { family: "'Inter', sans-serif", size: 13 },
-                                padding: 12,
-                                cornerRadius: 8,
-                                displayColors: true
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleColor: '#f8fafc',
+                                bodyColor: '#cbd5e1',
+                                titleFont: { family: "'Inter', sans-serif", size: 14, weight: '700' },
+                                bodyFont: { family: "'Inter', sans-serif", size: 13, weight: '500' },
+                                padding: 16,
+                                cornerRadius: 12,
+                                displayColors: true,
+                                boxPadding: 6,
+                                borderColor: 'rgba(255,255,255,0.1)',
+                                borderWidth: 1
                             }
                         },
                         scales: { 
                             x: {
                                 grid: { display: false, drawBorder: false },
-                                ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: '#64748b' }
+                                border: { display: false },
+                                ticks: { font: { family: "'Inter', sans-serif", size: 12, weight: '500' }, color: '#94a3b8', padding: 10 }
                             },
                             y: { 
                                 beginAtZero: true,
-                                grid: { color: '#f1f5f9', drawBorder: false, borderDash: [5, 5] },
+                                grid: { color: 'rgba(226, 232, 240, 0.6)', drawBorder: false, borderDash: [6, 6] },
+                                border: { display: false },
                                 ticks: {
-                                    font: { family: "'Inter', sans-serif", size: 11 },
-                                    color: '#64748b',
-                                    callback: function(value) { return '₹' + value; }
+                                    font: { family: "'Inter', sans-serif", size: 12, weight: '500' },
+                                    color: '#94a3b8',
+                                    padding: 12,
+                                    callback: function(value) { return '₹' + value.toLocaleString(); }
                                 }
                             }
                         }
@@ -2190,6 +2207,11 @@
             const ctxTop = document.getElementById('topSellersChart');
             if (ctxTop) {
                 if (topSellersChartInstance) topSellersChartInstance.destroy();
+                
+                const gradientBar = ctxTop.getContext('2d').createLinearGradient(0, 0, 400, 0);
+                gradientBar.addColorStop(0, '#8b5cf6');
+                gradientBar.addColorStop(1, '#c084fc');
+
                 topSellersChartInstance = new Chart(ctxTop, {
                     type: 'bar',
                     data: {
@@ -2197,16 +2219,39 @@
                         datasets: [{
                             label: 'Quantity Sold',
                             data: topProducts.length ? topProducts.map(p => p.qty) : [0],
-                            backgroundColor: '#8b5cf6',
-                            borderRadius: 6
+                            backgroundColor: gradientBar,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            barPercentage: 0.6
                         }]
                     },
                     options: {
                         indexAxis: 'y', // Horizontal bar chart
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { x: { beginAtZero: true } }
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleFont: { family: "'Inter', sans-serif", size: 14, weight: '700' },
+                                bodyFont: { family: "'Inter', sans-serif", size: 13, weight: '500' },
+                                padding: 12,
+                                cornerRadius: 8
+                            }
+                        },
+                        scales: { 
+                            x: { 
+                                beginAtZero: true,
+                                grid: { color: 'rgba(226, 232, 240, 0.6)', drawBorder: false, borderDash: [6, 6] },
+                                border: { display: false },
+                                ticks: { font: { family: "'Inter', sans-serif", size: 12, weight: '500' }, color: '#94a3b8' }
+                            },
+                            y: {
+                                grid: { display: false, drawBorder: false },
+                                border: { display: false },
+                                ticks: { font: { family: "'Inter', sans-serif", size: 13, weight: '600' }, color: '#475569', padding: 8 }
+                            }
+                        }
                     }
                 });
             }
