@@ -2084,6 +2084,22 @@
                 gradientProf.addColorStop(0, 'rgba(16, 185, 129, 0.6)');
                 gradientProf.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
 
+                // Custom plugin for glowing lines
+                const glowPlugin = {
+                    id: 'glowLine',
+                    beforeDatasetsDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+                        ctx.shadowBlur = 10;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 4;
+                    },
+                    afterDatasetsDraw: (chart) => {
+                        chart.ctx.restore();
+                    }
+                };
+
                 trendChartInstance = new Chart(ctxTrend, {
                     type: 'line',
                     data: {
@@ -2125,6 +2141,7 @@
                             }
                         ]
                     },
+                    plugins: [glowPlugin],
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
@@ -2189,10 +2206,22 @@
             const ctxTop = document.getElementById('topSellersChart');
             if (ctxTop) {
                 if (topSellersChartInstance) topSellersChartInstance.destroy();
+                // Create 5 distinct, vibrant gradients for the 5 bars
+                const barGradients = [];
+                const colors = [
+                    ['#8b5cf6', '#d946ef'], // Purple to Pink
+                    ['#3b82f6', '#06b6d4'], // Blue to Cyan
+                    ['#10b981', '#14b8a6'], // Emerald to Teal
+                    ['#f59e0b', '#f97316'], // Amber to Orange
+                    ['#ec4899', '#f43f5e']  // Pink to Rose
+                ];
                 
-                const gradientBar = ctxTop.getContext('2d').createLinearGradient(0, 0, 400, 0);
-                gradientBar.addColorStop(0, '#8b5cf6');
-                gradientBar.addColorStop(1, '#c084fc');
+                colors.forEach(c => {
+                    const g = ctxTop.getContext('2d').createLinearGradient(0, 0, 400, 0);
+                    g.addColorStop(0, c[0]);
+                    g.addColorStop(1, c[1]);
+                    barGradients.push(g);
+                });
 
                 topSellersChartInstance = new Chart(ctxTop, {
                     type: 'bar',
@@ -2201,7 +2230,7 @@
                         datasets: [{
                             label: 'Quantity Sold',
                             data: topProducts.length ? topProducts.map(p => p.qty) : [0],
-                            backgroundColor: gradientBar,
+                            backgroundColor: barGradients, // Assign the array of gradients
                             borderRadius: 8,
                             borderSkipped: false,
                             barPercentage: 0.6
