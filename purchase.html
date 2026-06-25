@@ -1138,9 +1138,9 @@
                         }
                     }
                 });
-                const text = result.data.text;
+                const ocrData = result.data;
                 dz.innerHTML = origHTML;
-                _parseOCRText(text);
+                _parseOCRWithLayout(ocrData);
             } catch(err) {
                 dz.innerHTML = origHTML;
                 showToast('OCR Failed', 'Could not scan the file. Please try a clearer image.');
@@ -1168,6 +1168,165 @@
             canvas.width = viewport.width; canvas.height = viewport.height;
             await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
             return new Promise(res => canvas.toBlob(res, 'image/png'));
+        }
+
+        /* ── Layout-aware OCR parser using word bounding boxes ── */
+        function _parseOCRWithLayout(data) {
+            // Filter out low-confidence / empty words
+            const words = (data.words || []).filter(w => w.confidence > 25 && w.text.trim().length > 0);
+            if (words.length < 5) {
+                // Fallback to flat text
+                _parseOCRText(data.text || '');
+                return;
+            }
+
+            // ── Step 1: Group words into rows by Y-position ──
+            const ROW_TOL = 8; // pixels — words within 8px vertically = same row
+            const rows = [];
+            for (const word of words) {
+                const midY = (word.bbox.y0 + word.bbox.y1) / 2;
+                let placed = false;
+                for (const row of rows) {
+                    if (Math.abs(row.midY - midY) <= ROW_TOL) {
+                        row.words.push(word);
+                        row.midY = row.words.reduce((s,w)=>s+(w.bbox.y0+w.bbox.y1)/2,0)/row.words.length;
+                        placed = true; break;
+                    }
+                }
+                if (!placed) rows.push({ midY, words: [word] });
+            }
+            rows.sort((a,b) => a.midY - b.midY);
+            rows.forEach(r => r.words.sort((a,b) => a.bbox.x0 - b.bbox.x0));
+
+            // ── Step 2: Find header row ──
+            const HDR_MAP = {
+                'product':'name','medicine':'name','item':'name','description':'name','drug':'name','particular':'name',
+                'old':'skip','free':'skip','mfr':'skip','mfg':'skip','manf':'skip','amount':'skip','amt':'skip','hsn':'skip','dis':'skip','s.dis':'skip',
+                'pack':'pack','pcs':'pack',
+                'batch':'batch','lot':'batch',
+                'exp':'expiry','expiry':'expiry',
+                'mrp':'mrp',
+                'qty':'qty','quantity':'qty',
+                'rate':'rate','ptr':'rate','pts':'rate',
+                'gst':'gst','tax':'gst',
+            };
+            const HDR_KEYS = Object.keys(HDR_MAP);
+
+            let headerRowIdx = -1;
+            const columns = []; // {type, leftBound, rightBound}
+
+            for (let i = 0; i < rows.length; i++) {
+                const rowLower = rows[i].words.map(w => w.text.toLowerCase());
+                const hits = rowLower.filter(t => HDR_KEYS.some(k => t.includes(k))).length;
+                if (hits >= 3) {
+                    headerRowIdx = i;
+                    // Build column boundaries from this header row
+                    const hWords = rows[i].words;
+                    let nameStart = -1, nameEnd = -1;
+                    const colDefs = [];
+                    for (const hw of hWords) {
+                        const t = hw.text.toLowerCase().replace(/[^a-z\.]/g,'');
+                        let type = null;
+                        for (const [key, val] of Object.entries(HDR_MAP)) {
+                            if (t.includes(key)) { type = val; break; }
+                        }
+                        if (type) colDefs.push({ type, x0: hw.bbox.x0, x1: hw.bbox.x1, midX: (hw.bbox.x0+hw.bbox.x1)/2 });
+                    }
+                    // Sort by X, set boundaries as midpoints between adjacent columns
+                    colDefs.sort((a,b) => a.x0 - b.x0);
+                    for (let c = 0; c < colDefs.length; c++) {
+                        const left  = c === 0 ? 0 : (colDefs[c-1].x1 + colDefs[c].x0) / 2;
+                        const right = c === colDefs.length-1 ? 99999 : (colDefs[c].x1 + colDefs[c+1].x0) / 2;
+                        columns.push({ type: colDefs[c].type, left, right });
+                    }
+                    break;
+                }
+            }
+
+            // No header found → fallback to text parser
+            if (headerRowIdx < 0 || columns.length < 3) {
+                _parseOCRText(data.text || '');
+                return;
+            }
+
+            // ── Step 3: Assign data words to columns by X-position ──
+            const SKIP_ROW = [
+                /distributor|wholesaler|pharmacy|chemist|supplier/i,
+                /pvt\.?\s*ltd|limited|llp/i,
+                /\b(road|street|nagar|colony|pin\s*code|dist)\b/i,
+                /\b(gstin|dl\s*no|drug\s*lic|pan\s*no)\b/i,
+                /sub[\s-]?total|grand\s*total|net\s*amount|sgst|cgst|igst/i,
+            ];
+            const VALID_GST = new Set(['0','5','12','18','28']);
+            const dataRows = [];
+
+            for (let i = headerRowIdx + 1; i < rows.length; i++) {
+                const row = rows[i];
+                const rowText = row.words.map(w => w.text).join(' ');
+                if (SKIP_ROW.some(p => p.test(rowText))) continue;
+                if (!/\d/.test(rowText)) continue;
+                if (rowText.replace(/\s/g,'').length < 4) continue;
+
+                // Build cell map
+                const cell = {};
+                for (const col of columns) {
+                    if (col.type === 'skip') continue;
+                    const cellWords = row.words.filter(w => {
+                        const mx = (w.bbox.x0 + w.bbox.x1) / 2;
+                        return mx >= col.left && mx < col.right;
+                    }).map(w => w.text).join(' ').trim();
+                    // Merge into existing cell (handles multi-word columns)
+                    if (cellWords) cell[col.type] = (cell[col.type] ? cell[col.type]+' ' : '') + cellWords;
+                }
+
+                let name   = (cell.name   || '').replace(/^\d+[.)]\s*/,'').trim(); // strip serial
+                let batch  =  cell.batch  || '';
+                let expiry =  cell.expiry || '';
+                let qty    =  cell.qty    || '';
+                let mrp    =  cell.mrp    || '';
+                let rate   =  cell.rate   || '';
+                let pack   =  cell.pack   || '';
+                let gst    = '';
+
+                // Strip old MRP from name (after pipe)
+                name = name.replace(/\s*\|\s*[\d\.]+.*$/, '').trim();
+
+                // Validate GST
+                if (cell.gst) {
+                    const g = String(Math.round(parseFloat(cell.gst)));
+                    if (VALID_GST.has(g)) gst = g;
+                }
+
+                // Validate numbers
+                const cleanNum = v => v ? v.replace(/[^\d\.]/g,'') : '';
+                mrp  = cleanNum(mrp);
+                rate = cleanNum(rate);
+                qty  = cleanNum(qty).replace(/\.\d+/,''); // qty is integer
+
+                if (!name || name.length < 2) continue;
+                if (SKIP_ROW.some(p => p.test(name))) continue;
+                if (/^[\d\s\.]+$/.test(name)) continue;
+
+                dataRows.push([name, batch, expiry, qty, mrp, rate, gst, pack]);
+            }
+
+            if (dataRows.length === 0) {
+                // Fallback to text parser
+                _parseOCRText(data.text || '');
+                return;
+            }
+
+            _invHdrs = ['Product Name','Batch No','Expiry','Quantity','MRP','Rate','GST%','Pack'];
+            _invRows = dataRows;
+            const issues = _checkOCRQuality(dataRows);
+            if (issues.blocked) {
+                _showOCRWarning(issues.messages, true);
+            } else if (issues.messages.length > 0) {
+                _showOCRWarning(issues.messages, false);
+            } else {
+                showToast('OCR Complete', 'Found ' + dataRows.length + ' product(s). Verify mapping below.');
+                showInvMapper();
+            }
         }
 
         function _parseOCRText(text) {
