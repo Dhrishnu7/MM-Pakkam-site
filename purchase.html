@@ -1572,21 +1572,19 @@
             const emptyBatch= rows.filter(r => !String(r[1]).trim()).length;
             const emptyExp  = rows.filter(r => !String(r[2]).trim()).length;
 
-            if (emptyName / total > 0.6) {
-                issues.push('Most product names could not be read.');
+            // Block process if more than 20% error rate on critical fields
+            if (emptyName / total > 0.2 || emptyQty / total > 0.2 || emptyMRP / total > 0.2) {
+                issues.push('Error rate > 20%: Too many missing product names, quantities, or prices.');
                 blocked = true;
-            } else if (emptyName > 0) {
-                issues.push(emptyName + ' product name(s) missing — check those rows.');
+                return { messages: issues, blocked };
             }
-            if (emptyQty / total === 1 && emptyMRP / total === 1) {
-                issues.push('No quantity or price data found.');
-                blocked = true;
-            } else {
-                if (emptyQty / total > 0.5) issues.push('Quantity missing for many rows.');
-                if (emptyMRP / total > 0.5) issues.push('MRP missing for many rows.');
-            }
+
+            if (emptyName > 0) issues.push(emptyName + ' product name(s) missing — check those rows.');
+            if (emptyQty > 0)  issues.push(emptyQty + ' quantity field(s) missing.');
+            if (emptyMRP > 0)  issues.push(emptyMRP + ' MRP field(s) missing.');
             if (emptyBatch === total) issues.push('Batch numbers not detected (fill manually).');
             if (emptyExp   === total) issues.push('Expiry dates not detected (fill manually).');
+            
             return { messages: issues, blocked };
         }
 
@@ -1630,9 +1628,9 @@
             if (old) old.remove();
 
             if (blocked) {
-                // Simple clear toast for bad image
-                showToast('🚫 Image Not Clear',
-                    'Could not read the invoice clearly. Please upload a clearer photo or use Excel/CSV.');
+                // User requested specific error note
+                showToast('🚫 File Not Clear',
+                    'File not clear. Upload a clear file or Excel/CSV for better results.');
                 return;
             }
 
