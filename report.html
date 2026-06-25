@@ -87,45 +87,13 @@
 
         /* ── Page Header ── */
         .page-header {
-            text-align: center; margin-bottom: 2.5rem;
+            text-align: center; margin-bottom: 2rem;
             animation: fadeUp 0.5s ease forwards; opacity: 0;
-            padding: 2.5rem 1.5rem 2rem;
-            background: linear-gradient(135deg, rgba(244,63,94,0.08) 0%, rgba(14,165,233,0.08) 50%, rgba(139,92,246,0.08) 100%);
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.8);
-            backdrop-filter: blur(10px);
-            position: relative; overflow: hidden;
         }
-        .page-header::before {
-            content: '';
-            position: absolute; top: -40px; right: -40px;
-            width: 160px; height: 160px;
-            background: radial-gradient(circle, rgba(244,63,94,0.15), transparent 70%);
-            border-radius: 50%;
-        }
-        .page-header::after {
-            content: '';
-            position: absolute; bottom: -40px; left: -40px;
-            width: 140px; height: 140px;
-            background: radial-gradient(circle, rgba(14,165,233,0.15), transparent 70%);
-            border-radius: 50%;
-        }
-        .breadcrumb { font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.8rem; }
+        .breadcrumb { font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.6rem; }
         .breadcrumb a { color: #e11d48; text-decoration: none; font-weight: 500; }
-        .page-header-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 0.3rem 0.9rem; border-radius: 50px;
-            background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.2);
-            font-size: 0.75rem; font-weight: 700; color: #e11d48;
-            letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.8rem;
-        }
-        .page-header h1 {
-            font-size: 2.4rem; font-weight: 900; letter-spacing: -0.03em;
-            background: linear-gradient(135deg, #0f172a 0%, #e11d48 50%, #0ea5e9 100%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-            margin-bottom: 0.5rem;
-        }
-        .page-header p { color: #64748b; font-size: 1rem; max-width: 480px; margin: 0 auto; }
+        .page-header h1 { font-size: 1.9rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
+        .page-header p { color: #64748b; margin-top: 0.4rem; font-size: 0.95rem; }
 
         /* ── Filter Card ── */
         .filter-card {
@@ -930,10 +898,6 @@
 
         <div class="page-header">
             <div class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Report</div>
-            <div class="page-header-badge">
-                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v18H3V3zm2 2v14h14V5H5zm2 10l3-4 3 3 3-5 2 3v3H7z"/></svg>
-                Business Intelligence
-            </div>
             <h1>Report & Analytics</h1>
             <p>View sales, purchase summaries, and track your business growth.</p>
         </div>
