@@ -1627,30 +1627,35 @@
             const old = document.getElementById('ocrScanWarning');
             if (old) old.remove();
 
-            if (blocked) {
-                // User requested specific error note
-                showToast('🚫 File Not Clear',
-                    'File not clear. Upload a clear file or Excel/CSV for better results.');
-                return;
-            }
-
-            // Partial issues — show warning with option to proceed
             const wrap = document.createElement('div');
             wrap.id = 'ocrScanWarning';
-            wrap.style.cssText = 'margin-top:1rem;padding:1rem 1.2rem;border-radius:12px;border:2px solid #fde68a;background:#fffbeb;font-size:0.82rem;';
-            let html = `<div style='font-weight:800;font-size:0.9rem;color:#78350f;margin-bottom:0.5rem;'>⚠️ Scan Quality Issues</div>`;
-            html += messages.map(m => `<div style='margin-bottom:0.3rem;color:#92400e;'>${m}</div>`).join('');
-            html += `<div style='margin-top:0.8rem;display:flex;gap:0.6rem;'>
-                <button onclick="document.getElementById('ocrScanWarning').remove(); _autoImportOCR();"
-                    style='flex:1;padding:0.5rem;background:#f59e0b;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
-                    ✅ Fill Form Anyway (Verify Manually)
-                </button>
-                <button onclick="document.getElementById('ocrScanWarning').remove(); document.getElementById('invFileInput').value='';"
-                    style='flex:1;padding:0.5rem;background:#6b7280;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
-                    🔄 Re-upload Better Image
-                </button>
-            </div>`;
-            wrap.innerHTML = html;
+            
+            if (blocked) {
+                wrap.style.cssText = 'margin-top:1rem;padding:1rem 1.2rem;border-radius:12px;border:2px solid #fca5a5;background:#fef2f2;font-size:0.82rem;';
+                let html = `<div style='font-weight:800;font-size:1rem;color:#991b1b;margin-bottom:0.5rem;'>🚫 File Not Clear</div>`;
+                html += `<div style='margin-bottom:0.8rem;color:#7f1d1d;line-height:1.4;'>File not clear. Please upload a clear file or use Excel/CSV for better results.</div>`;
+                html += `<button onclick="document.getElementById('ocrScanWarning').remove(); document.getElementById('invFileInput').value='';"
+                        style='width:100%;padding:0.6rem;background:#ef4444;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
+                        🔄 Re-upload Better Image
+                    </button>`;
+                wrap.innerHTML = html;
+            } else {
+                wrap.style.cssText = 'margin-top:1rem;padding:1rem 1.2rem;border-radius:12px;border:2px solid #fde68a;background:#fffbeb;font-size:0.82rem;';
+                let html = `<div style='font-weight:800;font-size:0.9rem;color:#78350f;margin-bottom:0.5rem;'>⚠️ Scan Quality Issues</div>`;
+                html += messages.map(m => `<div style='margin-bottom:0.3rem;color:#92400e;'>${m}</div>`).join('');
+                html += `<div style='margin-top:0.8rem;display:flex;gap:0.6rem;'>
+                    <button onclick="document.getElementById('ocrScanWarning').remove(); _autoImportOCR();"
+                        style='flex:1;padding:0.5rem;background:#f59e0b;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
+                        ✅ Fill Form Anyway (Verify Manually)
+                    </button>
+                    <button onclick="document.getElementById('ocrScanWarning').remove(); document.getElementById('invFileInput').value='';"
+                        style='flex:1;padding:0.5rem;background:#6b7280;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
+                        🔄 Re-upload Better Image
+                    </button>
+                </div>`;
+                wrap.innerHTML = html;
+            }
+
             const step1 = document.getElementById('invStep1');
             if (step1) step1.appendChild(wrap);
         }
