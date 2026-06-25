@@ -2075,73 +2075,48 @@
             if (ctxTrend) {
                 if (trendChartInstance) trendChartInstance.destroy();
                 
-                // Create gradients
-                const gradientRev = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 350);
-                gradientRev.addColorStop(0, 'rgba(14, 165, 233, 0.6)');
-                gradientRev.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
-                
-                const gradientProf = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 350);
-                gradientProf.addColorStop(0, 'rgba(16, 185, 129, 0.6)');
-                gradientProf.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
-
-                // Custom plugin for glowing lines
-                const glowPlugin = {
-                    id: 'glowLine',
-                    beforeDatasetsDraw: (chart) => {
-                        const ctx = chart.ctx;
-                        ctx.save();
-                        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-                        ctx.shadowBlur = 10;
-                        ctx.shadowOffsetX = 0;
-                        ctx.shadowOffsetY = 4;
-                    },
-                    afterDatasetsDraw: (chart) => {
-                        chart.ctx.restore();
-                    }
-                };
+                // Create a beautiful gradient for Revenue Bars
+                const gradientRev = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 400);
+                gradientRev.addColorStop(0, '#3b82f6'); // bright blue
+                gradientRev.addColorStop(1, '#60a5fa'); // light blue
 
                 trendChartInstance = new Chart(ctxTrend, {
-                    type: 'line',
+                    type: 'bar', // Base type is bar
                     data: {
                         labels: labels.length ? labels : ['No Data'],
                         datasets: [
                             {
-                                label: 'Revenue (₹)',
-                                data: salesData.length ? salesData : [0],
-                                borderColor: '#0ea5e9',
-                                backgroundColor: gradientRev,
-                                borderWidth: 4,
-                                fill: true,
-                                tension: 0.4,
-                                cubicInterpolationMode: 'monotone',
-                                pointBackgroundColor: '#ffffff',
-                                pointBorderColor: '#0ea5e9',
-                                pointBorderWidth: 3,
-                                pointRadius: 4,
-                                pointHoverRadius: 8,
-                                pointHoverBorderWidth: 4,
-                                pointHoverBackgroundColor: '#ffffff'
-                            },
-                            {
+                                type: 'line', // Profit is an overlay line
                                 label: 'Est. Net Profit (₹)',
                                 data: profitData.length ? profitData : [0],
-                                borderColor: '#10b981',
-                                backgroundColor: gradientProf,
-                                borderWidth: 4,
-                                fill: true,
-                                tension: 0.4,
+                                borderColor: '#10b981', // Emerald green
+                                backgroundColor: '#10b981',
+                                borderWidth: 3,
+                                fill: false, // Don't fill, looks cleaner
+                                tension: 0.4, // Smooth curves
                                 cubicInterpolationMode: 'monotone',
                                 pointBackgroundColor: '#ffffff',
                                 pointBorderColor: '#10b981',
                                 pointBorderWidth: 3,
-                                pointRadius: 4,
+                                pointRadius: 5,
                                 pointHoverRadius: 8,
-                                pointHoverBorderWidth: 4,
-                                pointHoverBackgroundColor: '#ffffff'
+                                pointHoverBorderWidth: 3,
+                                pointHoverBackgroundColor: '#10b981',
+                                pointHoverBorderColor: '#ffffff',
+                                order: 1 // Draw on top
+                            },
+                            {
+                                type: 'bar', // Revenue is the bar
+                                label: 'Revenue (₹)',
+                                data: salesData.length ? salesData : [0],
+                                backgroundColor: gradientRev,
+                                borderRadius: 6,
+                                borderSkipped: false,
+                                barPercentage: 0.5,
+                                order: 2 // Draw underneath
                             }
                         ]
                     },
-                    plugins: [glowPlugin],
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
