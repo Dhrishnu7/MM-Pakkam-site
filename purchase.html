@@ -1507,8 +1507,8 @@
             } else if (issues.messages.length > 0) {
                 _showOCRWarning(issues.messages, false);
             } else {
-                showToast('OCR Complete', 'Found ' + dataRows.length + ' product(s). Verify mapping below.');
-                showInvMapper();
+                showToast('OCR Complete', 'Found ' + dataRows.length + ' product(s). Filling form now...');
+                _autoImportOCR();
             }
         }
 
@@ -1517,80 +1517,93 @@
         function _checkOCRQuality(rows) {
             const issues = [];
             let blocked = false;
+            const total = rows.length;
+            const emptyName = rows.filter(r => !String(r[0]).trim()).length;
+            const emptyQty  = rows.filter(r => !String(r[3]).trim()).length;
+            const emptyMRP  = rows.filter(r => !String(r[4]).trim()).length;
+            const emptyBatch= rows.filter(r => !String(r[1]).trim()).length;
+            const emptyExp  = rows.filter(r => !String(r[2]).trim()).length;
 
-            const totalRows = rows.length;
-            const emptyName  = rows.filter(r => !String(r[0]).trim()).length;
-            const emptyQty   = rows.filter(r => !String(r[3]).trim()).length;
-            const emptyMRP   = rows.filter(r => !String(r[4]).trim()).length;
-            const emptyBatch = rows.filter(r => !String(r[1]).trim()).length;
-            const emptyExp   = rows.filter(r => !String(r[2]).trim()).length;
-
-            const nameMissRatio = emptyName / totalRows;
-            const qtyMissRatio  = emptyQty  / totalRows;
-            const mrpMissRatio  = emptyMRP  / totalRows;
-
-            // Blocked: More than 60% product names missing = scan is useless
-            if (nameMissRatio > 0.6) {
-                issues.push('❌ Over 60% of product names are missing — the image is likely blurry or too dark.');
+            if (emptyName / total > 0.6) {
+                issues.push('Most product names could not be read.');
                 blocked = true;
             } else if (emptyName > 0) {
-                issues.push('⚠️ ' + emptyName + ' product name(s) could not be read — check those rows.');
+                issues.push(emptyName + ' product name(s) missing — check those rows.');
             }
-
-            // Blocked: All qty AND mrp missing = zero usable data
-            if (qtyMissRatio === 1 && mrpMissRatio === 1) {
-                issues.push('❌ No quantity or price data was found — the invoice table was not recognized.');
+            if (emptyQty / total === 1 && emptyMRP / total === 1) {
+                issues.push('No quantity or price data found.');
                 blocked = true;
             } else {
-                if (qtyMissRatio > 0.5)  issues.push('⚠️ Quantity missing for ' + emptyQty + ' / ' + totalRows + ' rows.');
-                if (mrpMissRatio > 0.5)  issues.push('⚠️ MRP missing for ' + emptyMRP + ' / ' + totalRows + ' rows.');
+                if (emptyQty / total > 0.5) issues.push('Quantity missing for many rows.');
+                if (emptyMRP / total > 0.5) issues.push('MRP missing for many rows.');
             }
-
-            if (emptyBatch === totalRows) issues.push('ℹ️ Batch numbers not detected — you can fill them manually.');
-            if (emptyExp   === totalRows) issues.push('ℹ️ Expiry dates not detected — you can fill them manually.');
-
+            if (emptyBatch === total) issues.push('Batch numbers not detected (fill manually).');
+            if (emptyExp   === total) issues.push('Expiry dates not detected (fill manually).');
             return { messages: issues, blocked };
         }
 
+        /* ── Auto-import OCR results directly into purchase form ── */
+        function _autoImportOCR() {
+            // _invRows = [[name, batch, expiry, qty, mrp, rate, gst, pack], ...]
+            // _invHdrs = ['Product Name','Batch No','Expiry','Quantity','MRP','Rate','GST%','Pack']
+            document.getElementById('lineItemsContainer').innerHTML = '';
+            lineItemCounter = 0;
+
+            _invRows.forEach(row => {
+                const pName = String(row[0] || '').trim();
+                if (!pName) return;
+
+                lineItemCounter++;
+                const container = document.getElementById('lineItemsContainer');
+                container.insertAdjacentHTML('beforeend', createLineItemHTML(lineItemCounter));
+                const el = document.getElementById(`item_${lineItemCounter}`);
+
+                el.querySelector('.li-productName').value  = pName;
+                el.querySelector('.li-batchNo').value      = String(row[1] || '').trim();
+                el.querySelector('.li-expireDate').value   = _parseExpiry(row[2]);
+                el.querySelector('.li-quantity').value     = String(row[3] || '').trim();
+                el.querySelector('.li-mrp').value          = String(row[4] || '').trim();
+                el.querySelector('.li-rate').value         = String(row[5] || '').trim();
+                el.querySelector('.li-gst').value          = String(row[6] || '').trim();
+                el.querySelector('.li-pack').value         = String(row[7] || '').trim();
+
+                calcItemTotal(`item_${lineItemCounter}`);
+            });
+
+            if (lineItemCounter === 0) addLineItem();
+            renumberItems();
+            updateGrandTotal();
+            closeInvoiceImportModal();
+            showToast('✅ ' + lineItemCounter + ' items loaded!', 'Review each item, adjust if needed, then Save.');
+        }
+
         function _showOCRWarning(messages, blocked) {
-            // Remove old warning if any
             const old = document.getElementById('ocrScanWarning');
             if (old) old.remove();
 
-            const wrap = document.createElement('div');
-            wrap.id = 'ocrScanWarning';
-            wrap.style.cssText = 'margin-top:1rem;padding:1rem 1.2rem;border-radius:12px;border:2px solid ' +
-                (blocked ? '#fca5a5' : '#fde68a') + ';background:' +
-                (blocked ? '#fff1f2' : '#fffbeb') + ';font-size:0.82rem;';
-
-            const icon  = blocked ? '🚫' : '⚠️';
-            const title = blocked ? 'Scan Failed — Do Not Proceed' : 'Scan Quality Issues Detected';
-            const color = blocked ? '#991b1b' : '#78350f';
-
-            let html = `<div style='font-weight:800;font-size:0.9rem;color:${color};margin-bottom:0.5rem;'>${icon} ${title}</div>`;
-            html += messages.map(m => `<div style='margin-bottom:0.3rem;'>${m}</div>`).join('');
-
             if (blocked) {
-                html += `<div style='margin-top:0.8rem;padding:0.5rem 0.8rem;background:#fecaca;border-radius:8px;color:#7f1d1d;font-weight:700;'>
-                    Please upload a clearer image or use Excel/CSV for accurate results.
-                </div>
-                <button onclick="document.getElementById('ocrScanWarning').remove(); document.getElementById('invFileInput').value='';"
-                    style='margin-top:0.8rem;padding:0.5rem 1.2rem;background:#ef4444;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;width:100%;'>
-                    🔄 Try Again with Better Image
-                </button>`;
-            } else {
-                html += `<div style='margin-top:0.8rem;display:flex;gap:0.6rem;'>
-                    <button onclick="document.getElementById('ocrScanWarning').remove(); showInvMapper();"
-                        style='flex:1;padding:0.5rem;background:#f59e0b;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
-                        ⚠️ Proceed Anyway (Verify Manually)
-                    </button>
-                    <button onclick="document.getElementById('ocrScanWarning').remove(); document.getElementById('invFileInput').value='';"
-                        style='flex:1;padding:0.5rem;background:#6b7280;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
-                        🔄 Re-upload Better Image
-                    </button>
-                </div>`;
+                // Simple clear toast for bad image
+                showToast('🚫 Image Not Clear',
+                    'Could not read the invoice clearly. Please upload a clearer photo or use Excel/CSV.');
+                return;
             }
 
+            // Partial issues — show warning with option to proceed
+            const wrap = document.createElement('div');
+            wrap.id = 'ocrScanWarning';
+            wrap.style.cssText = 'margin-top:1rem;padding:1rem 1.2rem;border-radius:12px;border:2px solid #fde68a;background:#fffbeb;font-size:0.82rem;';
+            let html = `<div style='font-weight:800;font-size:0.9rem;color:#78350f;margin-bottom:0.5rem;'>⚠️ Scan Quality Issues</div>`;
+            html += messages.map(m => `<div style='margin-bottom:0.3rem;color:#92400e;'>${m}</div>`).join('');
+            html += `<div style='margin-top:0.8rem;display:flex;gap:0.6rem;'>
+                <button onclick="document.getElementById('ocrScanWarning').remove(); _autoImportOCR();"
+                    style='flex:1;padding:0.5rem;background:#f59e0b;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
+                    ✅ Fill Form Anyway (Verify Manually)
+                </button>
+                <button onclick="document.getElementById('ocrScanWarning').remove(); document.getElementById('invFileInput').value='';"
+                    style='flex:1;padding:0.5rem;background:#6b7280;color:white;border:none;border-radius:8px;font-weight:700;cursor:pointer;'>
+                    🔄 Re-upload Better Image
+                </button>
+            </div>`;
             wrap.innerHTML = html;
             const step1 = document.getElementById('invStep1');
             if (step1) step1.appendChild(wrap);
