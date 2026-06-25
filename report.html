@@ -1992,33 +1992,53 @@
             const sales = data.filter(r => r.type === 'sales');
             const purchases = Object.values(_rawPurchasesMap);
 
+            // Helper function to find the most accurate cost for a product
+            function getUnitCost(productName, purchasesList) {
+                if (!productName) return null;
+                // Normalize name for fuzzy matching (remove spaces, symbols, lowercase)
+                const normalize = (str) => String(str).toLowerCase().replace(/[^a-z0-9]/g, '');
+                const targetName = normalize(productName);
+                
+                // Find all matches
+                const matches = purchasesList.filter(p => normalize(p.product_name || p.productName || "") === targetName);
+                
+                if (matches.length === 0) return null;
+                
+                // Sort by date descending to get the LATEST purchase price
+                matches.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+                
+                const match = matches[0];
+                const pRate = parseFloat(match.rate) || 0;
+                const pPack = parseFloat(match.pack) || 1;
+                const pGst = parseFloat(match.gst) || 0;
+                
+                // Return cost per unit including GST
+                return (pRate / pPack) * (1 + (pGst / 100));
+            }
+
             // 1. Calculate TRUE Profit
             let trueProfit = 0;
             const productSales = {}; // For Top Sellers
 
             sales.forEach(s => {
-                // Find matching purchase to get actual cost
-                // Match by product name. If multiple, take the average or latest rate.
-                // For simplicity, find the first matching purchase in rawPurchasesMap
-                let costPerUnit = 0;
-                const match = purchases.find(p => String(p.product_name || p.productName || "").toLowerCase() === String(s.product || "").toLowerCase());
+                const saleRevenue = s.total || 0;
+                const qty = s.qty || 1;
                 
-                if (match) {
-                    const pRate = parseFloat(match.rate) || 0;
-                    const pPack = parseFloat(match.pack) || 1;
-                    const pGst = parseFloat(match.gst) || 0;
-                    // Cost per unit including GST
-                    costPerUnit = (pRate / pPack) * (1 + (pGst / 100));
+                let costPerUnit = getUnitCost(s.product, purchases);
+                
+                // Fallback: If no purchase record exists, assume a realistic 15% profit margin (Cost = 85% of Sale)
+                // This prevents the graph from skewing wildly due to missing purchase entries.
+                if (costPerUnit === null) {
+                    costPerUnit = (saleRevenue * 0.85) / qty; 
                 }
 
-                const saleRevenue = s.total;
-                const saleCost = costPerUnit * s.qty;
+                const saleCost = costPerUnit * qty;
                 trueProfit += (saleRevenue - saleCost);
 
                 // Top Sellers aggregation
                 const pName = s.product || 'Unknown';
                 if (!productSales[pName]) productSales[pName] = { qty: 0, revenue: 0 };
-                productSales[pName].qty += s.qty;
+                productSales[pName].qty += qty;
                 productSales[pName].revenue += saleRevenue;
             });
 
@@ -2029,21 +2049,19 @@
                 if (!dateMap[r.date]) dateMap[r.date] = { sales: 0, cogs: 0, purchases: 0 };
                 
                 if (r.type === 'sales') {
-                    dateMap[r.date].sales += r.total;
+                    const saleRevenue = r.total || 0;
+                    const qty = r.qty || 1;
+                    dateMap[r.date].sales += saleRevenue;
                     
-                    // calculate COGS for this sale
-                    let costPerUnit = 0;
-                    const match = purchases.find(p => String(p.product_name || p.productName || "").toLowerCase() === String(r.product || "").toLowerCase());
-                    if (match) {
-                        const pRate = parseFloat(match.rate) || 0;
-                        const pPack = parseFloat(match.pack) || 1;
-                        const pGst = parseFloat(match.gst) || 0;
-                        costPerUnit = (pRate / pPack) * (1 + (pGst / 100));
+                    let costPerUnit = getUnitCost(r.product, purchases);
+                    if (costPerUnit === null) {
+                        costPerUnit = (saleRevenue * 0.85) / qty; // 15% margin fallback
                     }
-                    dateMap[r.date].cogs += (costPerUnit * r.qty);
+                    
+                    dateMap[r.date].cogs += (costPerUnit * qty);
                 }
                 
-                if (r.type === 'purchase') dateMap[r.date].purchases += r.total;
+                if (r.type === 'purchase') dateMap[r.date].purchases += r.total || 0;
             });
 
             const sortedDates = Object.keys(dateMap).sort();
