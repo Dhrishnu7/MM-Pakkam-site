@@ -1828,15 +1828,19 @@
                 };
 
                 // Pack: weight/volume (GM, ML…) → 1 unit; multiplication → evaluate; else strip
-                const wvPat = /^[\d.]+\s*(ml|mg|gm|g|l|mcg|iu|kg|oz)\s*$/i;
-                const mulPat = /^(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)$/;
+                const wvPat    = /^[\d.]+\s*(ml|mg|gm|g|l|mcg|iu|kg|oz)\s*$/i;
+                // "1X10G", "1X10ML" → weight/volume product (cream, syrup) → sell as 1 whole unit
+                const mulWvPat = /^(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)\s*(ml|mg|gm|g|l|mcg|iu|kg|oz)\s*$/i;
+                // "1X10", "2X15" → tablet/capsule strips → evaluate the multiplication
+                const mulPat   = /^(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)$/;
                 const packVal = v => {
                     const raw = String(v??'').trim();
                     if (!raw) return '';
-                    if (wvPat.test(raw)) return '1';              // 100 ML / 75 GM → 1
+                    if (wvPat.test(raw))    return '1';   // "100 ML", "75 GM" → 1
+                    if (mulWvPat.test(raw)) return '1';   // "1X10G", "1X10ML" → cream/syrup → 1
                     const mul = raw.match(mulPat);
-                    if (mul) return String(Math.round(Number(mul[1]) * Number(mul[2]))); // 1X10 → 10
-                    return raw.replace(/[^\d.]/g, '');             // 10 TAB → 10
+                    if (mul) return String(Math.round(Number(mul[1]) * Number(mul[2]))); // "1X10" → 10
+                    return raw.replace(/[^\d.]/g, '');    // "10 TAB" → 10
                 };
 
                 // GST: Excel often stores 12% as the decimal 0.12 — convert back to %
