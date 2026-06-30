@@ -2319,7 +2319,8 @@
                         totalOut: 0
                     };
                 }
-                map[key].totalIn += parseFloat(p.quantity) || 0;
+                // Stock in loose units: strips × tablets-per-strip (e.g. 2 × 15 = 30 tablets)
+                map[key].totalIn += (parseFloat(p.quantity) || 0) * (parseFloat(p.pack) || 1);
                 // keep the most recent expiry
                 if (p.expireDate && (!map[key].exp || p.expireDate > map[key].exp)) {
                     map[key].exp = p.expireDate;

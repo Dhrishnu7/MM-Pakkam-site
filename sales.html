@@ -832,7 +832,10 @@
             purchases.forEach(p => {
                 if ((p.productName || '').trim().toLowerCase() === name) {
                     if (!batch || (p.batchNo || '').trim().toLowerCase() === batch) {
-                        totalPurchased += parseFloat(p.quantity) || 0;
+                        // Stock is in loose units: quantity × pack (e.g. 2 strips × 15 = 30 tablets)
+                        const qty  = parseFloat(p.quantity) || 0;
+                        const pack = parseFloat(p.pack) || 1;
+                        totalPurchased += qty * pack;
                     }
                 }
             });
@@ -1015,16 +1018,22 @@
             if (!match) return;
 
             const purchaseMrp  = parseFloat(match.mrp)  || 0;
+            const purchaseRate = parseFloat(match.rate) || 0;
             const purchasePack = parseFloat(match.pack) || 1;
-            const salesMrp     = purchasePack > 0
-                ? parseFloat((purchaseMrp / purchasePack).toFixed(2))
+            // Divide MRP and Rate by pack size to get per-unit price
+            // e.g. Strip MRP ₹30 ÷ 15 tablets = ₹2 per tablet
+            const salesMrp  = purchasePack > 0
+                ? parseFloat((purchaseMrp  / purchasePack).toFixed(2))
                 : purchaseMrp;
+            const salesRate = purchasePack > 0
+                ? parseFloat((purchaseRate / purchasePack).toFixed(2))
+                : purchaseRate;
 
             const fields = [
                 { el: document.getElementById('exp_'  + id), val: match.expireDate || '' },
                 { el: document.getElementById('pack_' + id), val: match.pack        || '' },
-                { el: document.getElementById('mrp_'  + id), val: salesMrp > 0 ? salesMrp : '' },
-                { el: document.getElementById('rate_' + id), val: match.rate        || '' },
+                { el: document.getElementById('mrp_'  + id), val: salesMrp  > 0 ? salesMrp  : '' },
+                { el: document.getElementById('rate_' + id), val: salesRate  > 0 ? salesRate : '' },
                 { el: document.getElementById('gst_'  + id), val: match.gst         || '' },
             ];
             fields.forEach(({ el, val }) => {
