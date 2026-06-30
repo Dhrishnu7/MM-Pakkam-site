@@ -895,10 +895,10 @@
                 );
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Saved!`;
             } else {
-                // For any failures, we save them to the pending queue to sync later
+                // For any failures, save to pending queue and show which items failed
                 showToast(
-                    `Saved Offline`,
-                    `${failCount} item(s) saved offline and will sync automatically when online.`
+                    `⚠️ ${failCount} item(s) failed`,
+                    `Saved locally. Open F12 Console to see the exact error for each failed item.`
                 );
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01"/></svg> Saved Offline (Pending Sync)`;
             }

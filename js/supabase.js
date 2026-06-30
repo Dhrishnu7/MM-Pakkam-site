@@ -242,13 +242,15 @@ async function dbAddPurchase(row) {
     if (!user) { console.warn('[db] dbAddPurchase: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
     // Note: avoid .single() here — it throws PGRST116 if RLS prevents read-back
     // even when the insert itself succeeded, causing a false "Saved Offline" error.
+    const ed = row.expireDate || row.expire_date || '';
     const { error } = await _supabase.from('purchases').insert({
         bill_no:      row.billNo     || '',
         firm:         row.firm       || '',
         date:         row.date       || new Date().toISOString().slice(0,10),
         product_name: row.productName || row.product_name || '',
         batch_no:     row.batchNo    || row.batch_no     || '',
-        expire_date:  row.expireDate || row.expire_date  || '',
+        // month input returns 'YYYY-MM' — Supabase date column needs 'YYYY-MM-DD'
+        expire_date:  ed.length === 7 ? ed + '-01' : (ed || null),
         pack:         Number(row.pack)      || 0,
         quantity:     Number(row.quantity) || 0,
         mrp:          Number(row.mrp)      || 0,
