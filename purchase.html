@@ -1817,17 +1817,36 @@
                 container.insertAdjacentHTML('beforeend', createLineItemHTML(lineItemCounter));
                 const el=document.getElementById(`item_${lineItemCounter}`);
 
-                // Extract numeric portion only (handles "75 GM", "100 ML", "10 TAB" etc.)
-                const numOnly = v => String(v??'').trim().replace(/[^\d.]/g, '');
+                // ── Import value parsers ──────────────────────────────────────────
+                // Basic: strip everything except digits and dot
+                const numOnly = v => {
+                    const raw = String(v??'').trim();
+                    // Handle multiplication format: "1X10", "1×10", "2*15" → evaluate
+                    const mul = raw.match(/^(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)$/);
+                    if (mul) return String(Math.round(Number(mul[1]) * Number(mul[2])));
+                    return raw.replace(/[^\d.]/g, '');
+                };
 
-                // For pack specifically: physical weight/volume values ("75 GM", "100 ML")
-                // mean the pack count is 1 — you sell the whole item as one unit.
+                // Pack: weight/volume (GM, ML…) → 1 unit; multiplication → evaluate; else strip
                 const wvPat = /^[\d.]+\s*(ml|mg|gm|g|l|mcg|iu|kg|oz)\s*$/i;
+                const mulPat = /^(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)$/;
                 const packVal = v => {
                     const raw = String(v??'').trim();
                     if (!raw) return '';
-                    if (wvPat.test(raw)) return '1'; // 100 ML → 1 unit
-                    return raw.replace(/[^\d.]/g, '');  // 10 TAB → 10
+                    if (wvPat.test(raw)) return '1';              // 100 ML / 75 GM → 1
+                    const mul = raw.match(mulPat);
+                    if (mul) return String(Math.round(Number(mul[1]) * Number(mul[2]))); // 1X10 → 10
+                    return raw.replace(/[^\d.]/g, '');             // 10 TAB → 10
+                };
+
+                // GST: Excel often stores 12% as the decimal 0.12 — convert back to %
+                const gstVal = v => {
+                    const raw = String(v??'').trim();
+                    const num = parseFloat(raw.replace(/[^\d.]/g, ''));
+                    if (isNaN(num) || raw === '') return '';
+                    // Values like 0.05, 0.12, 0.18, 0.28 are decimal GST → multiply by 100
+                    if (num > 0 && num < 1) return String(parseFloat((num * 100).toFixed(4)).toString());
+                    return String(num);
                 };
 
                 el.querySelector('.li-productName').value = pName;
@@ -1837,7 +1856,8 @@
                 if(map.quantity!==undefined)   el.querySelector('.li-quantity').value   = numOnly(row[map.quantity]);
                 if(map.mrp!==undefined)        el.querySelector('.li-mrp').value        = numOnly(row[map.mrp]);
                 if(map.rate!==undefined)       el.querySelector('.li-rate').value       = numOnly(row[map.rate]);
-                if(map.gst!==undefined)        el.querySelector('.li-gst').value        = numOnly(row[map.gst]);
+                if(map.gst!==undefined)        el.querySelector('.li-gst').value        = gstVal(row[map.gst]);
+
 
                 calcItemTotal(`item_${lineItemCounter}`);
             });
