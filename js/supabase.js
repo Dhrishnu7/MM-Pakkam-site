@@ -240,7 +240,9 @@ async function dbGetPurchases(fromDate, toDate) {
 async function dbAddPurchase(row) {
     const user = _currentUser();
     if (!user) { console.warn('[db] dbAddPurchase: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
-    const { data, error } = await _supabase.from('purchases').insert({
+    // Note: avoid .single() here — it throws PGRST116 if RLS prevents read-back
+    // even when the insert itself succeeded, causing a false "Saved Offline" error.
+    const { error } = await _supabase.from('purchases').insert({
         bill_no:      row.billNo     || '',
         firm:         row.firm       || '',
         date:         row.date       || new Date().toISOString().slice(0,10),
@@ -253,9 +255,9 @@ async function dbAddPurchase(row) {
         rate:         Number(row.rate)     || 0,
         gst:          Number(row.gst)      || 0,
         user_id:      user,
-    }).select().single();
+    });
     if (error) { console.error('purchase add:', error); return { success: false, message: error.message }; }
-    return { success: true, data };
+    return { success: true };
 }
 async function dbDeletePurchase(id) {
     const user = _currentUser();
@@ -294,16 +296,19 @@ async function dbSaveBill(bill) {
     if (!user) { console.warn('[db] dbSaveBill: no user, aborting.'); return { success: false, message: 'Not logged in.' }; }
     let billNo = bill.billNo || await dbNextBillNo();
 
-    let { data: billRow, error: billErr } = await _supabase.from('bills').insert({
+    // Use .select() array form — NOT .single() — to avoid PGRST116 false errors
+    // when RLS allows insert but restricts read-back.
+    let { data: billRows, error: billErr } = await _supabase.from('bills').insert({
         bill_no:       billNo,
         date:          bill.date,
         customer_name: bill.customerName || '',
         doctor_name:   bill.doctorName   || '',
         grand_total:   parseFloat(String(bill.grandTotal).replace(/[^0-9.]/g,'')) || 0,
         user_id:       user,
-    }).select().single();
+    }).select();
+    let billRow = billRows?.[0] || null;
 
-    if (billErr) {
+    if (billErr || !billRow) {
         // Fallback: If there's a unique constraint violation, auto-generate a fallback ID
         billNo = 'MM-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random()*1000);
         let retry = await _supabase.from('bills').insert({
@@ -313,13 +318,13 @@ async function dbSaveBill(bill) {
             doctor_name:   bill.doctorName   || '',
             grand_total:   parseFloat(String(bill.grandTotal).replace(/[^0-9.]/g,'')) || 0,
             user_id:       user,
-        }).select().single();
+        }).select();
 
-        if (retry.error) {
+        if (retry.error || !retry.data?.[0]) {
             console.error('bill save retry failed:', retry.error);
-            return { success: false, message: retry.error.message };
+            return { success: false, message: retry.error?.message || 'Bill insert returned no data' };
         }
-        billRow = retry.data;
+        billRow = retry.data[0];
         billErr = null;
     }
 
