@@ -247,6 +247,7 @@ async function dbAddPurchase(row) {
         product_name: row.productName || row.product_name || '',
         batch_no:     row.batchNo    || row.batch_no     || '',
         expire_date:  row.expireDate || row.expire_date  || '',
+        pack:         Number(row.pack)      || 0,
         quantity:     Number(row.quantity) || 0,
         mrp:          Number(row.mrp)      || 0,
         rate:         Number(row.rate)     || 0,
