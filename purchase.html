@@ -1679,6 +1679,17 @@
             const step1 = document.getElementById('invStep1');
             if (step1) step1.appendChild(wrap);
         }
+        // Returns true if a column's data values look like physical weight/volume
+        // measurements (e.g. "75 GM", "100 ML", "500 MG") rather than a count
+        function isWeightVolumeCol(colIdx) {
+            const wvPat = /^\s*[\d.]+\s*(ml|mg|gm|g|l|mcg|iu|kg|oz|tab|cap|nos)\s*$/i;
+            const sample = _invRows.slice(0, 12);
+            const nonEmpty = sample.filter(r => String(r[colIdx]??'').trim()).length;
+            if (!nonEmpty) return false;
+            const hits = sample.filter(r => wvPat.test(String(r[colIdx]??'').trim())).length;
+            return (hits / nonEmpty) >= 0.4;
+        }
+
         function showInvMapper() {
             document.getElementById('invStep1').style.display='none';
             document.getElementById('invStep2').style.display='block';
@@ -1695,23 +1706,34 @@
                 mrp:/mrp|max.*price|selling/i,
                 rate:/rate|purchase|cost|ptr|pts/i,
                 gst:/gst|tax|vat/i,
-                pack:/pack|packing|size/i,
+                // Pack = strip count (10 TAB, 15 CAP) — NOT weight/volume columns
+                pack:/^pack(\s*size)?$|^packing$/i,
             };
             const container = document.getElementById('invFieldChips');
             container.innerHTML = '';
             INV_FIELDS.forEach(f=>{
                 const kw = keywords[f.key];
-                const idx = kw ? _invHdrs.findIndex(h=>kw.test(h)) : -1;
+                let idx = kw ? _invHdrs.findIndex(h=>kw.test(h.trim())) : -1;
+
+                // For pack: reject the match if the column's values look like
+                // physical weight/volume (e.g. "75 GM", "100 ML") — those are
+                // not strip counts; default pack to 1 for such products.
+                if (f.key === 'pack' && idx >= 0 && isWeightVolumeCol(idx)) {
+                    idx = -1; // treat as not found → chip pre-skipped → defaults to 1
+                }
+
                 const detectedName = idx >= 0 ? (_invHdrs[idx] || 'Col '+(idx+1)) : null;
-                // Store detected index on chip
                 const chip = document.createElement('div');
                 chip.className = 'inv-chip' + (detectedName ? '' : ' inv-chip-skip');
                 chip.dataset.key = f.key;
                 chip.dataset.idx = idx;
                 chip.dataset.skipped = detectedName ? 'false' : 'true';
+                // Extra hint for pack when auto-rejected
+                const hint = (f.key==='pack' && !detectedName)
+                    ? ' <span style="font-size:0.7rem;color:#f59e0b;">(will default to 1)</span>' : '';
                 chip.innerHTML = `
                     <span class="inv-chip-label">${f.label.replace(' ✱','')}</span>
-                    <span class="inv-chip-detected">${detectedName ? '→ ' + detectedName : 'Not found'}</span>
+                    <span class="inv-chip-detected">${detectedName ? '→ ' + detectedName : 'Not found'+hint}</span>
                     <button type="button" class="inv-chip-skip-btn" onclick="toggleChipSkip(this.closest('.inv-chip'))">
                         ${chip.dataset.skipped==='true' ? 'Include' : 'Skip'}
                     </button>`;
@@ -1795,13 +1817,23 @@
                 container.insertAdjacentHTML('beforeend', createLineItemHTML(lineItemCounter));
                 const el=document.getElementById(`item_${lineItemCounter}`);
 
-                // Helper: extract just the leading number from strings like "75 GM", "100 ML", "10 TAB"
+                // Extract numeric portion only (handles "75 GM", "100 ML", "10 TAB" etc.)
                 const numOnly = v => String(v??'').trim().replace(/[^\d.]/g, '');
+
+                // For pack specifically: physical weight/volume values ("75 GM", "100 ML")
+                // mean the pack count is 1 — you sell the whole item as one unit.
+                const wvPat = /^[\d.]+\s*(ml|mg|gm|g|l|mcg|iu|kg|oz)\s*$/i;
+                const packVal = v => {
+                    const raw = String(v??'').trim();
+                    if (!raw) return '';
+                    if (wvPat.test(raw)) return '1'; // 100 ML → 1 unit
+                    return raw.replace(/[^\d.]/g, '');  // 10 TAB → 10
+                };
 
                 el.querySelector('.li-productName').value = pName;
                 if(map.batchNo!==undefined)   el.querySelector('.li-batchNo').value    = String(row[map.batchNo]??'').trim();
                 if(map.expireDate!==undefined) el.querySelector('.li-expireDate').value = _parseExpiry(row[map.expireDate]);
-                if(map.pack!==undefined)       el.querySelector('.li-pack').value       = numOnly(row[map.pack]);
+                if(map.pack!==undefined)       el.querySelector('.li-pack').value       = packVal(row[map.pack]);
                 if(map.quantity!==undefined)   el.querySelector('.li-quantity').value   = numOnly(row[map.quantity]);
                 if(map.mrp!==undefined)        el.querySelector('.li-mrp').value        = numOnly(row[map.mrp]);
                 if(map.rate!==undefined)       el.querySelector('.li-rate').value       = numOnly(row[map.rate]);
