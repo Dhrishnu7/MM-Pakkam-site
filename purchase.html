@@ -480,18 +480,38 @@
         }
 
         /* ── Invoice Import Modal extras ── */
-        .inv-field-map {
-            display:grid; grid-template-columns:1fr 1fr; gap:0.55rem 1rem;
-            margin:0.8rem 0;
+        .inv-chip-grid {
+            display: flex; flex-direction: column; gap: 0.45rem; margin: 0.8rem 0;
         }
-        .inv-field-row { display:flex; flex-direction:column; gap:4px; }
-        .inv-field-lbl { font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#64748b; }
-        .inv-field-select {
-            padding:6px 10px; border-radius:8px; border:1.5px solid #e2e8f0;
-            font-family:'Inter',sans-serif; font-size:0.82rem; font-weight:600;
-            color:#0f172a; background:white; cursor:pointer;
+        .inv-chip {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.5rem 0.75rem; border-radius: 10px;
+            background: #f8fafc; border: 1.5px solid #e2e8f0;
+            transition: opacity 0.2s, background 0.2s;
         }
-        .inv-field-select:focus { outline:none; border-color:#f59e0b; }
+        .inv-chip.inv-chip-skip {
+            opacity: 0.45; background: #f1f5f9;
+        }
+        .inv-chip-label {
+            font-size: 0.78rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .06em; color: #374151; min-width: 130px;
+        }
+        .inv-chip-detected {
+            font-size: 0.82rem; font-weight: 600; color: #0ea5e9; flex: 1;
+        }
+        .inv-chip.inv-chip-skip .inv-chip-detected { color: #94a3b8; }
+        .inv-chip-skip-btn {
+            font-size: 0.72rem; font-weight: 700; padding: 3px 12px;
+            border-radius: 20px; border: 1.5px solid #e2e8f0;
+            background: white; color: #64748b; cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+        .inv-chip-skip-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+        .inv-chip.inv-chip-skip .inv-chip-skip-btn {
+            background: #d1fae5; border-color: #6ee7b7; color: #059669;
+        }
+        .inv-chip.inv-chip-skip .inv-chip-skip-btn:hover { background: #a7f3d0; }
         .inv-preview-table { width:100%; border-collapse:collapse; font-size:0.78rem; margin-top:0.5rem; }
         .inv-preview-table th { background:#f1f5f9; padding:5px 8px; text-align:left; font-weight:800; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap; }
         .inv-preview-table td { padding:5px 8px; border-bottom:1px solid #f1f5f9; color:#0f172a; white-space:nowrap; }
@@ -1665,39 +1685,58 @@
             document.getElementById('invStep3').style.display='none';
             document.getElementById('invImportBtn').disabled=true;
             document.getElementById('invRowCount').textContent=`${_invRows.length} data row(s) detected`;
-            const colOpts='<option value="">— Skip —</option>'+
-                _invHdrs.map((h,i)=>`<option value="${i}">${h||('Col '+(i+1))}</option>`).join('');
+
+            // Auto-detect column indices by keyword matching
+            const keywords={
+                productName:/product|medicine|drug|name|item|brand|generic/i,
+                batchNo:/batch|lot/i,
+                expireDate:/exp|expiry|expire/i,
+                quantity:/qty|quant|nos|units/i,
+                mrp:/mrp|max.*price|selling/i,
+                rate:/rate|purchase|cost|ptr|pts/i,
+                gst:/gst|tax|vat/i,
+                pack:/pack|packing|size/i,
+            };
+            const container = document.getElementById('invFieldChips');
+            container.innerHTML = '';
             INV_FIELDS.forEach(f=>{
-                const sel=document.getElementById('invSel_'+f.key);
-                if(!sel) return;
-                sel.innerHTML=colOpts;
-                // Auto-detect by header name
-                const keywords={
-                    productName:/product|medicine|drug|name|item|brand|generic/i,
-                    batchNo:/batch|lot/i,
-                    expireDate:/exp|expiry|expire/i,
-                    quantity:/qty|quant|nos|units/i,
-                    mrp:/mrp|max.*price|selling/i,
-                    rate:/rate|purchase|cost|ptr|pts/i,
-                    gst:/gst|tax|vat/i,
-                    pack:/pack|packing|size/i,
-                };
-                const kw=keywords[f.key];
-                if(kw){
-                    const idx=_invHdrs.findIndex(h=>kw.test(h));
-                    if(idx>=0) sel.value=String(idx);
-                }
+                const kw = keywords[f.key];
+                const idx = kw ? _invHdrs.findIndex(h=>kw.test(h)) : -1;
+                const detectedName = idx >= 0 ? (_invHdrs[idx] || 'Col '+(idx+1)) : null;
+                // Store detected index on chip
+                const chip = document.createElement('div');
+                chip.className = 'inv-chip' + (detectedName ? '' : ' inv-chip-skip');
+                chip.dataset.key = f.key;
+                chip.dataset.idx = idx;
+                chip.dataset.skipped = detectedName ? 'false' : 'true';
+                chip.innerHTML = `
+                    <span class="inv-chip-label">${f.label.replace(' ✱','')}</span>
+                    <span class="inv-chip-detected">${detectedName ? '→ ' + detectedName : 'Not found'}</span>
+                    <button type="button" class="inv-chip-skip-btn" onclick="toggleChipSkip(this.closest('.inv-chip'))">
+                        ${chip.dataset.skipped==='true' ? 'Include' : 'Skip'}
+                    </button>`;
+                container.appendChild(chip);
             });
+        }
+
+        function toggleChipSkip(chip) {
+            const skipped = chip.dataset.skipped === 'true';
+            chip.dataset.skipped = skipped ? 'false' : 'true';
+            chip.classList.toggle('inv-chip-skip', !skipped);
+            chip.querySelector('.inv-chip-skip-btn').textContent = skipped ? 'Skip' : 'Include';
         }
 
         function buildInvPreview() {
             const map={};
-            INV_FIELDS.forEach(f=>{
-                const sel=document.getElementById('invSel_'+f.key);
-                if(sel&&sel.value!=='') map[f.key]=parseInt(sel.value);
+            const chips = document.querySelectorAll('#invFieldChips .inv-chip');
+            chips.forEach(chip => {
+                if (chip.dataset.skipped === 'false') {
+                    const idx = parseInt(chip.dataset.idx);
+                    if (!isNaN(idx) && idx >= 0) map[chip.dataset.key] = idx;
+                }
             });
             if(map.productName===undefined){
-                showToast('Required','Please map the Product Name column.'); return;
+                showToast('Required','Product Name column was not detected or was skipped. Please check your file headers.'); return;
             }
             document.getElementById('invStep2').style.display='none';
             document.getElementById('invStep3').style.display='block';
@@ -1852,44 +1891,10 @@
 
             <!-- Step 2: Map Columns -->
             <div class="modal-bd" id="invStep2" style="display:none">
-                <div class="step-lbl">Match your file's columns to Billware fields</div>
+                <div class="step-lbl">Review auto-detected columns</div>
                 <div class="stats-txt" id="invRowCount"></div>
-                <div class="inv-field-map">
-                    <!-- dynamically generated selects for each INV_FIELD -->
-                    <div class="inv-field-row">
-                        <label class="inv-field-lbl">Product Name ✱</label>
-                        <select class="inv-field-select" id="invSel_productName"></select>
-                    </div>
-                    <div class="inv-field-row">
-                        <label class="inv-field-lbl">Batch No</label>
-                        <select class="inv-field-select" id="invSel_batchNo"></select>
-                    </div>
-                    <div class="inv-field-row">
-                        <label class="inv-field-lbl">Expiry Date</label>
-                        <select class="inv-field-select" id="invSel_expireDate"></select>
-                    </div>
-                    <div class="inv-field-row">
-                        <label class="inv-field-lbl">Quantity</label>
-                        <select class="inv-field-select" id="invSel_quantity"></select>
-                    </div>
-                    <div class="inv-field-row">
-                        <label class="inv-field-lbl">MRP (₹)</label>
-                        <select class="inv-field-select" id="invSel_mrp"></select>
-                    </div>
-                    <div class="inv-field-row">
-                        <label class="inv-field-lbl">Purchase Rate (₹)</label>
-                        <select class="inv-field-select" id="invSel_rate"></select>
-                    </div>
-                    <div class="inv-field-row">
-                        <label class="inv-field-lbl">GST (%)</label>
-                        <select class="inv-field-select" id="invSel_gst"></select>
-                    </div>
-                    <div class="inv-field-row">
-                        <label class="inv-field-lbl">Pack Size</label>
-                        <select class="inv-field-select" id="invSel_pack"></select>
-                    </div>
-                </div>
-                <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.2rem;">✱ Required. All other fields are optional.</div>
+                <div id="invFieldChips" class="inv-chip-grid"></div>
+                <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.8rem;">✱ Product Name is required. Click <strong>Skip</strong> on any field you don't want to import.</div>
             </div>
 
             <!-- Step 3: Preview -->
