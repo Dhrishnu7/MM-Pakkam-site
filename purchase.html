@@ -1795,14 +1795,17 @@
                 container.insertAdjacentHTML('beforeend', createLineItemHTML(lineItemCounter));
                 const el=document.getElementById(`item_${lineItemCounter}`);
 
+                // Helper: extract just the leading number from strings like "75 GM", "100 ML", "10 TAB"
+                const numOnly = v => String(v??'').trim().replace(/[^\d.]/g, '');
+
                 el.querySelector('.li-productName').value = pName;
                 if(map.batchNo!==undefined)   el.querySelector('.li-batchNo').value    = String(row[map.batchNo]??'').trim();
                 if(map.expireDate!==undefined) el.querySelector('.li-expireDate').value = _parseExpiry(row[map.expireDate]);
-                if(map.pack!==undefined)       el.querySelector('.li-pack').value       = String(row[map.pack]??'').trim();
-                if(map.quantity!==undefined)   el.querySelector('.li-quantity').value   = String(row[map.quantity]??'').trim();
-                if(map.mrp!==undefined)        el.querySelector('.li-mrp').value        = String(row[map.mrp]??'').trim();
-                if(map.rate!==undefined)       el.querySelector('.li-rate').value       = String(row[map.rate]??'').trim();
-                if(map.gst!==undefined)        el.querySelector('.li-gst').value        = String(row[map.gst]??'').trim();
+                if(map.pack!==undefined)       el.querySelector('.li-pack').value       = numOnly(row[map.pack]);
+                if(map.quantity!==undefined)   el.querySelector('.li-quantity').value   = numOnly(row[map.quantity]);
+                if(map.mrp!==undefined)        el.querySelector('.li-mrp').value        = numOnly(row[map.mrp]);
+                if(map.rate!==undefined)       el.querySelector('.li-rate').value       = numOnly(row[map.rate]);
+                if(map.gst!==undefined)        el.querySelector('.li-gst').value        = numOnly(row[map.gst]);
 
                 calcItemTotal(`item_${lineItemCounter}`);
             });
