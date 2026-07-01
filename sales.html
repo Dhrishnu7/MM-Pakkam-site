@@ -801,13 +801,15 @@
             const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
             const map = {};
             purchases.forEach(p => {
-                if (p.productName) {
-                    const baseName = p.productName.trim();
+                const pName = p.productName || p.product_name;
+                const pBatch = p.batchNo || p.batch_no;
+                if (pName) {
+                    const baseName = pName.trim();
                     // Always map the base name (latest entry wins)
                     map[baseName.toLowerCase()] = p;
                     // Also map the batch-specific name
-                    if (p.batchNo) {
-                        const batchName = `${baseName} (Batch: ${p.batchNo.trim()})`;
+                    if (pBatch) {
+                        const batchName = `${baseName} (Batch: ${pBatch.trim()})`;
                         map[batchName.toLowerCase()] = p;
                     }
                 }
@@ -824,8 +826,10 @@
             const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
             let totalPurchased = 0;
             purchases.forEach(p => {
-                if ((p.productName || '').trim().toLowerCase() === name) {
-                    if (!batch || (p.batchNo || '').trim().toLowerCase() === batch) {
+                const pName = (p.productName || p.product_name || '').trim().toLowerCase();
+                const pBatch = (p.batchNo || p.batch_no || '').trim().toLowerCase();
+                if (pName === name) {
+                    if (!batch || pBatch === batch) {
                         // Stock is in loose units: quantity × pack (e.g. 2 strips × 15 = 30 tablets)
                         const qty  = parseFloat(p.quantity) || 0;
                         const pack = parseFloat(p.pack) || 1;
@@ -862,8 +866,9 @@
 
             // Only add the BASE name from purchases (not the batch-specific variant)
             purchases.forEach(p => {
-                if (p.productName) {
-                    const base = p.productName.trim();
+                const pName = p.productName || p.product_name;
+                if (pName) {
+                    const base = pName.trim();
                     if (base && !seen.has(base.toLowerCase())) { seen.add(base.toLowerCase()); names.push(base); }
                 }
             });
@@ -878,8 +883,10 @@
             const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
             const seen = new Set(), batches = [];
             purchases.forEach(p => {
-                if ((p.productName || '').trim().toLowerCase() === name && p.batchNo) {
-                    const bk = p.batchNo.trim().toLowerCase();
+                const pName = (p.productName || p.product_name || '').trim().toLowerCase();
+                const pBatch = p.batchNo || p.batch_no;
+                if (pName === name && pBatch) {
+                    const bk = pBatch.trim().toLowerCase();
                     if (!seen.has(bk)) {
                         seen.add(bk);
                         batches.push(p);
@@ -958,11 +965,14 @@
 
             // Populate batch dropdown options
             batches.forEach(p => {
-                const stock = getStock(p.productName, p.batchNo);
+                const pBatch = p.batchNo || p.batch_no;
+                const pName = p.productName || p.product_name;
+                const pExp = p.expireDate || p.expire_date || '-';
+                const stock = getStock(pName, pBatch);
                 const opt = document.createElement('option');
-                opt.value = p.batchNo;
-                opt.textContent = p.batchNo;
-                opt.title = `Exp: ${p.expireDate || '-'}  |  Stock: ${stock}`;
+                opt.value = pBatch;
+                opt.textContent = pBatch;
+                opt.title = `Exp: ${pExp}  |  Stock: ${stock}`;
                 batchSelect.appendChild(opt);
             });
 
@@ -1006,8 +1016,8 @@
             // Find the purchase record for this product+batch
             const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
             const match = purchases.find(p =>
-                (p.productName || '').trim().toLowerCase() === productVal.toLowerCase() &&
-                (p.batchNo     || '').trim().toLowerCase() === batchVal.toLowerCase()
+                (p.productName || p.product_name || '').trim().toLowerCase() === productVal.toLowerCase() &&
+                (p.batchNo     || p.batch_no || '').trim().toLowerCase() === batchVal.toLowerCase()
             );
             if (!match) return;
 
@@ -1023,22 +1033,26 @@
                 ? parseFloat((purchaseRate / purchasePack).toFixed(2))
                 : purchaseRate;
 
-            const fields = [
-                { el: document.getElementById('exp_'  + id), val: match.expireDate || '' },
-                { el: document.getElementById('pack_' + id), val: match.pack        || '' },
-                { el: document.getElementById('mrp_'  + id), val: salesMrp  > 0 ? salesMrp  : '' },
-                { el: document.getElementById('rate_' + id), val: salesRate  > 0 ? salesRate : '' },
-                { el: document.getElementById('gst_'  + id), val: match.gst         || '' },
-            ];
-            fields.forEach(({ el, val }) => {
-                if (!el) return;
-                el.value = val;
-                if (val !== '') flashCell(el);
-            });
+            // Fill row fields (using snake_case fallbacks for DB synced data)
+            const pExp = match.expireDate || match.expire_date || '';
+            const pPack = match.pack || 1;
+            const pGST = match.gst || 0;
 
-            const stockEl = document.getElementById('stock_' + id);
+            const expEl      = document.getElementById('exp_' + id);
+            const packEl     = document.getElementById('pack_' + id);
+            const mrpEl      = document.getElementById('mrp_' + id);
+            const rateEl     = document.getElementById('rate_' + id);
+            const gstEl      = document.getElementById('gst_' + id);
+            const stockEl    = document.getElementById('stock_' + id);
+
+            if (expEl) { expEl.value = pExp; flashCell(expEl); }
+            if (packEl) { packEl.value = pPack; }
+            if (mrpEl) { mrpEl.value = salesMrp > 0 ? salesMrp : ''; flashCell(mrpEl); }
+            if (rateEl) { rateEl.value = salesRate > 0 ? salesRate : ''; flashCell(rateEl); }
+            if (gstEl) { gstEl.value = pGST; flashCell(gstEl); }
+
             if (stockEl) {
-                stockEl.value = getStock(match.productName, match.batchNo);
+                stockEl.value = getStock(match.productName || match.product_name, match.batchNo || match.batch_no);
                 flashCell(stockEl);
                 checkStockOnQtyChange(id);
             }
