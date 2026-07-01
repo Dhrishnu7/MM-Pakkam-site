@@ -633,7 +633,7 @@
         <div class="page-header">
             <div class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Sales</div>
             <h1>New Sale Bill</h1>
-            <p>Add up to 15 medicines at once and save as one bill</p>
+            <p>Add any number of medicines in one bill — no item limit</p>
         </div>
 
         <div class="form-card">
@@ -676,8 +676,7 @@
                 <!-- -- Medicine Table -- -->
                 <div class="section-label">
                     <h2>Medicine Details</h2>
-                    <span class="pill">UP TO 15 ITEMS</span>
-                    <span class="row-count-badge" id="rowCountBadge">1 / 15</span>
+                    <span class="row-count-badge" id="rowCountBadge">1 item</span>
                     <div style="display:flex; gap:0.5rem; margin-left:auto;">
                         <button type="button" class="clear-btn-sm" onclick="clearImportedMedicines()">
                             🗑️ Clear Imported
@@ -780,7 +779,6 @@
     </div>
 
     <script>
-        const MAX_ROWS = 15;
         let rowCount = 0;
         let globalRowCounter = 0;
 
@@ -1053,9 +1051,10 @@
         /* -- Update row count badge and add btn -- */
         function updateUI() {
             const badge = document.getElementById('rowCountBadge');
-            if(badge) badge.textContent = rowCount + ' / ' + MAX_ROWS;
+            if(badge) badge.textContent = rowCount + (rowCount === 1 ? ' item' : ' items');
+            // Add button is always enabled — no row limit
             const addBtn = document.getElementById('addRowBtn');
-            if(addBtn) addBtn.disabled = rowCount >= MAX_ROWS;
+            if(addBtn) addBtn.disabled = false;
             
             // disable remove button if only 1 row
             const removeBtns = document.querySelectorAll('.remove-row-btn');
@@ -1130,7 +1129,6 @@
         }
         /* -- Add Row -- */
         function addRow() {
-            if (rowCount >= MAX_ROWS) return;
             rowCount++;
             globalRowCounter++;
             const id = globalRowCounter;
