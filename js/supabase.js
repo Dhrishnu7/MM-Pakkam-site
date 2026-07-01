@@ -251,8 +251,7 @@ async function dbAddPurchase(row) {
         batch_no:     row.batchNo    || row.batch_no     || '',
         // month input returns 'YYYY-MM' — Supabase date column needs 'YYYY-MM-DD'
         expire_date:  ed.length === 7 ? ed + '-01' : (ed || null),
-        // NOTE: 'pack' column must exist in Supabase before re-enabling this line
-        // pack:      Number(row.pack) || 0,
+        pack:         Number(row.pack) || 0,
         quantity:     Number(row.quantity) || 0,
         mrp:          Number(row.mrp)      || 0,
         rate:         Number(row.rate)     || 0,
