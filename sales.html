@@ -679,10 +679,7 @@
                     <span class="row-count-badge" id="rowCountBadge">1 item</span>
                     <div style="display:flex; gap:0.5rem; margin-left:auto;">
                         <button type="button" class="clear-btn-sm" onclick="clearImportedMedicines()">
-                            🗑️ Clear Imported
-                        </button>
-                        <button type="button" class="import-btn-sm" onclick="openImportModal()" style="margin-left:0;">
-                            📋 Import Medicine List
+                            🗑️ Clear All Rows
                         </button>
                     </div>
                 </div>
@@ -1518,13 +1515,15 @@
         const setMedList = list => localStorage.setItem(ML_KEY, JSON.stringify(list));
 
         function clearImportedMedicines() {
-            if (confirm("Are you sure you want to clear all imported medicines? (Purchase history will remain).")) {
-                localStorage.removeItem(ML_KEY);
-                refreshGlobalMedicineList();
-                document.getElementById('toastTitle').textContent=`Cleared!`;
-                document.getElementById('toastSub').textContent=`Imported medicines removed.`;
+            if (confirm('Clear all rows and start a fresh bill?')) {
+                document.getElementById('medicineRows').innerHTML = '';
+                rowCount = 0;
+                addRow(); // reset to one blank row
+                updateGrandTotal();
+                document.getElementById('toastTitle').textContent = 'Cleared!';
+                document.getElementById('toastSub').textContent   = 'All rows removed. Ready for a new bill.';
                 document.getElementById('toast').classList.add('show');
-                setTimeout(()=>document.getElementById('toast').classList.remove('show'),3000);
+                setTimeout(() => document.getElementById('toast').classList.remove('show'), 3000);
             }
         }
 
