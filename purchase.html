@@ -909,6 +909,7 @@
                 btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Save All Purchases`;
                 if (failCount === 0) {
                     // Reset form: clear header + rebuild single line item
+                    clearDraft(); // wipe draft so a fresh form loads next time
                     document.getElementById('purchaseForm').reset();
                     document.getElementById('purchaseDate').valueAsDate = new Date();
                     document.getElementById('lineItemsContainer').innerHTML = '';
@@ -932,15 +933,84 @@
         /* ══════════════════════════════════════════════════════════════════ 
            Medicine List — localStorage helpers
         ══════════════════════════════════════════════════════════════════  */
-        const ML_KEY = 'mm_medicine_list';
+        const ML_KEY   = 'mm_medicine_list';
+        const DRAFT_KEY = 'mm_purchase_draft';
         const getMedList = () => JSON.parse(localStorage.getItem(ML_KEY) || '[]');
         const setMedList = list => localStorage.setItem(ML_KEY, JSON.stringify(list));
 
+        // ── Draft: save entire form to localStorage so refresh doesn't lose data ──
+        function saveDraft() {
+            const container = document.getElementById('lineItemsContainer');
+            const draft = {
+                billNo: document.getElementById('billNo').value,
+                firm:   document.getElementById('firm').value,
+                date:   document.getElementById('purchaseDate').value,
+                items:  []
+            };
+            container.querySelectorAll('.line-item').forEach(item => {
+                draft.items.push({
+                    productName: item.querySelector('.li-productName').value,
+                    batchNo:    item.querySelector('.li-batchNo').value,
+                    expireDate: item.querySelector('.li-expireDate').value,
+                    pack:       item.querySelector('.li-pack').value,
+                    quantity:   item.querySelector('.li-quantity').value,
+                    mrp:        item.querySelector('.li-mrp').value,
+                    rate:       item.querySelector('.li-rate').value,
+                    gst:        item.querySelector('.li-gst').value,
+                });
+            });
+            localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        }
+
+        function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
+
+        function restoreDraft() {
+            try {
+                const saved = localStorage.getItem(DRAFT_KEY);
+                if (!saved) return false;
+                const draft = JSON.parse(saved);
+                if (!draft.items || draft.items.length === 0) return false;
+                // Restore header
+                document.getElementById('billNo').value = draft.billNo || '';
+                document.getElementById('firm').value   = draft.firm   || '';
+                if (draft.date) document.getElementById('purchaseDate').value = draft.date;
+                // Restore items
+                const container = document.getElementById('lineItemsContainer');
+                container.innerHTML = '';
+                lineItemCounter = 0;
+                draft.items.forEach(d => {
+                    lineItemCounter++;
+                    const id = `item_${lineItemCounter}`;
+                    container.insertAdjacentHTML('beforeend', createLineItemHTML(lineItemCounter));
+                    const el = document.getElementById(id);
+                    el.querySelector('.li-productName').value = d.productName || '';
+                    el.querySelector('.li-batchNo').value     = d.batchNo     || '';
+                    el.querySelector('.li-expireDate').value  = d.expireDate  || '';
+                    el.querySelector('.li-pack').value        = d.pack        || '';
+                    el.querySelector('.li-quantity').value    = d.quantity    || '';
+                    el.querySelector('.li-mrp').value         = d.mrp         || '';
+                    el.querySelector('.li-rate').value        = d.rate        || '';
+                    el.querySelector('.li-gst').value         = d.gst         || '';
+                    calcItemTotal(id);
+                    const inputEl = el.querySelector('.li-productName');
+                    if (inputEl && typeof DrugMaster !== 'undefined') DrugMaster.init(inputEl, el);
+                });
+                renumberItems();
+                updateGrandTotal();
+                return true;
+            } catch(e) { console.warn('Draft restore failed:', e); return false; }
+        }
+
+        // ── Clear Imported: wipe all line items and reset to one blank row ──
         function clearImportedMedicines() {
-            if (confirm("Are you sure you want to clear all imported medicines? (Purchase history will remain).")) {
-                localStorage.removeItem(ML_KEY);
-                refreshProductDatalist();
-                showToast('Cleared!', 'Imported medicines removed.');
+            if (confirm('Clear all imported items and start fresh?')) {
+                const container = document.getElementById('lineItemsContainer');
+                container.innerHTML = '';
+                lineItemCounter = 0;
+                addLineItem();
+                updateGrandTotal();
+                clearDraft();
+                showToast('Cleared!', 'All imported items removed. Ready for fresh entry.');
             }
         }
 
@@ -1870,11 +1940,18 @@
             renumberItems();
             updateGrandTotal();
             closeInvoiceImportModal();
+            saveDraft(); // persist import so a refresh won't lose the data
             showToast(`✅ ${lineItemCounter} items loaded!`, 'Review, adjust, then click Save All Purchases.');
         }
 
-        // ── Initialize with one line item ──
-        addLineItem();
+        // ── Initialize: restore draft if available, else start with one blank item ──
+        if (!restoreDraft()) addLineItem();
+
+        // ── Auto-save draft whenever the user edits any field ──
+        document.getElementById('lineItemsContainer').addEventListener('input', saveDraft);
+        document.getElementById('billNo').addEventListener('input', saveDraft);
+        document.getElementById('firm').addEventListener('input', saveDraft);
+        document.getElementById('purchaseDate').addEventListener('change', saveDraft);
     </script>
 
     <!-- Shared datalist for all product name inputs -->
