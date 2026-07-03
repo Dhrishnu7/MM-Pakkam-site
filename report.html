@@ -526,6 +526,13 @@
             letter-spacing: 0.07em; text-transform: uppercase; color: #92400e;
         }
         .expiry-month-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        /* Expiry pill filter button active state */
+        .expiry-pill {
+            cursor: pointer; border: none; font: inherit;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .expiry-pill:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .expiry-pill.pill-active { outline: 3px solid #1e293b; outline-offset: 2px; transform: scale(1.04); font-weight: 800; }
         .month-pill {
             padding: 0.5rem 1rem; border-radius: 20px;
             border: 1.5px solid #fde68a; background: #fef3c7;
@@ -1179,10 +1186,10 @@
 
                 <!-- Summary Pills -->
                 <div class="expiry-summary" id="expirySummary" style="display:none">
-                    <div class="expiry-pill pill-expired"   id="pillExpired">🔴 0 Already Expired</div>
-                    <div class="expiry-pill pill-thismonth" id="pillThisMonth">🟠 0 Expiring This Month</div>
-                    <div class="expiry-pill pill-soon"      id="pillSoon">🟡 0 Expiring Soon</div>
-                    <div class="expiry-pill pill-ok"        id="pillOk">✅ 0 All OK</div>
+                    <button class="expiry-pill pill-expired"   id="pillExpired"   onclick="filterExpiryCategory('expired')">🔴 0 Already Expired</button>
+                    <button class="expiry-pill pill-thismonth" id="pillThisMonth" onclick="filterExpiryCategory('thisMonth')">🟠 0 Expiring This Month</button>
+                    <button class="expiry-pill pill-soon"      id="pillSoon"      onclick="filterExpiryCategory('soon')">🟡 0 Expiring Soon</button>
+                    <button class="expiry-pill pill-ok"        id="pillOk"        onclick="filterExpiryCategory('ok')">✅ 0 All OK</button>
                 </div>
 
                 <!-- Results Table -->
@@ -2645,6 +2652,9 @@
         // EXPIRY CHECKER
         // ══════════════════════════════════════
         let _expiryMonths = 0; // 0 = this month only
+        // Stores last expiry check results for filter buttons
+        let _expiryGroups = { expired: [], thisMonth: [], soon: [], ok: [] };
+        let _expiryActiveFilter = 'all'; // current active filter
 
         function toggleExpiryPanel() {
             const panel  = document.getElementById('expiryPanel');
@@ -2730,28 +2740,49 @@
             thisMonth.sort((a, b) => a.diff - b.diff);
             soon.sort((a, b)      => a.diff - b.diff);
 
-            // Update summary pills
+            // ── Store results globally for filter buttons ──
+            _expiryGroups = { expired, thisMonth, soon, ok };
+
+            // Update summary pill counts
             document.getElementById('expirySummary').style.display = 'flex';
             document.getElementById('pillExpired').innerHTML   = `🔴 ${expired.length} Already Expired`;
             document.getElementById('pillThisMonth').innerHTML = `🟠 ${thisMonth.length} Expiring This Month`;
             document.getElementById('pillSoon').innerHTML      = `🟡 ${soon.length} Expiring Soon`;
             document.getElementById('pillOk').innerHTML        = `✅ ${ok.length} OK`;
 
-            // Build table (show expired + this month + soon)
-            const combined = [...expired, ...thisMonth, ...soon];
-            const wrap     = document.getElementById('expiryTableWrap');
-            const empty    = document.getElementById('expiryEmpty');
-            const tbody    = document.getElementById('expiryBody');
+            // Default view: show all urgent medicines
+            filterExpiryCategory('all');
+        }
+
+        function filterExpiryCategory(cat) {
+            _expiryActiveFilter = cat;
+
+            // Highlight active pill button
+            document.querySelectorAll('.expiry-pill').forEach(p => p.classList.remove('pill-active'));
+            const pillMap = { expired: 'pillExpired', thisMonth: 'pillThisMonth', soon: 'pillSoon', ok: 'pillOk' };
+            if (pillMap[cat]) document.getElementById(pillMap[cat])?.classList.add('pill-active');
+
+            // Decide which rows to show
+            let rows;
+            if      (cat === 'expired')    rows = _expiryGroups.expired;
+            else if (cat === 'thisMonth')  rows = _expiryGroups.thisMonth;
+            else if (cat === 'soon')       rows = _expiryGroups.soon;
+            else if (cat === 'ok')         rows = _expiryGroups.ok;
+            else                           rows = [..._expiryGroups.expired, ..._expiryGroups.thisMonth, ..._expiryGroups.soon]; // 'all'
+
+            const wrap  = document.getElementById('expiryTableWrap');
+            const empty = document.getElementById('expiryEmpty');
+            const tbody = document.getElementById('expiryBody');
             wrap.style.display = 'block';
 
-            if (combined.length === 0) {
+            if (rows.length === 0) {
                 tbody.innerHTML = '';
                 empty.style.display = 'block';
                 return;
             }
             empty.style.display = 'none';
 
-            tbody.innerHTML = combined.map(r => {
+            tbody.innerHTML = rows.map(r => {
                 let statusHtml;
                 if (r.diff < 0) {
                     statusHtml = `<span class="expiry-status status-expired">🔴 Expired ${Math.abs(r.diff)} month(s) ago</span>`;
