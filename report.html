@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2419,11 +2419,11 @@
         }
 
         function buildStockData() {
-            // ── SOURCE 1: Supabase purchases (_dbPurchases set by loadData) ─────
+
             const map = {};
 
             if (_dbPurchases && _dbPurchases.length > 0) {
-                // Supabase path: raw purchase rows from DB
+                // PASS 1: Add all purchased stock
                 _dbPurchases.forEach(p => {
                     const name  = String(p.product_name || '').trim();
                     const batch = String(p.batch_no     || '').trim();
@@ -2432,29 +2432,51 @@
                     if (!map[key]) {
                         map[key] = { name, batch, exp: p.expire_date || '', totalIn: 0, totalOut: 0 };
                     }
-                    // quantity × pack size (strips × tablets-per-strip)
-                    map[key].totalIn += (parseFloat(p.quantity) || 0) * (parseFloat(p.pack) || 1);
+                    const packSize = parseFloat(p.pack) > 0 ? parseFloat(p.pack) : 1;
+                    map[key].totalIn += (parseFloat(p.quantity) || 0) * packSize;
                     if (p.expire_date && (!map[key].exp || p.expire_date > map[key].exp)) {
                         map[key].exp = p.expire_date;
                     }
                 });
 
-                // Subtract sold quantities from Supabase bills
+                // Build reverse index: normalisedName -> [key, key, ...]
+                const nameIndex = {};
+                Object.keys(map).forEach(k => {
+                    const n = k.split('|')[0];
+                    if (!nameIndex[n]) nameIndex[n] = [];
+                    nameIndex[n].push(k);
+                });
+
+                // PASS 2: Subtract sold quantities
                 (_dbBills || []).forEach(bill => {
                     (bill.bill_items || []).forEach(m => {
-                        const name  = String(m.product || m.product_name || '').trim();
-                        const batch = String(m.batch   || m.batch_no    || '').trim();
-                        if (!name) return;
-                        const key = name.toLowerCase() + '|' + batch.toLowerCase();
-                        if (!map[key]) {
-                            map[key] = { name, batch, exp: '', totalIn: 0, totalOut: 0 };
+                        const rawName = String(m.product || m.product_name || '').trim();
+                        const batch   = String(m.batch   || m.batch_no    || '').trim();
+                        if (!rawName) return;
+                        const norm    = rawName.toLowerCase();
+                        const soldQty = parseFloat(m.qty) || 0;
+
+                        // Try exact match (same product name + same batch)
+                        const exactKey = norm + '|' + batch.toLowerCase();
+                        if (map[exactKey]) {
+                            map[exactKey].totalOut += soldQty;
+                            return;
                         }
-                        map[key].totalOut += parseFloat(m.qty) || 0;
+                        // Try name-only match (product found in purchases under any batch)
+                        const candidates = nameIndex[norm] || [];
+                        if (candidates.length > 0) {
+                            map[candidates[0]].totalOut += soldQty;
+                            return;
+                        }
+                        // No purchase found - create orphan entry so we can see the sold qty
+                        map[exactKey] = { name: rawName, batch, exp: '', totalIn: 0, totalOut: soldQty };
+                        if (!nameIndex[norm]) nameIndex[norm] = [];
+                        nameIndex[norm].push(exactKey);
                     });
                 });
 
             } else {
-                // ── SOURCE 2: localStorage fallback ─────────────────────────────
+                // localStorage fallback
                 const lsPurchases = (typeof mmLsGet === 'function')
                     ? (mmLsGet('purchases') || [])
                     : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
@@ -2476,16 +2498,27 @@
                     }
                 });
 
+                const nameIndexLs = {};
+                Object.keys(map).forEach(k => {
+                    const n = k.split('|')[0];
+                    if (!nameIndexLs[n]) nameIndexLs[n] = [];
+                    nameIndexLs[n].push(k);
+                });
+
                 lsSales.forEach(bill => {
                     (bill.medicines || []).forEach(m => {
-                        const name  = String(m.product || '').trim();
-                        const batch = String(m.batch   || '').trim();
-                        if (!name) return;
-                        const key = name.toLowerCase() + '|' + batch.toLowerCase();
-                        if (!map[key]) {
-                            map[key] = { name, batch, exp: '', totalIn: 0, totalOut: 0 };
-                        }
-                        map[key].totalOut += parseFloat(m.qty) || 0;
+                        const rawName = String(m.product || '').trim();
+                        const batch   = String(m.batch   || '').trim();
+                        if (!rawName) return;
+                        const norm    = rawName.toLowerCase();
+                        const soldQty = parseFloat(m.qty) || 0;
+                        const exactKey = norm + '|' + batch.toLowerCase();
+                        if (map[exactKey]) { map[exactKey].totalOut += soldQty; return; }
+                        const candidates = nameIndexLs[norm] || [];
+                        if (candidates.length > 0) { map[candidates[0]].totalOut += soldQty; return; }
+                        map[exactKey] = { name: rawName, batch, exp: '', totalIn: 0, totalOut: soldQty };
+                        if (!nameIndexLs[norm]) nameIndexLs[norm] = [];
+                        nameIndexLs[norm].push(exactKey);
                     });
                 });
             }
