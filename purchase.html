@@ -1029,6 +1029,39 @@
         }
         window.addEventListener('DOMContentLoaded', refreshProductDatalist); // populate on page load
 
+        // ── Auto-fill from Stock Report "Add Purchase Entry" button ──
+        window.addEventListener('DOMContentLoaded', () => {
+            const params   = new URLSearchParams(window.location.search);
+            const prefill  = params.get('prefill');
+            if (!prefill) return;
+
+            // Give the page a moment to render the first line-item row
+            setTimeout(() => {
+                const firstRow = document.querySelector('.line-item');
+                if (!firstRow) return;
+                const nameInput  = firstRow.querySelector('.li-productName');
+                const batchInput = firstRow.querySelector('.li-batchNo');
+                if (nameInput) {
+                    nameInput.value = prefill;
+                    nameInput.dispatchEvent(new Event('input'));   // trigger any autocomplete
+                    // Show a brief toast so user knows it was pre-filled
+                    const toast = document.createElement('div');
+                    toast.textContent = `\u2713 Pre-filled: "${prefill}" \u2014 please fill in quantity & batch details`;
+                    Object.assign(toast.style, {
+                        position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
+                        background:'#1e293b', color:'#f8fafc', padding:'12px 24px',
+                        borderRadius:'10px', fontSize:'0.9rem', zIndex:'9999',
+                        boxShadow:'0 4px 20px rgba(0,0,0,0.3)', fontWeight:'600',
+                        animation:'fadeInUp 0.3s ease'
+                    });
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 4000);
+                }
+                // Focus the batch field next so user can continue fast
+                if (batchInput) batchInput.focus();
+            }, 300);
+        });
+
         /* ── Import Modal State ── */
         let _iRows=[], _iHdrs=[], _iCol=-1, _iNames=[], _iFileCount=0;
 

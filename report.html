@@ -2599,7 +2599,10 @@
                     <td style="color:#059669;font-weight:700;">${row.totalIn}</td>
                     <td style="color:#e11d48;font-weight:700;">${row.totalOut}</td>
                     <td><span class="stock-qty-number ${qtyClass}">${cur}</span></td>
-                    <td><span class="stock-status-badge ${statusClass}">${icon} ${statusText}</span></td>
+                    <td>${noPurchase
+                        ? `<button class="stock-status-badge badge-no-purchase" onclick="window.location='purchase.html?prefill='+encodeURIComponent('${row.name}')" style="cursor:pointer;border:none;font:inherit;">${icon} ${statusText}</button>`
+                        : `<span class="stock-status-badge ${statusClass}">${icon} ${statusText}</span>`
+                    }</td>
                 </tr>`;
 
                 // Sub-rows per batch (only if multiple batches)
