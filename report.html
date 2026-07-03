@@ -1465,7 +1465,7 @@
 
             // After loading data, set FROM date to earliest record date
             if (allData.length > 0) {
-                const dates = allData.map(r => r.date).filter(Boolean).sort();
+                const dates = allData.map(r => (r.date || '').slice(0, 10)).filter(Boolean).sort();
                 if (dates.length > 0) {
                     document.getElementById('fromDate').value = dates[0];
                 }
@@ -1482,7 +1482,9 @@
             const shList = JSON.parse(localStorage.getItem('mm_schedule_h_drugs') || '[]').map(d => String(d || "").trim().toLowerCase());
 
             currentData = allData.filter(r => {
-                const inDate = (!from || r.date >= from) && (!to || r.date <= to);
+                // Normalize to YYYY-MM-DD to handle full timestamps like "2026-07-03T10:30:00Z"
+                const rDate = (r.date || '').slice(0, 10);
+                const inDate = (!from || rDate >= from) && (!to || rDate <= to);
                 
                 let inType = false;
                 if (type === 'all') {
