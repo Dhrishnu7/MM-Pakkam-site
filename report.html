@@ -2510,7 +2510,7 @@
                     totalIn,
                     totalOut:  out,
                     current:   totalIn - out,
-                    noPurchase: totalIn === 0 && out > 0
+                    noPurchase: (totalIn - out) < 0   // negative stock = purchase entry needed
                 });
             });
 
