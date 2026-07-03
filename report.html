@@ -2863,29 +2863,158 @@
             printWin.document.close();
         }
 
-        /* ── Export GST Excel Logic ── */
+        /* ── Export GST Excel Logic (Professional GST Report) ── */
         function exportGSTExcel() {
             if (!currentData || currentData.length === 0) {
-                alert("No records to export for the selected period.");
+                alert("No records to export for the selected period.\nPlease generate a report first.");
                 return;
             }
 
-            let csvContent = "Date,Bill No,Type,Product,Qty,Rate (Rs),GST %,Taxable Value (Rs),CGST (Rs),SGST (Rs),Total (Rs)\n";
+            const fromVal   = document.getElementById('fromDate').value || '';
+            const toVal     = document.getElementById('toDate').value   || '';
+            const storeName = (typeof mmLsGet === 'function')
+                ? (mmLsGet('storeName') || localStorage.getItem('mm_storeName') || 'Store')
+                : (localStorage.getItem('mm_storeName') || 'Store');
 
-            currentData.forEach(r => {
-                const date = formatDate(r.date);
-                const billNo = r.billNo || '';
-                const type = r.type === 'sales' ? 'Sale' : 'Purchase';
-                const product = `"${(r.product || '').replace(/"/g, '""')}"`; // Escape quotes
-                const qty = r.qty || 0;
-                const rate = r.rate || 0;
-                const gst = r.gst || 0;
-                const total = r.total || 0;
+            // helpers
+            function fmtDate(d) {
+                if (!d) return '';
+                const s = String(d).slice(0, 10);
+                const [y, mo, day] = s.split('-');
+                return (day && mo && y) ? (day + '-' + mo + '-' + y) : s;
+            }
+            function r2(n) { return (parseFloat(n) || 0).toFixed(2); }
+            function csvEsc(v) {
+                const s = String(v === null || v === undefined ? '' : v);
+                return (s.includes(',') || s.includes('"') || s.includes('\n'))
+                    ? ('"' + s.replace(/"/g, '""') + '"') : s;
+            }
+            function row() {
+                return Array.from(arguments).map(csvEsc).join(',') + '\r\n';
+            }
 
-                // Reverse calculation to find exact taxable base if needed,
-                // but rate * qty is usually the base (excluding GST).
-                // Assuming Total = (Qty * Rate) * (1 + GST/100).
-                const baseValue = total / (1 + (gst / 100));
+            const sales     = currentData.filter(r => r.type === 'sales');
+            const purchases = currentData.filter(r => r.type === 'purchase');
+
+            // group sales by bill
+            const billsMap = {};
+            sales.forEach(r => {
+                const key = r.billNo || '-';
+                if (!billsMap[key]) {
+                    const raw = (_rawBillsMap && _rawBillsMap[r.id]) || null;
+                    billsMap[key] = {
+                        billNo: key,
+                        date: r.date,
+                        customer: (raw && (raw.customer_name || raw.customerName)) || 'Walk-in Customer',
+                        items: []
+                    };
+                }
+                billsMap[key].items.push(r);
+            });
+
+            // group purchases by bill
+            const purBillsMap = {};
+            purchases.forEach(r => {
+                const key = r.billNo || '-';
+                if (!purBillsMap[key]) {
+                    const rawArr = _rawPurchasesMap ? Object.values(_rawPurchasesMap) : [];
+                    const raw = rawArr.find(p => (p.bill_no || p.billNo) === key) || null;
+                    purBillsMap[key] = {
+                        billNo: key,
+                        date: r.date,
+                        firm: (raw && (raw.firm || raw.supplierName)) || '-',
+                        items: []
+                    };
+                }
+                purBillsMap[key].items.push(r);
+            });
+
+            function gstSummary(records) {
+                const map = {};
+                records.forEach(r => {
+                    const gstPct = r2(r.gst) + '%';
+                    const base = parseFloat(r.total) / (1 + (parseFloat(r.gst) / 100));
+                    const tax  = parseFloat(r.total) - base;
+                    if (!map[gstPct]) map[gstPct] = { taxable:0, cgst:0, sgst:0, total:0, count:0 };
+                    map[gstPct].taxable += base;
+                    map[gstPct].cgst    += tax / 2;
+                    map[gstPct].sgst    += tax / 2;
+                    map[gstPct].total   += parseFloat(r.total);
+                    map[gstPct].count++;
+                });
+                return map;
+            }
+
+            let csv = '\uFEFF'; // BOM for Excel UTF-8
+
+            // ── HEADER ──────────────────────────────────────────────────────
+            csv += row('GST REPORT', storeName);
+            csv += row('Period', (fmtDate(fromVal) || 'All Time') + ' to ' + (fmtDate(toVal) || 'Today'));
+            csv += row('Generated On', fmtDate(new Date().toISOString()));
+            csv += '\r\n\r\n';
+
+            // ── SECTION 1: SALES ─────────────────────────────────────────────
+            csv += row('SECTION 1: OUTWARD SUPPLIES (SALES) - GSTR-1 / B2C');
+            csv += row('Date','Bill No','Customer Name','Product / Medicine','Qty','Rate (Rs)','GST %','Taxable Value (Rs)','CGST (Rs)','SGST (Rs)','Bill Total (Rs)');
+
+            let salBase=0, salCGST=0, salSGST=0, salAmt=0, salBills=0;
+            Object.values(billsMap).sort((a,b) => a.date > b.date ? 1 : -1).forEach(bill => {
+                let bBase=0, bCGST=0, bSGST=0, bTotal=0;
+                bill.items.forEach(r => {
+                    const base = parseFloat(r.total) / (1 + parseFloat(r.gst) / 100);
+                    const tax  = parseFloat(r.total) - base;
+                    bBase  += base; bCGST += tax/2; bSGST += tax/2; bTotal += parseFloat(r.total);
+                    csv += row(fmtDate(r.date), bill.billNo, bill.customer, r.product, r.qty, r2(r.rate), r2(r.gst), r2(base), r2(tax/2), r2(tax/2), '');
+                });
+                csv += row('', '', '', 'BILL TOTAL: ' + bill.billNo, '', '', '', r2(bBase), r2(bCGST), r2(bSGST), r2(bTotal));
+                salBase+=bBase; salCGST+=bCGST; salSGST+=bSGST; salAmt+=bTotal; salBills++;
+                csv += '\r\n';
+            });
+            csv += row('SALES GRAND TOTAL', salBills + ' bills', '', '', '', '', '', r2(salBase), r2(salCGST), r2(salSGST), r2(salAmt));
+            csv += '\r\n\r\n';
+
+            // ── SECTION 2: PURCHASES ─────────────────────────────────────────
+            csv += row('SECTION 2: INWARD SUPPLIES (PURCHASES) - GSTR-2 / Input Tax Credit');
+            csv += row('Date','Purchase Bill No','Supplier / Firm','Product / Medicine','Qty','Rate (Rs)','GST %','Taxable Value (Rs)','CGST ITC (Rs)','SGST ITC (Rs)','Total (Rs)');
+
+            let purBase=0, purCGST=0, purSGST=0, purAmt=0, purBills=0;
+            Object.values(purBillsMap).sort((a,b) => a.date > b.date ? 1 : -1).forEach(bill => {
+                let bBase=0, bCGST=0, bSGST=0, bTotal=0;
+                bill.items.forEach(r => {
+                    const base = parseFloat(r.total) / (1 + parseFloat(r.gst) / 100);
+                    const tax  = parseFloat(r.total) - base;
+                    bBase  += base; bCGST += tax/2; bSGST += tax/2; bTotal += parseFloat(r.total);
+                    csv += row(fmtDate(r.date), bill.billNo, bill.firm, r.product, r.qty, r2(r.rate), r2(r.gst), r2(base), r2(tax/2), r2(tax/2), '');
+                });
+                csv += row('', '', '', 'BILL TOTAL: ' + bill.billNo, '', '', '', r2(bBase), r2(bCGST), r2(bSGST), r2(bTotal));
+                purBase+=bBase; purCGST+=bCGST; purSGST+=bSGST; purAmt+=bTotal; purBills++;
+                csv += '\r\n';
+            });
+            csv += row('PURCHASES GRAND TOTAL', purBills + ' bills', '', '', '', '', '', r2(purBase), r2(purCGST), r2(purSGST), r2(purAmt));
+            csv += '\r\n\r\n';
+
+            // ── SECTION 3: GST SUMMARY BY RATE ──────────────────────────────
+            csv += row('SECTION 3: GST SUMMARY BY TAX RATE');
+            csv += '\r\n';
+            csv += row('-- SALES --');
+            csv += row('GST Rate','No. of Items','Taxable Value (Rs)','CGST (Rs)','SGST (Rs)','Total Tax (Rs)','Invoice Value (Rs)');
+            const salSum = gstSummary(sales);
+            Object.entries(salSum).sort().forEach(([rate, v]) => {
+                csv += row(rate, v.count, r2(v.taxable), r2(v.cgst), r2(v.sgst), r2(v.cgst+v.sgst), r2(v.total));
+            });
+            csv += row('TOTAL', sales.length, r2(salBase), r2(salCGST), r2(salSGST), r2(salCGST+salSGST), r2(salAmt));
+            csv += '\r\n';
+            csv += row('-- PURCHASES --');
+            csv += row('GST Rate','No. of Items','Taxable Value (Rs)','CGST ITC (Rs)','SGST ITC (Rs)','Total ITC (Rs)','Invoice Value (Rs)');
+            const purSum = gstSummary(purchases);
+            Object.entries(purSum).sort().forEach(([rate, v]) => {
+                csv += row(rate, v.count, r2(v.taxable), r2(v.cgst), r2(v.sgst), r2(v.cgst+v.sgst), r2(v.total));
+            });
+            csv += row('TOTAL', purchases.length, r2(purBase), r2(purCGST), r2(purSGST), r2(purCGST+purSGST), r2(purAmt));
+            csv += '\r\n\r\n';
+
+            // ── SECTION 4: NET GST PAYABLE ────────────────────────────�
+        /* ── Search &amp; Print Bills Logic ── */+ (gst / 100));
                 const totalTax = total - baseValue;
                 const cgst = totalTax / 2;
                 const sgst = totalTax / 2;
