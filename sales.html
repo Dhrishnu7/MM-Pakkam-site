@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1957,17 +1957,26 @@
         // -- Sync from Supabase on Load --
         (async function syncFromDatabase() {
             try {
-                const [customers, doctors] = await Promise.all([
+                const [customers, doctors, medicines, purchases] = await Promise.all([
                     dbGetCustomers(),
-                    dbGetDoctors()
+                    dbGetDoctors(),
+                    dbGetMedicines(),
+                    dbGetPurchases()          // no date filter — get ALL for autocomplete
                 ]);
-                if (customers && customers.length > 0) {
+
+                if (customers && customers.length > 0)
                     localStorage.setItem('mm_customers', JSON.stringify(customers));
-                }
-                if (doctors && doctors.length > 0) {
+                if (doctors && doctors.length > 0)
                     localStorage.setItem('mm_doctors', JSON.stringify(doctors));
-                }
+                if (medicines && medicines.length > 0)
+                    localStorage.setItem('mm_medicine_list', JSON.stringify(medicines));
+                if (purchases && purchases.length > 0)
+                    localStorage.setItem('mm_purchases', JSON.stringify(purchases));
+
+                // Refresh all datalists now that data is ready
                 refreshNamesLists();
+                refreshGlobalMedicineList();
+
             } catch (err) {
                 console.error("Database sync failed:", err);
             }
