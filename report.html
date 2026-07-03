@@ -2437,12 +2437,12 @@
                     if (!purchaseMap[norm]) purchaseMap[norm] = { name, batchMap: {}, totalIn: 0 };
                     purchaseMap[norm].totalIn += qty;
 
-                    const bk = batch.toLowerCase();
+                    const bk = (batch || '_no_batch_').toLowerCase();
                     if (!purchaseMap[norm].batchMap[bk]) {
-                        purchaseMap[norm].batchMap[bk] = { batch, exp, totalIn: 0 };
+                        purchaseMap[norm].batchMap[bk] = { batch, exp, totalIn: 0, current: 0 };
                     }
                     purchaseMap[norm].batchMap[bk].totalIn += qty;
-                    if (exp && exp > purchaseMap[norm].batchMap[bk].exp) {
+                    if (exp && exp > (purchaseMap[norm].batchMap[bk].exp || '')) {
                         purchaseMap[norm].batchMap[bk].exp = exp;
                     }
                 });
@@ -2451,8 +2451,7 @@
                     (bill.bill_items || []).forEach(m => {
                         const name = String(m.product || m.product_name || '').trim();
                         if (!name) return;
-                        const norm = name.toLowerCase();
-                        salesMap[norm] = (salesMap[norm] || 0) + (parseFloat(m.qty) || 0);
+                        salesMap[name.toLowerCase()] = (salesMap[name.toLowerCase()] || 0) + (parseFloat(m.qty) || 0);
                     });
                 });
 
@@ -2471,19 +2470,17 @@
 
                     if (!purchaseMap[norm]) purchaseMap[norm] = { name, batchMap: {}, totalIn: 0 };
                     purchaseMap[norm].totalIn += qty;
-
-                    const bk = batch.toLowerCase();
-                    if (!purchaseMap[norm].batchMap[bk]) purchaseMap[norm].batchMap[bk] = { batch, exp, totalIn: 0 };
+                    const bk = (batch || '_no_batch_').toLowerCase();
+                    if (!purchaseMap[norm].batchMap[bk]) purchaseMap[norm].batchMap[bk] = { batch, exp, totalIn: 0, current: 0 };
                     purchaseMap[norm].batchMap[bk].totalIn += qty;
-                    if (exp && exp > purchaseMap[norm].batchMap[bk].exp) purchaseMap[norm].batchMap[bk].exp = exp;
+                    if (exp && exp > (purchaseMap[norm].batchMap[bk].exp || '')) purchaseMap[norm].batchMap[bk].exp = exp;
                 });
 
                 lsSales.forEach(bill => {
                     (bill.medicines || []).forEach(m => {
                         const name = String(m.product || '').trim();
                         if (!name) return;
-                        const norm = name.toLowerCase();
-                        salesMap[norm] = (salesMap[norm] || 0) + (parseFloat(m.qty) || 0);
+                        salesMap[name.toLowerCase()] = (salesMap[name.toLowerCase()] || 0) + (parseFloat(m.qty) || 0);
                     });
                 });
             }
@@ -2494,14 +2491,25 @@
                 const p       = purchaseMap[norm];
                 const out     = salesMap[norm] || 0;
                 const totalIn = p ? p.totalIn : 0;
-                // Build sorted batch list (by expiry date ascending)
-                const batches = p ? Object.values(p.batchMap).sort((a, b) => (a.exp || '').localeCompare(b.exp || '')) : [];
+
+                // FIFO: sort by expiry (oldest first), deduct sold qty from oldest batch first
+                const batches = p
+                    ? Object.values(p.batchMap).sort((a, b) => (a.exp || '9999').localeCompare(b.exp || '9999'))
+                    : [];
+
+                let remaining = out;
+                batches.forEach(b => {
+                    const deducted = Math.min(b.totalIn, remaining);
+                    b.current  = b.totalIn - deducted;
+                    remaining -= deducted;
+                });
+
                 rows.push({
-                    name:     p ? p.name : norm,
-                    batches,                     // [{batch, exp, totalIn}]
+                    name:      p ? p.name : norm,
+                    batches,
                     totalIn,
-                    totalOut: out,
-                    current:  totalIn - out,
+                    totalOut:  out,
+                    current:   totalIn - out,
                     noPurchase: totalIn === 0 && out > 0
                 });
             });
@@ -2519,8 +2527,8 @@
 
             let inCnt = 0, lowCnt = 0, outCnt = 0, noPurchaseCnt = 0;
             filtered.forEach(r => {
-                if (r.noPurchase)        noPurchaseCnt++;
-                else if (r.current <= 0) outCnt++;
+                if (r.noPurchase)         noPurchaseCnt++;
+                else if (r.current <= 0)  outCnt++;
                 else if (r.current <= 10) lowCnt++;
                 else inCnt++;
             });
@@ -2532,7 +2540,7 @@
                 <div class="stock-pill" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;">&#x1F4E6; ${filtered.length} Total Items</div>
             `;
 
-            const tbody  = document.getElementById('stockTableBody');
+            const tbody   = document.getElementById('stockTableBody');
             const emptyEl = document.getElementById('stockEmptyState');
 
             if (filtered.length === 0) {
@@ -2541,6 +2549,12 @@
                 return;
             }
             emptyEl.style.display = 'none';
+
+            const fmtExp = exp => {
+                if (!exp) return '<span style="color:#94a3b8;">&#x2014;</span>';
+                try { return new Date(exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); }
+                catch(e) { return exp; }
+            };
 
             let html = '';
             filtered.forEach((row, idx) => {
@@ -2560,22 +2574,17 @@
                 }
 
                 const rowBg = noPurchase
-                    ? 'background:linear-gradient(90deg,#fff7ed 0%,#fff 100%);border-left:3px solid #f97316;'
-                    : multiBatch
-                        ? 'background:#f8fafc;border-left:3px solid #6366f1;'
-                        : '';
+                    ? 'background:linear-gradient(90deg,#fff7ed,#fff);border-left:3px solid #f97316;'
+                    : multiBatch ? 'background:#f5f3ff;border-left:3px solid #6366f1;' : '';
 
-                // Batch display for single-batch row
                 const singleBatch = row.batches.length === 1 ? row.batches[0] : null;
                 const batchDisplay = singleBatch
-                    ? `<code style="background:#f1f5f9;padding:2px 7px;border-radius:6px;font-size:0.82rem;">${singleBatch.batch}</code>`
+                    ? `<code style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:6px;font-size:0.82rem;">${singleBatch.batch || '&#x2014;'}</code>`
                     : multiBatch
-                        ? `<span style="font-size:0.75rem;color:#6366f1;font-weight:600;">${row.batches.length} Batches</span>`
+                        ? `<span style="font-size:0.78rem;color:#6366f1;font-weight:700;background:#ede9fe;padding:2px 8px;border-radius:6px;">&#x25A6; ${row.batches.length} Batches</span>`
                         : '<span style="color:#94a3b8;">&#x2014;</span>';
 
-                const expDisplay = singleBatch && singleBatch.exp
-                    ? (() => { try { return new Date(singleBatch.exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); } catch(e){ return singleBatch.exp; } })()
-                    : multiBatch ? '<span style="color:#94a3b8;font-size:0.75rem;">Mixed</span>' : '&#x2014;';
+                const expDisplay = singleBatch ? fmtExp(singleBatch.exp) : (multiBatch ? '<span style="color:#94a3b8;font-size:0.78rem;">Mixed</span>' : '&#x2014;');
 
                 const purchaseNote = noPurchase
                     ? `<div style="font-size:0.72rem;color:#c2410c;margin-top:2px;font-weight:600;">&#x26A0;&#xFE0F; Sold without purchase entry</div>`
@@ -2587,27 +2596,33 @@
                     <td><strong style="color:#0f172a;">${row.name}</strong>${purchaseNote}</td>
                     <td>${batchDisplay}</td>
                     <td style="color:#64748b;">${expDisplay}</td>
-                    <td style="color:#059669;font-weight:600;">${row.totalIn}</td>
-                    <td style="color:#e11d48;font-weight:600;">${row.totalOut}</td>
+                    <td style="color:#059669;font-weight:700;">${row.totalIn}</td>
+                    <td style="color:#e11d48;font-weight:700;">${row.totalOut}</td>
                     <td><span class="stock-qty-number ${qtyClass}">${cur}</span></td>
                     <td><span class="stock-status-badge ${statusClass}">${icon} ${statusText}</span></td>
                 </tr>`;
 
-                // Sub-rows for each batch (only if multiple batches)
+                // Sub-rows per batch (only if multiple batches)
                 if (multiBatch) {
-                    row.batches.forEach(b => {
-                        const bExpDisplay = b.exp
-                            ? (() => { try { return new Date(b.exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); } catch(e){ return b.exp; } })()
-                            : '&#x2014;';
-                        html += `<tr style="background:#f1f5fb;">
-                            <td style="color:#cbd5e1;font-size:0.75rem;">&#x2514;</td>
-                            <td style="padding-left:24px;color:#475569;font-size:0.85rem;">
-                                <code style="background:#e0e7ff;color:#3730a3;padding:2px 7px;border-radius:6px;font-size:0.8rem;">${b.batch || '&#x2014;'}</code>
+                    const lastIdx = row.batches.length - 1;
+                    row.batches.forEach((b, bi) => {
+                        const isLast    = bi === lastIdx;
+                        const connector = isLast ? '&#x2570;' : '&#x251C;'; // ╰ or ├
+                        const bCur      = b.current;
+                        let bQtyClass   = 'qty-good', bBadge = '&#x2705; OK';
+                        if (bCur <= 0)  { bQtyClass = 'qty-out'; bBadge = '&#x274C; Empty'; }
+                        else if (bCur <= 10) { bQtyClass = 'qty-low'; bBadge = '&#x26A0;&#xFE0F; Low'; }
+
+                        html += `<tr style="background:#faf9ff;border-left:3px solid #c4b5fd;">
+                            <td style="color:#a5b4fc;font-size:1rem;padding-left:12px;">${connector}</td>
+                            <td style="padding-left:16px;">
+                                <code style="background:#ede9fe;color:#5b21b6;padding:3px 9px;border-radius:6px;font-size:0.82rem;font-weight:600;">${b.batch || '&#x2014;'}</code>
                             </td>
-                            <td colspan="2" style="color:#64748b;font-size:0.82rem;">${bExpDisplay}</td>
-                            <td style="color:#059669;font-size:0.85rem;font-weight:600;">${b.totalIn}</td>
+                            <td colspan="2" style="color:#64748b;font-size:0.85rem;">${fmtExp(b.exp)}</td>
+                            <td style="color:#059669;font-size:0.88rem;font-weight:600;">${b.totalIn}</td>
                             <td style="color:#94a3b8;font-size:0.8rem;">&#x2014;</td>
-                            <td colspan="2" style="color:#94a3b8;font-size:0.75rem;font-style:italic;">batch stock</td>
+                            <td><span class="stock-qty-number ${bQtyClass}" style="font-size:0.9rem;">${bCur}</span></td>
+                            <td><span style="font-size:0.75rem;color:#6b7280;">${bBadge}</span></td>
                         </tr>`;
                     });
                 }
