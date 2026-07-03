@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -777,6 +777,8 @@
         .badge-in  { background: #d1fae5; color: #065f46; }
         .badge-low { background: #fef3c7; color: #92400e; }
         .badge-out { background: #fee2e2; color: #991b1b; }
+        .badge-no-purchase { background: #fff7ed; color: #c2410c; border: 1.5px solid #fb923c; font-weight: 700; animation: pulse-orange 1.8s ease-in-out infinite; }
+        @keyframes pulse-orange { 0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,0.4); } 50% { box-shadow: 0 0 0 5px rgba(251,146,60,0); } }
         .stock-qty-number {
             font-size: 1rem; font-weight: 800;
         }
@@ -2521,9 +2523,10 @@
                 : _stockData;
 
             // Update summary pills
-            let inCnt = 0, lowCnt = 0, outCnt = 0;
+            let inCnt = 0, lowCnt = 0, outCnt = 0, noPurchaseCnt = 0;
             filtered.forEach(r => {
-                if (r.current <= 0) outCnt++;
+                if (r.totalIn === 0 && r.totalOut > 0) noPurchaseCnt++;
+                else if (r.current <= 0) outCnt++;
                 else if (r.current <= 10) lowCnt++;
                 else inCnt++;
             });
@@ -2531,6 +2534,7 @@
                 <div class="stock-pill pill-in-stock">✅ ${inCnt} In Stock</div>
                 <div class="stock-pill pill-low-stock">⚠️ ${lowCnt} Low Stock (≤10)</div>
                 <div class="stock-pill pill-out-stock">❌ ${outCnt} Out of Stock</div>
+                ${noPurchaseCnt > 0 ? `<div class="stock-pill" style="background:#fff7ed;color:#c2410c;border:1.5px solid #fb923c;font-weight:700;">🛒 ${noPurchaseCnt} Purchase Entry Needed</div>` : ''}
                 <div class="stock-pill" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;">📦 ${filtered.length} Total Items</div>
             `;
 
@@ -2546,18 +2550,35 @@
 
             tbody.innerHTML = filtered.map((row, idx) => {
                 const cur = row.current;
-                let statusClass, badgeClass, qtyClass, statusText, icon;
-                if (cur <= 0)  { statusClass = 'badge-out'; qtyClass = 'qty-out'; statusText = 'Out of Stock'; icon = '❌'; }
-                else if (cur <= 10) { statusClass = 'badge-low'; qtyClass = 'qty-low'; statusText = 'Low Stock'; icon = '⚠️'; }
-                else           { statusClass = 'badge-in';  qtyClass = 'qty-good'; statusText = 'In Stock';    icon = '✅'; }
+                const noPurchase = row.totalIn === 0 && row.totalOut > 0;
+
+                let statusClass, qtyClass, statusText, icon;
+                if (noPurchase) {
+                    statusClass = 'badge-no-purchase'; qtyClass = 'qty-out';
+                    statusText  = 'Add Purchase Entry'; icon = '🛒';
+                } else if (cur <= 0)  {
+                    statusClass = 'badge-out'; qtyClass = 'qty-out'; statusText = 'Out of Stock'; icon = '❌';
+                } else if (cur <= 10) {
+                    statusClass = 'badge-low'; qtyClass = 'qty-low'; statusText = 'Low Stock'; icon = '⚠️';
+                } else {
+                    statusClass = 'badge-in';  qtyClass = 'qty-good'; statusText = 'In Stock'; icon = '✅';
+                }
+
+                const rowStyle = noPurchase
+                    ? 'background:linear-gradient(90deg,#fff7ed 0%,#fff 100%); border-left:3px solid #f97316;'
+                    : '';
 
                 const expDisplay = row.exp
                     ? new Date(row.exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
                     : '—';
 
-                return `<tr>
+                const purchaseNote = noPurchase
+                    ? `<div style="font-size:0.72rem;color:#c2410c;margin-top:3px;font-weight:600;">⚠️ Sold without purchase entry</div>`
+                    : '';
+
+                return `<tr style="${rowStyle}">
                     <td style="color:#94a3b8; font-weight:700;">${idx + 1}</td>
-                    <td><strong style="color:#0f172a;">${row.name}</strong></td>
+                    <td><strong style="color:#0f172a;">${row.name}</strong>${purchaseNote}</td>
                     <td><code style="background:#f1f5f9;padding:2px 7px;border-radius:6px;font-size:0.82rem;">${row.batch || '—'}</code></td>
                     <td style="color:#64748b;">${expDisplay}</td>
                     <td style="color:#059669; font-weight:600;">${row.totalIn}</td>
