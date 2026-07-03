@@ -290,57 +290,113 @@
         }
 
         /* ── Analytics Layout ── */
-        .analytics-view { display: none; width: 100%; max-width: 1040px; animation: fadeUp 0.5s ease forwards; }
-        .analytics-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-        .analytics-card {
-            background: rgba(255,255,255,0.92); backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.95); border-radius: 22px;
-            padding: 1.8rem; box-shadow: 0 8px 32px rgba(0,0,0,0.07);
-            position: relative; overflow: hidden;
+        /* ─────────────────────────────────────────
+           VISUAL ANALYTICS — PREMIUM DARK DESIGN
+        ───────────────────────────────────────── */
+        .analytics-view {
+            display: none; width: 100%;
+            animation: fadeUp 0.5s ease forwards;
+            background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 40%, #0d1627 100%);
+            border-radius: 28px;
+            padding: 2rem;
+            margin-top: 1.2rem;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.06);
         }
-        .analytics-card::before {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, #e11d48, #f97316, #0ea5e9);
+
+        /* KPI stat row */
+        .analytics-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.8rem;
         }
-        .analytics-card h3 {
-            font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 1.2rem;
-            display: flex; align-items: center; gap: 8px;
+        .analytics-kpi-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 1.3rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        
-        /* ── True Profit Box ── */
-        .true-profit-box {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            color: white; border-radius: 22px; padding: 2rem 2.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05) inset;
-            position: relative; overflow: hidden;
-            display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
-        }
-        .true-profit-box::before {
+        .analytics-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+        .analytics-kpi-card::before {
             content: '';
             position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, #10b981, #059669, #34d399);
         }
-        .true-profit-box::after {
-            content: '';
-            position: absolute; top: -60px; right: -60px;
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, rgba(16,185,129,0.15), transparent 70%);
+        .kpi-revenue::before  { background: linear-gradient(90deg, #0ea5e9, #38bdf8); }
+        .kpi-profit::before   { background: linear-gradient(90deg, #10b981, #34d399); }
+        .kpi-txn::before      { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .kpi-label {
+            font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em;
+            text-transform: uppercase; margin-bottom: 0.5rem;
         }
-        .tp-left { display: flex; flex-direction: column; gap: 4px; }
-        .tp-icon {
-            width: 48px; height: 48px; border-radius: 14px;
-            background: linear-gradient(135deg, #10b981, #059669);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 6px 18px rgba(16,185,129,0.4); flex-shrink: 0;
+        .kpi-revenue .kpi-label { color: #38bdf8; }
+        .kpi-profit  .kpi-label { color: #34d399; }
+        .kpi-txn     .kpi-label { color: #a78bfa; }
+        .kpi-value {
+            font-size: 1.9rem; font-weight: 900; color: #f1f5f9;
+            letter-spacing: -0.03em; line-height: 1;
         }
-        .tp-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #10b981; }
-        .tp-value { font-size: 2.8rem; font-weight: 900; letter-spacing: -0.03em; color: white; line-height: 1; }
-        .tp-sub { font-size: 0.78rem; color: #64748b; font-weight: 500; margin-top: 4px; }
+        .kpi-sub { font-size: 0.72rem; color: #475569; margin-top: 5px; font-weight: 500; }
+        .kpi-icon {
+            position: absolute; bottom: 1rem; right: 1.2rem;
+            font-size: 1.8rem; opacity: 0.15;
+        }
 
-        @media (max-width: 900px) {
-            .analytics-grid { grid-template-columns: 1fr; }
+        /* Analytics chart cards */
+        .analytics-grid {
+            display: flex; flex-direction: column; gap: 1.4rem;
+        }
+        .analytics-card {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 1.8rem;
+            position: relative; overflow: hidden;
+            transition: box-shadow 0.2s ease;
+        }
+        .analytics-card:hover { box-shadow: 0 16px 48px rgba(0,0,0,0.25); }
+        .analytics-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        }
+        .chart-top-sellers::before  { background: linear-gradient(90deg, #8b5cf6, #ec4899, #f97316); }
+        .chart-trend::before        { background: linear-gradient(90deg, #0ea5e9, #10b981); }
+        .analytics-card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 1.4rem;
+        }
+        .analytics-card-title {
+            font-size: 0.95rem; font-weight: 800; color: #f1f5f9;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .analytics-card-title .chart-icon {
+            width: 30px; height: 30px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.95rem;
+        }
+        .icon-sellers { background: linear-gradient(135deg,#8b5cf6,#ec4899); }
+        .icon-trend   { background: linear-gradient(135deg,#0ea5e9,#10b981); }
+        .analytics-card-badge {
+            font-size: 0.7rem; font-weight: 700; padding: 3px 10px;
+            border-radius: 20px; letter-spacing: 0.06em; text-transform: uppercase;
+        }
+        .badge-sellers { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+        .badge-trend   { background: rgba(14,165,233,0.12); color: #38bdf8; border: 1px solid rgba(14,165,233,0.25); }
+
+        /* True profit box — now a KPI card, hidden from old position */
+        .true-profit-box { display: none; }
+
+        @media (max-width: 700px) {
+            .analytics-kpi-row { grid-template-columns: 1fr 1fr; }
+            .analytics-view { padding: 1.2rem; }
+            .kpi-value { font-size: 1.5rem; }
+        }
+        @media (max-width: 420px) {
+            .analytics-kpi-row { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 700px) {
@@ -926,32 +982,64 @@
 
         <!-- 📈 ANALYTICS VIEW -->
         <div class="analytics-view" id="analyticsView">
-            
-            <div class="true-profit-box">
+
+            <!-- Hidden legacy profit box (value still updated by JS) -->
+            <div class="true-profit-box" id="trueProfitBoxLegacy" style="display:none;">
                 <div class="tp-left">
-                    <div class="tp-label">📊 True Profit Margin (Selected Period)</div>
+                    <div class="tp-label">📊 True Profit Margin</div>
                     <div class="tp-value" id="trueProfitValue">₹ 0</div>
                     <div class="tp-sub">Calculated per item: (Sale Price − Purchase Price) × Qty</div>
                 </div>
-                <div class="tp-icon">
-                    <svg width="24" height="24" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+
+            <!-- KPI Row -->
+            <div class="analytics-kpi-row">
+                <div class="analytics-kpi-card kpi-revenue">
+                    <div class="kpi-label">Total Revenue</div>
+                    <div class="kpi-value" id="kpiRevenue">₹0</div>
+                    <div class="kpi-sub">From sales in selected period</div>
+                    <div class="kpi-icon">💰</div>
+                </div>
+                <div class="analytics-kpi-card kpi-profit">
+                    <div class="kpi-label">Est. Net Profit</div>
+                    <div class="kpi-value" id="kpiProfit">₹0</div>
+                    <div class="kpi-sub">(Sale − Purchase Price) × Qty</div>
+                    <div class="kpi-icon">📈</div>
+                </div>
+                <div class="analytics-kpi-card kpi-txn">
+                    <div class="kpi-label">Total Transactions</div>
+                    <div class="kpi-value" id="kpiTxn">0</div>
+                    <div class="kpi-sub">Bills generated in period</div>
+                    <div class="kpi-icon">🧾</div>
                 </div>
             </div>
 
             <div class="analytics-grid">
-                <!-- Trend Chart -->
-                <div class="analytics-card" style="grid-column: 1 / -1;">
-                    <h3>Revenue & Profit Trend</h3>
-                    <div style="height: 300px; width: 100%;">
-                        <canvas id="trendChart"></canvas>
+                <!-- Top Sellers FIRST -->
+                <div class="analytics-card chart-top-sellers">
+                    <div class="analytics-card-header">
+                        <div class="analytics-card-title">
+                            <span class="chart-icon icon-sellers">🏆</span>
+                            Top 5 Best Selling Medicines
+                        </div>
+                        <span class="analytics-card-badge badge-sellers">By Qty</span>
+                    </div>
+                    <div style="height: 260px; width: 100%;">
+                        <canvas id="topSellersChart"></canvas>
                     </div>
                 </div>
 
-                <!-- Top Sellers -->
-                <div class="analytics-card" style="grid-column: 1 / -1;">
-                    <h3>Top 5 Best Selling Medicines</h3>
-                    <div style="height: 250px; width: 100%;">
-                        <canvas id="topSellersChart"></canvas>
+                <!-- Trend Chart BELOW -->
+                <div class="analytics-card chart-trend">
+                    <div class="analytics-card-header">
+                        <div class="analytics-card-title">
+                            <span class="chart-icon icon-trend">📉</span>
+                            Revenue &amp; Profit Trend
+                        </div>
+                        <span class="analytics-card-badge badge-trend">Over Time</span>
+                    </div>
+                    <div style="height: 300px; width: 100%;">
+                        <canvas id="trendChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -2124,6 +2212,23 @@
                 if (r.type === 'purchase') dateMap[r.date].purchases += r.total || 0;
             });
 
+            // ── Update KPI Cards ──
+            const totalRevenue = sales.reduce((s, r) => s + (r.total || 0), 0);
+            const totalTxns    = sales.length;
+            const fmt = v => '₹' + Math.round(v).toLocaleString('en-IN');
+            const kpiRev  = document.getElementById('kpiRevenue');
+            const kpiProf = document.getElementById('kpiProfit');
+            const kpiTxn  = document.getElementById('kpiTxn');
+            if (kpiRev)  kpiRev.textContent  = fmt(totalRevenue);
+            if (kpiProf) {
+                kpiProf.textContent = fmt(trueProfit);
+                kpiProf.style.color = trueProfit >= 0 ? '#34d399' : '#f87171';
+            }
+            if (kpiTxn)  kpiTxn.textContent  = totalTxns;
+            // Also update legacy hidden profit value (for compatibility)
+            const legacyEl = document.getElementById('trueProfitValue');
+            if (legacyEl) legacyEl.textContent = fmt(trueProfit);
+
             const sortedDates = Object.keys(dateMap).sort();
             const labels = sortedDates.map(formatDate);
             const salesData = sortedDates.map(d => dateMap[d].sales);
@@ -2135,14 +2240,14 @@
             if (ctxTrend) {
                 if (trendChartInstance) trendChartInstance.destroy();
                 
-                // Create ultra-clean transparent gradients so they don't muddy together when overlapping
+                // Vivid gradients for dark background
                 const gradientRev = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 350);
-                gradientRev.addColorStop(0, 'rgba(14, 165, 233, 0.25)'); // Bright blue, low opacity
-                gradientRev.addColorStop(1, 'rgba(14, 165, 233, 0.0)');
-                
+                gradientRev.addColorStop(0, 'rgba(56,189,248,0.4)');
+                gradientRev.addColorStop(1, 'rgba(56,189,248,0.02)');
+
                 const gradientProf = ctxTrend.getContext('2d').createLinearGradient(0, 0, 0, 350);
-                gradientProf.addColorStop(0, 'rgba(16, 185, 129, 0.25)'); // Emerald green, low opacity
-                gradientProf.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+                gradientProf.addColorStop(0, 'rgba(52,211,153,0.4)');
+                gradientProf.addColorStop(1, 'rgba(52,211,153,0.02)');
 
                 trendChartInstance = new Chart(ctxTrend, {
                     type: 'line', 
@@ -2224,15 +2329,15 @@
                             x: {
                                 grid: { display: false, drawBorder: false },
                                 border: { display: false },
-                                ticks: { font: { family: "'Inter', sans-serif", size: 12, weight: '500' }, color: '#94a3b8', padding: 10 }
+                                ticks: { font: { family: "'Inter', sans-serif", size: 12, weight: '500' }, color: '#64748b', padding: 10 }
                             },
                             y: { 
                                 beginAtZero: true,
-                                grid: { color: 'rgba(226, 232, 240, 0.6)', drawBorder: false, borderDash: [6, 6] },
+                                grid: { color: 'rgba(255,255,255,0.06)', drawBorder: false, borderDash: [6, 6] },
                                 border: { display: false },
                                 ticks: {
                                     font: { family: "'Inter', sans-serif", size: 12, weight: '500' },
-                                    color: '#94a3b8',
+                                    color: '#64748b',
                                     padding: 12,
                                     callback: function(value) { return '₹' + value.toLocaleString(); }
                                 }
