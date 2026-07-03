@@ -2872,18 +2872,19 @@
 
             const fromVal   = document.getElementById('fromDate').value || '';
             const toVal     = document.getElementById('toDate').value   || '';
-            const storeName = (typeof mmLsGet === 'function')
-                ? (mmLsGet('storeName') || localStorage.getItem('mm_storeName') || 'Store')
-                : (localStorage.getItem('mm_storeName') || 'Store');
+            const storeName = (window.mmShopProfile && window.mmShopProfile.shop_name)
+                ? window.mmShopProfile.shop_name
+                : (localStorage.getItem('mm_storeName') || localStorage.getItem('storeName') || 'My Store');
 
             // helpers
+            const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
             function fmtDate(d) {
                 if (!d) return '';
                 const s = String(d).slice(0, 10);
-                const [y, mo, day] = s.split('-');
-                return (day && mo && y) ? (day + '-' + mo + '-' + y) : s;
+                const parts = s.split('-'); if (parts.length !== 3) return s;
+                const [y, mo, day] = parts; const mIdx = parseInt(mo,10)-1;
+                return day + ' ' + (MONTHS[mIdx] || mo) + ' ' + y;
             }
-            function r2(n) { return (parseFloat(n) || 0).toFixed(2); }
             function csvEsc(v) {
                 const s = String(v === null || v === undefined ? '' : v);
                 return (s.includes(',') || s.includes('"') || s.includes('\n'))
