@@ -1030,22 +1030,34 @@
         <!-- Summary Cards -->
         <div class="summary-grid">
             <div class="summary-card card-sales">
-                <div class="summary-label">Total Sales</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div class="summary-label">Total Sales</div>
+                    <span style="font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;background:#d1fae5;color:#065f46;letter-spacing:0.05em;">ALL TIME</span>
+                </div>
                 <div class="summary-value" id="totalSales">₹ 0</div>
                 <div class="summary-sub" id="salesCount">0 transactions</div>
             </div>
             <div class="summary-card card-purchase">
-                <div class="summary-label">Total Purchase</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div class="summary-label">Total Purchase</div>
+                    <span style="font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;background:#fef3c7;color:#92400e;letter-spacing:0.05em;">ALL TIME</span>
+                </div>
                 <div class="summary-value" id="totalPurchase">₹ 0</div>
                 <div class="summary-sub" id="purchaseCount">0 transactions</div>
             </div>
             <div class="summary-card card-profit">
-                <div class="summary-label">Net Profit</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div class="summary-label">Net Profit</div>
+                    <span style="font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;background:#fee2e2;color:#9f1239;letter-spacing:0.05em;">ALL TIME</span>
+                </div>
                 <div class="summary-value" id="netProfit">₹ 0</div>
                 <div class="summary-sub">Sales − Purchase</div>
             </div>
             <div class="summary-card card-items">
-                <div class="summary-label">Total Items</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div class="summary-label">Total Items</div>
+                    <span style="font-size:0.65rem;font-weight:800;padding:2px 8px;border-radius:20px;background:#ede9fe;color:#4c1d95;letter-spacing:0.05em;">ALL TIME</span>
+                </div>
                 <div class="summary-value" id="totalItems">0</div>
                 <div class="summary-sub">Units sold / purchased</div>
             </div>
@@ -1478,7 +1490,7 @@
             });
 
             renderTable(activeTab);
-            updateSummary(currentData);
+            updateSummary(allData);  // summary cards always show ALL-TIME totals
             if (typeof generateAnalytics === 'function') generateAnalytics(currentData);
         }
 
@@ -1603,7 +1615,7 @@
                     row.style.transition = 'opacity 0.35s, transform 0.35s';
                     row.style.opacity = '0';
                     row.style.transform = 'translateX(20px)';
-                    setTimeout(() => { renderTable(activeTab); updateSummary(currentData); }, 360);
+                    setTimeout(() => { renderTable(activeTab); updateSummary(allData); }, 360);
                 }
                 showToast(`🗑️ Moved to Bin. Restore anytime within 30 days.`, 'success');
                 // If bin panel is open, re-render it
