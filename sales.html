@@ -978,7 +978,7 @@
 
             // If only one batch, auto-select it
             if (batches.length === 1) {
-                batchSelect.value = batches[0].batchNo;
+                batchSelect.value = batches[0].batchNo || batches[0].batch_no;
                 selectBatch(id);
             } else {
                 batchSelect.focus();
@@ -1034,9 +1034,11 @@
                 : purchaseRate;
 
             // Fill row fields (using snake_case fallbacks for DB synced data)
-            const pExp = match.expireDate || match.expire_date || '';
+            // Supabase stores expire_date as YYYY-MM-DD — month input needs YYYY-MM
+            const pExpRaw = match.expireDate || match.expire_date || '';
+            const pExp = pExpRaw.length >= 7 ? pExpRaw.substring(0, 7) : pExpRaw;
             const pPack = match.pack || 1;
-            const pGST = match.gst || 0;
+            const pGST  = match.gst  || 0;
 
             const expEl      = document.getElementById('exp_' + id);
             const packEl     = document.getElementById('pack_' + id);
