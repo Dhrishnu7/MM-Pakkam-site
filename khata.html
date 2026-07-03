@@ -448,6 +448,8 @@
 
         async function loadAndRenderKhata() {
             let debtors = [];
+
+            // 1️⃣ Try Supabase first
             try {
                 if (typeof dbGetKhataData === 'function') {
                     const rows = await dbGetKhataData();
@@ -461,9 +463,18 @@
                         }));
                     }
                 }
-            } catch(e) { console.warn('Supabase khata load failed, falling back to localStorage', e); }
+            } catch(e) { console.warn('Supabase khata load failed:', e); }
 
-            // Fallback: scoped localStorage (mm_susan_customers)
+            // 2️⃣ Fallback: unscoped localStorage (mm_customers) — same key used by sales.html
+            if (debtors.length === 0) {
+                const raw = localStorage.getItem('mm_customers') || localStorage.getItem(_lsKey ? _lsKey('customers') : 'mm_customers');
+                const customers = JSON.parse(raw || '[]');
+                debtors = customers
+                    .filter(c => parseFloat(c.balance || 0) > 0)
+                    .map(c => ({ id: null, name: c.name, phone: c.phone || '', address: c.address || '', balance: parseFloat(c.balance) }));
+            }
+
+            // 3️⃣ Last fallback: scoped localStorage (mm_susan_customers)
             if (debtors.length === 0) {
                 const customers = mmLsGet('customers') || [];
                 debtors = customers
@@ -589,22 +600,41 @@
         async function confirmAddBalance() {
             const name   = document.getElementById('addBalName').value.trim();
             const amount = parseFloat(document.getElementById('addBalAmount').value);
-            if (!name)              { alert('Please enter a customer name.'); return; }
+            if (!name)                       { alert('Please enter a customer name.'); return; }
             if (isNaN(amount) || amount <= 0) { alert('Please enter a valid amount.'); return; }
 
             const btn = document.querySelector('#addBalanceModal .btn-confirm');
-            btn.textContent = 'Saving…'; btn.disabled = true;
+            if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
 
+            let saved = false;
+
+            // Try Supabase
             try {
-                await dbUpdateCustomerBalance(name, '', '', amount);
+                const result = await dbUpdateCustomerBalance(name, '', '', amount);
+                if (result && result.success) saved = true;
+            } catch(e) { console.warn('Supabase balance update failed:', e); }
+
+            // Always update unscoped localStorage (same key as sales.html uses)
+            try {
+                const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+                let cust = customers.find(c => (c.name||'').toLowerCase() === name.toLowerCase());
+                if (cust) {
+                    cust.balance = (parseFloat(cust.balance) || 0) + amount;
+                } else {
+                    customers.push({ name, phone: '', address: '', balance: amount });
+                }
+                localStorage.setItem('mm_customers', JSON.stringify(customers));
+                saved = true; // at least localStorage saved
+            } catch(e) { console.warn('localStorage balance update failed:', e); }
+
+            if (btn) { btn.textContent = '✓ Add Balance'; btn.disabled = false; }
+
+            if (saved) {
                 closeAddBalanceModal();
-                await loadAndRenderKhata(); // reload from Supabase
-                alert(`✅ ₹${amount.toFixed(2)} added to ${name}'s balance successfully!`);
-            } catch(e) {
-                console.error('Add balance failed:', e);
-                alert('Failed to save. Please try again.');
-            } finally {
-                btn.textContent = '✓ Add Balance'; btn.disabled = false;
+                await loadAndRenderKhata();
+                alert(`✅ ₹${amount.toFixed(2)} added to ${name}'s balance!`);
+            } else {
+                alert('Failed to save. Please check your connection.');
             }
         }
 
