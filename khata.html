@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accounts Ledger | Billware</title>
+    <title>Credit Accounts | Billware</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -396,7 +396,7 @@
         let _khataCustomers   = [];
 
         // ── Load shop name from Supabase profile ──
-        (async function loadShopName() {
+        async function loadShopName() {
             try {
                 const profile = await dbGetShopProfile();
                 const name = (profile && profile.shop_name && profile.shop_name.trim())
@@ -408,7 +408,7 @@
             } catch(e) {
                 document.getElementById('shopNameHeader').textContent = 'My Shop';
             }
-        })();
+        }
 
         function filterKhata(q) {
             const query = (q || '').trim().toLowerCase();
@@ -537,7 +537,18 @@
             renderKhata();
         }
 
-        document.addEventListener('DOMContentLoaded', loadAndRenderKhata);
+        // ── Wait for Supabase auth session before fetching data ──
+        // DOMContentLoaded fires before Supabase restores the session,
+        // so _currentUser() would return null. We wait for getSession() first.
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await _supabase.auth.getSession(); // ensures session is restored
+            } catch(e) {
+                // fallback: small delay to let Supabase init
+                await new Promise(r => setTimeout(r, 400));
+            }
+            await Promise.all([loadAndRenderKhata(), loadShopName()]);
+        });
     </script>
 </body>
 </html>
