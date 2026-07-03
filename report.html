@@ -957,11 +957,11 @@
             <div class="filters" style="display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap;">
                 <div class="filter-group">
                     <label>From Date</label>
-                    <input type="date" id="fromDate" onchange="generateReport()">
+                    <input type="date" id="fromDate">
                 </div>
                 <div class="filter-group">
                     <label>To Date</label>
-                    <input type="date" id="toDate" onchange="generateReport()">
+                    <input type="date" id="toDate">
                 </div>
                 <div class="filter-group">
                     <label>Type</label>
@@ -980,7 +980,7 @@
                         Clear Data
                     </button>
                 </div>
-                <button class="btn-filter" onclick="generateReport()">
+                <button class="btn-filter" id="generateBtn" onclick="runGenerate()">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
                     </svg>
@@ -1474,18 +1474,42 @@
             generateReport();
         }
 
+        // Wrapper for Generate button with visual feedback
+        function runGenerate() {
+            const btn = document.getElementById('generateBtn');
+            if (btn) {
+                btn.textContent = '⏳ Loading...';
+                btn.disabled = true;
+            }
+            setTimeout(() => {
+                generateReport();
+                if (btn) {
+                    btn.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg> Generate';
+                    btn.disabled = false;
+                }
+            }, 100);
+        }
+
         function generateReport() {
-            const from = document.getElementById('fromDate').value;
-            const to   = document.getElementById('toDate').value;
-            const type = document.getElementById('reportType').value;
+            const fromStr = document.getElementById('fromDate').value;
+            const toStr   = document.getElementById('toDate').value;
+            const type    = document.getElementById('reportType').value;
 
             const shList = JSON.parse(localStorage.getItem('mm_schedule_h_drugs') || '[]').map(d => String(d || "").trim().toLowerCase());
 
+            // Use Date objects for fully robust inclusive comparison
+            // Adding T00:00:00 to FROM and T23:59:59 to TO so records on the exact TO date are included
+            const fromDate = fromStr ? new Date(fromStr + 'T00:00:00') : null;
+            const toDate   = toStr   ? new Date(toStr   + 'T23:59:59') : null;
+
             currentData = allData.filter(r => {
-                // Normalize to YYYY-MM-DD to handle full timestamps like "2026-07-03T10:30:00Z"
-                const rDate = (r.date || '').slice(0, 10);
-                const inDate = (!from || rDate >= from) && (!to || rDate <= to);
-                
+                // Normalize record date to YYYY-MM-DD, then compare as Date
+                const rDateStr = (r.date || '').slice(0, 10);
+                if (!rDateStr) return false;
+                const rDate = new Date(rDateStr + 'T12:00:00'); // midday to avoid timezone edge cases
+
+                const inDate = (!fromDate || rDate >= fromDate) && (!toDate || rDate <= toDate);
+
                 let inType = false;
                 if (type === 'all') {
                     inType = true;
@@ -1494,12 +1518,12 @@
                 } else {
                     inType = r.type === type;
                 }
-                
+
                 return inDate && inType;
             });
 
             renderTable(activeTab);
-            updateSummary(currentData);  // summary cards reflect the selected date range
+            updateSummary(currentData);
             if (typeof generateAnalytics === 'function') generateAnalytics(currentData);
         }
 
