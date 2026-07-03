@@ -2674,39 +2674,61 @@
             const customVal = document.getElementById('customMonths').value;
             const months = customVal !== '' ? Math.max(0, parseInt(customVal) || 0) : _expiryMonths;
 
-            const purchases = (typeof mmLsGet === 'function') ? (mmLsGet('purchases') || []) : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
-            const today = new Date();
-            const thisYM = today.getFullYear() * 12 + today.getMonth(); // numeric month index
+            // ── Use Supabase data if available, else localStorage ──
+            let purchases = [];
+            if (_dbPurchases && _dbPurchases.length > 0) {
+                // Supabase field names: product_name, batch_no, expire_date
+                purchases = _dbPurchases.map(p => ({
+                    productName: (p.product_name || '').trim() || '-',
+                    batchNo:     (p.batch_no     || '').trim() || '-',
+                    billNo:      (p.invoice_no   || p.bill_no || '-'),
+                    date:        (p.date         || p.created_at || ''),
+                    expireDate:  (p.expire_date  || '')
+                }));
+            } else {
+                const ls = (typeof mmLsGet === 'function') ? (mmLsGet('purchases') || []) : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+                purchases = ls.map(p => ({
+                    productName: p.productName || '-',
+                    batchNo:     p.batchNo     || '-',
+                    billNo:      p.billNo      || '-',
+                    date:        p.date        || '',
+                    expireDate:  p.expireDate  || ''
+                }));
+            }
+
+            const today  = new Date();
+            const thisYM = today.getFullYear() * 12 + today.getMonth(); // 0-based month index
 
             let expired = [], thisMonth = [], soon = [], ok = [];
 
             purchases.forEach(p => {
                 if (!p.expireDate) return; // skip if no expiry recorded
                 // expireDate is 'YYYY-MM'
-                const [yr, mo] = p.expireDate.split('-').map(Number);
+                const parts = p.expireDate.split('-').map(Number);
+                const yr = parts[0], mo = parts[1];
                 if (!yr || !mo) return;
                 const expYM = yr * 12 + (mo - 1); // 0-based month
-                const diff  = expYM - thisYM;      // negative = past
+                const diff  = expYM - thisYM;      // negative = already expired
 
                 const row = {
-                    name:        p.productName || '-',
-                    batchNo:     p.batchNo     || '-',
-                    billNo:      p.billNo      || '-',
-                    purchDate:   p.date        || '',
-                    expireDate:  p.expireDate,
+                    name:       p.productName,
+                    batchNo:    p.batchNo,
+                    billNo:     p.billNo,
+                    purchDate:  p.date,
+                    expireDate: p.expireDate,
                     diff
                 };
 
-                if (diff < 0)       expired.push(row);
+                if (diff < 0)        expired.push(row);
                 else if (diff === 0) thisMonth.push(row);
                 else if (diff <= months) soon.push(row);
                 else ok.push(row);
             });
 
-            // Sort each group: most urgent first
-            expired.sort((a,b)   => a.diff - b.diff);
-            thisMonth.sort((a,b) => a.diff - b.diff);
-            soon.sort((a,b)      => a.diff - b.diff);
+            // Sort: most urgent first
+            expired.sort((a, b)   => a.diff - b.diff);
+            thisMonth.sort((a, b) => a.diff - b.diff);
+            soon.sort((a, b)      => a.diff - b.diff);
 
             // Update summary pills
             document.getElementById('expirySummary').style.display = 'flex';
@@ -2715,7 +2737,7 @@
             document.getElementById('pillSoon').innerHTML      = `🟡 ${soon.length} Expiring Soon`;
             document.getElementById('pillOk').innerHTML        = `✅ ${ok.length} OK`;
 
-            // Build table
+            // Build table (show expired + this month + soon)
             const combined = [...expired, ...thisMonth, ...soon];
             const wrap     = document.getElementById('expiryTableWrap');
             const empty    = document.getElementById('expiryEmpty');
