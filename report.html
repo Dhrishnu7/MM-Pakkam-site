@@ -3013,44 +3013,29 @@
             csv += row('TOTAL', purchases.length, r2(purBase), r2(purCGST), r2(purSGST), r2(purCGST+purSGST), r2(purAmt));
             csv += '\r\n\r\n';
 
-            // ── SECTION 4: NET GST PAYABLE ────────────────────────────�
-        /* ── Search &amp; Print Bills Logic ── */+ (gst / 100));
-                const totalTax = total - baseValue;
-                const cgst = totalTax / 2;
-                const sgst = totalTax / 2;
 
-                const row = [
-                    date,
-                    billNo,
-                    type,
-                    product,
-                    qty.toFixed(2),
-                    rate.toFixed(2),
-                    gst.toFixed(2),
-                    baseValue.toFixed(2),
-                    cgst.toFixed(2),
-                    sgst.toFixed(2),
-                    total.toFixed(2)
-                ].join(",");
+            // SECTION 4: NET GST PAYABLE
+            const netCGST = salCGST - purCGST;
+            const netSGST = salSGST - purSGST;
+            csv += row('SECTION 4: NET GST PAYABLE (After Input Tax Credit)');
+            csv += row('', 'CGST (Rs)', 'SGST (Rs)', 'Total GST (Rs)');
+            csv += row('Output Tax (Sales)',           r2(salCGST), r2(salSGST), r2(salCGST+salSGST));
+            csv += row('Input Tax Credit (Purchases)', r2(purCGST), r2(purSGST), r2(purCGST+purSGST));
+            csv += row('NET GST PAYABLE',              r2(netCGST), r2(netSGST), r2(netCGST+netSGST));
 
-                csvContent += row + "\n";
-            });
-
-            // Create a blob and trigger download
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            
-            const from = document.getElementById('fromDate').value || 'all';
-            const to = document.getElementById('toDate').value || 'all';
-            
-            link.setAttribute("href", url);
-            link.setAttribute("download", `GST_Report_${from}_to_${to}.csv`);
+            // DOWNLOAD
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const safeName = storeName.replace(/[^a-zA-Z0-9]/g, '_');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'GST_Report_' + safeName + '_' + (fromVal || 'AllTime') + '_to_' + (toVal || 'Today') + '.csv');
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
-            showToast("✅ GST Excel Exported Successfully!", "success");
+            URL.revokeObjectURL(url);
+
+            showToast('GST Report Exported! Open in Excel for best view.', 'success');
         }
 
         /* ── Search & Print Bills Logic ── */
