@@ -2784,7 +2784,10 @@
 
             tbody.innerHTML = rows.map(r => {
                 let statusHtml;
-                if (r.diff < 0) {
+                if (cat === 'ok') {
+                    // OK medicines — show green safe badge
+                    statusHtml = `<span class="expiry-status" style="background:#dcfce7;color:#16a34a;border:1.5px solid #86efac;">✅ Safe &mdash; ${r.diff} month(s) left</span>`;
+                } else if (r.diff < 0) {
                     statusHtml = `<span class="expiry-status status-expired">🔴 Expired ${Math.abs(r.diff)} month(s) ago</span>`;
                 } else if (r.diff === 0) {
                     statusHtml = `<span class="expiry-status status-thismonth">🟠 Expiring This Month</span>`;
