@@ -367,6 +367,7 @@
                 <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
             </svg>
             <input type="text" id="searchInput" placeholder="Search customer name…" oninput="filterKhata(this.value)">
+            <button onclick="openAddBalanceModal()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;border-radius:10px;padding:0.4rem 0.9rem;font-weight:700;font-size:0.8rem;font-family:Inter,sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(99,102,241,0.3);transition:all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">+ Add Balance</button>
         </div>
 
         <div class="khata-grid" id="khataGrid">
@@ -379,13 +380,37 @@
         <div class="modal">
             <h2 id="modalTitle">Settle Dues</h2>
             <p id="modalSub">Record a payment from this customer.</p>
+            <!-- Warning banner showing what will be deducted -->
+            <div id="settleBanner" style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:0.75rem 1rem;margin-bottom:1.2rem;font-size:0.85rem;color:#92400e;font-weight:600;display:flex;align-items:center;gap:8px;">
+                ⚠️ Pending Balance: <span id="settleBannerAmt" style="color:#dc2626;font-size:1rem;"></span> &mdash; enter only the amount received today.
+            </div>
             <div class="form-group">
-                <label>Amount Received (₹)</label>
-                <input type="number" id="settleAmount" step="0.01" min="0" placeholder="0.00">
+                <label>Amount Received (₹) &mdash; type manually</label>
+                <input type="number" id="settleAmount" step="0.01" min="0" placeholder="Enter amount received">
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
                 <button type="button" class="btn-confirm" onclick="confirmSettle()">✓ Save Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Balance Modal -->
+    <div class="modal-overlay" id="addBalanceModal">
+        <div class="modal">
+            <h2>Add Customer Balance</h2>
+            <p>Manually add or restore a credit balance for a customer.</p>
+            <div class="form-group">
+                <label>Customer Name</label>
+                <input type="text" id="addBalName" placeholder="e.g. Madhan Kumar" style="font-size:1rem;">
+            </div>
+            <div class="form-group">
+                <label>Balance Amount (₹)</label>
+                <input type="number" id="addBalAmount" step="0.01" min="0" placeholder="0.00">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeAddBalanceModal()">Cancel</button>
+                <button type="button" class="btn-confirm" onclick="confirmAddBalance()">✓ Add Balance</button>
             </div>
         </div>
     </div>
@@ -496,11 +521,12 @@
         function openSettleModal(index, name, currentBalance) {
             currentCustIndex = index;
             document.getElementById('modalTitle').textContent = `Settle: ${name}`;
-            document.getElementById('modalSub').textContent = `Current Balance: ₹${currentBalance.toFixed(2)}`;
+            document.getElementById('modalSub').textContent = `Enter only the amount received today.`;
+            document.getElementById('settleBannerAmt').textContent = `₹${currentBalance.toFixed(2)}`;
             const amtInput = document.getElementById('settleAmount');
-            amtInput.value = currentBalance.toFixed(2);
+            amtInput.value = ''; // NEVER pre-fill — user must type the amount manually
             document.getElementById('settleModal').classList.add('open');
-            setTimeout(() => { amtInput.focus(); amtInput.select(); }, 100);
+            setTimeout(() => { amtInput.focus(); }, 150);
         }
 
         function closeModal() {
@@ -511,15 +537,22 @@
         async function confirmSettle() {
             if (currentCustIndex < 0) return;
             const amount = parseFloat(document.getElementById('settleAmount').value);
-            if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount greater than 0."); return; }
+            if (isNaN(amount) || amount <= 0) { alert('Please enter a valid amount greater than 0.'); return; }
             const cust = _allKhataCustomers[currentCustIndex];
             if (!cust) return;
 
-            if (amount > cust.balance) {
-                if (!confirm(`₹${amount} is more than the balance (₹${cust.balance.toFixed(2)}). Continue?`)) return;
-            }
+            // Hard confirmation — prevents accidental full settlement
+            const willBeLeft = Math.max(0, cust.balance - amount);
+            const confirmed = confirm(
+                `⚠️ Confirm Payment\n\n` +
+                `Customer: ${cust.name}\n` +
+                `Amount Received: ₹${amount.toFixed(2)}\n` +
+                `Remaining Balance After: ₹${willBeLeft.toFixed(2)}\n\n` +
+                `Tap OK to confirm. This cannot be undone.`
+            );
+            if (!confirmed) return;
 
-            cust.balance = Math.max(0, parseFloat((cust.balance - amount).toFixed(2)));
+            cust.balance = willBeLeft;
 
             try {
                 if (cust.id && typeof _supabase !== 'undefined') {
@@ -537,7 +570,41 @@
             renderKhata();
         }
 
-        // ── Wait for Supabase auth session before fetching data ──
+        // ── Add Balance (Manual Restore) ──
+        function openAddBalanceModal() {
+            document.getElementById('addBalName').value   = '';
+            document.getElementById('addBalAmount').value = '';
+            document.getElementById('addBalanceModal').classList.add('open');
+            setTimeout(() => document.getElementById('addBalName').focus(), 100);
+        }
+
+        function closeAddBalanceModal() {
+            document.getElementById('addBalanceModal').classList.remove('open');
+        }
+
+        async function confirmAddBalance() {
+            const name   = document.getElementById('addBalName').value.trim();
+            const amount = parseFloat(document.getElementById('addBalAmount').value);
+            if (!name)              { alert('Please enter a customer name.'); return; }
+            if (isNaN(amount) || amount <= 0) { alert('Please enter a valid amount.'); return; }
+
+            const btn = document.querySelector('#addBalanceModal .btn-confirm');
+            btn.textContent = 'Saving…'; btn.disabled = true;
+
+            try {
+                await dbUpdateCustomerBalance(name, '', '', amount);
+                closeAddBalanceModal();
+                await loadAndRenderKhata(); // reload from Supabase
+                alert(`✅ ₹${amount.toFixed(2)} added to ${name}'s balance successfully!`);
+            } catch(e) {
+                console.error('Add balance failed:', e);
+                alert('Failed to save. Please try again.');
+            } finally {
+                btn.textContent = '✓ Add Balance'; btn.disabled = false;
+            }
+        }
+
+
         // DOMContentLoaded fires before Supabase restores the session,
         // so _currentUser() would return null. We wait for getSession() first.
         document.addEventListener('DOMContentLoaded', async () => {
