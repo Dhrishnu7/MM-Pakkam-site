@@ -524,12 +524,12 @@
         function openSettleModal(index, name, currentBalance) {
             currentCustIndex = index;
             document.getElementById('modalTitle').textContent = `Settle: ${name}`;
-            document.getElementById('modalSub').textContent = `Enter only the amount received today.`;
+            document.getElementById('modalSub').textContent = `Verify amount and confirm below.`;
             document.getElementById('settleBannerAmt').textContent = `₹${currentBalance.toFixed(2)}`;
             const amtInput = document.getElementById('settleAmount');
-            amtInput.value = ''; // NEVER pre-fill — user must type the amount manually
+            amtInput.value = currentBalance.toFixed(2); // Auto-filled for convenience
             document.getElementById('settleModal').classList.add('open');
-            setTimeout(() => { amtInput.focus(); }, 150);
+            setTimeout(() => { amtInput.focus(); amtInput.select(); }, 150);
         }
 
         function closeModal() {
