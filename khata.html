@@ -15,275 +15,294 @@
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            background: linear-gradient(145deg, #0a0f1e 0%, #0f172a 50%, #0d1627 100%);
+            background: #f0f4ff;
+            background-image:
+                radial-gradient(at 0% 0%,   hsla(230,100%,96%,1) 0px, transparent 55%),
+                radial-gradient(at 100% 0%,  hsla(190,100%,94%,1) 0px, transparent 55%),
+                radial-gradient(at 0% 100%,  hsla(280,80%,96%,1) 0px, transparent 55%),
+                radial-gradient(at 100% 100%,hsla(210,100%,95%,1) 0px, transparent 55%);
+            background-attachment: fixed;
             display: flex;
             flex-direction: column;
-            color: #f1f5f9;
+            color: #0f172a;
         }
 
         /* ── Navbar ── */
         header {
-            background: rgba(255,255,255,0.04);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.80);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(99,102,241,0.1);
             padding: 0.85rem 2rem;
             display: flex; align-items: center; justify-content: space-between;
             position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 20px rgba(99,102,241,0.06);
         }
 
-        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; transition: transform 0.2s; }
+        .logo:hover { transform: translateY(-1px); }
         .logo-icon {
             width: 40px; height: 40px; border-radius: 12px;
-            background: linear-gradient(135deg, #d97706, #f59e0b);
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 14px rgba(217,119,6,0.4);
+            box-shadow: 0 4px 14px rgba(99,102,241,0.35);
             flex-shrink: 0;
         }
         .logo-text {
-            font-size: 1.1rem; font-weight: 800; color: #f1f5f9;
-            letter-spacing: -0.01em;
+            font-size: 1.1rem; font-weight: 800;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
         .back-btn {
             display: inline-flex; align-items: center; gap: 6px;
-            padding: 0.5rem 1.1rem;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
+            padding: 0.48rem 1.1rem;
+            background: white;
+            border: 1.5px solid #e0e7ff;
             border-radius: 50px;
-            font-size: 0.85rem; font-weight: 600; color: #94a3b8;
+            font-size: 0.84rem; font-weight: 600; color: #6366f1;
             cursor: pointer; transition: all 0.2s ease; text-decoration: none;
         }
         .back-btn:hover {
-            background: rgba(255,255,255,0.12);
-            color: #f1f5f9;
+            background: #6366f1; color: white;
+            border-color: #6366f1;
+            box-shadow: 0 4px 14px rgba(99,102,241,0.3);
             transform: translateX(-2px);
         }
 
         /* ── Page Content ── */
         .page-content {
-            flex: 1; padding: 2.5rem 1.5rem 4rem;
+            flex: 1; padding: 2.5rem 1.5rem 5rem;
             max-width: 1100px; margin: 0 auto; width: 100%;
             animation: fadeUp 0.5s ease forwards; opacity: 0;
         }
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(18px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
         /* ── Page Header ── */
         .page-header { margin-bottom: 2rem; }
         .page-tag {
-            font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em;
-            text-transform: uppercase; color: #f59e0b; margin-bottom: 6px;
-            display: flex; align-items: center; gap: 6px;
+            font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em;
+            text-transform: uppercase; color: #6366f1; margin-bottom: 7px;
+            display: flex; align-items: center; gap: 7px;
         }
         .page-tag::before {
             content: '';
-            display: inline-block; width: 20px; height: 2px;
-            background: #f59e0b; border-radius: 2px;
+            display: inline-block; width: 18px; height: 2px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 2px;
         }
         .page-header h1 {
-            font-size: 2rem; font-weight: 900; color: #f1f5f9;
-            letter-spacing: -0.03em; line-height: 1.1;
+            font-size: 2rem; font-weight: 900; color: #0f172a;
+            letter-spacing: -0.03em;
         }
-        .page-header p { color: #475569; margin-top: 6px; font-size: 0.92rem; font-weight: 500; }
+        .page-header p { color: #94a3b8; margin-top: 5px; font-size: 0.9rem; font-weight: 500; }
 
         /* ── Stat Card ── */
         .stat-card {
             position: relative; overflow: hidden;
-            background: linear-gradient(135deg, #1e1050 0%, #0f172a 60%);
-            border: 1px solid rgba(245,158,11,0.2);
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 40%, #7c3aed 100%);
             border-radius: 24px; padding: 2rem 2.5rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04) inset;
-            margin-bottom: 2rem;
+            box-shadow: 0 16px 48px rgba(99,102,241,0.35);
+            margin-bottom: 1.8rem;
             display: flex; align-items: center; justify-content: space-between; gap: 2rem;
         }
         .stat-card::before {
             content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, #d97706, #f59e0b, #fbbf24);
+            position: absolute; top: -80px; right: -60px;
+            width: 240px; height: 240px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
         }
         .stat-card::after {
             content: '';
-            position: absolute; top: -60px; right: -40px;
-            width: 200px; height: 200px;
-            background: radial-gradient(circle, rgba(245,158,11,0.12), transparent 70%);
-            pointer-events: none;
+            position: absolute; bottom: -60px; left: 30%;
+            width: 160px; height: 160px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
         }
-        .stat-left { display: flex; flex-direction: column; gap: 4px; }
+        .stat-left { position: relative; z-index: 1; }
         .stat-label {
-            font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
-            letter-spacing: 0.12em; color: #f59e0b;
+            font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.12em; color: rgba(255,255,255,0.65); margin-bottom: 6px;
         }
         .stat-value {
-            font-size: 3rem; font-weight: 900; color: #fbbf24;
+            font-size: 2.8rem; font-weight: 900; color: white;
             letter-spacing: -0.04em; line-height: 1;
         }
-        .stat-sub { font-size: 0.78rem; color: #475569; margin-top: 4px; font-weight: 500; }
+        .stat-sub { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-top: 5px; }
         .stat-icon {
-            width: 56px; height: 56px; border-radius: 16px;
-            background: linear-gradient(135deg, #d97706, #f59e0b);
+            position: relative; z-index: 1;
+            width: 58px; height: 58px; border-radius: 18px;
+            background: rgba(255,255,255,0.18);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 8px 24px rgba(217,119,6,0.4);
-            font-size: 1.5rem; flex-shrink: 0;
+            font-size: 1.6rem; flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.25);
+            backdrop-filter: blur(8px);
         }
 
         /* ── Search ── */
         .search-bar {
             display: flex; align-items: center; gap: 10px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 14px; padding: 0.7rem 1.2rem;
+            background: white;
+            border: 1.5px solid #e0e7ff;
+            border-radius: 14px; padding: 0.72rem 1.2rem;
             margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.06);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-bar:focus-within {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
         }
         .search-bar input {
             flex: 1; background: none; border: none; outline: none;
-            color: #f1f5f9; font-size: 0.9rem; font-family: 'Inter', sans-serif;
+            color: #0f172a; font-size: 0.9rem; font-family: 'Inter', sans-serif;
             font-weight: 500;
         }
-        .search-bar input::placeholder { color: #475569; }
+        .search-bar input::placeholder { color: #c7d2fe; }
 
         /* ── Grid ── */
         .khata-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
             gap: 1.2rem;
         }
 
         /* ── Customer Card ── */
         .customer-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: white;
+            border: 1.5px solid #e0e7ff;
             border-radius: 20px; padding: 1.5rem;
             display: flex; flex-direction: column; gap: 1rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            box-shadow: 0 4px 16px rgba(99,102,241,0.06);
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
             position: relative; overflow: hidden;
         }
         .customer-card::before {
             content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, #ef4444, #f97316);
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
             opacity: 0; transition: opacity 0.2s;
         }
         .customer-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
-            border-color: rgba(239,68,68,0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 16px 40px rgba(99,102,241,0.15);
+            border-color: #c7d2fe;
         }
         .customer-card:hover::before { opacity: 1; }
 
-        .c-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .c-header { display: flex; align-items: center; gap: 12px; }
         .c-avatar {
-            width: 44px; height: 44px; border-radius: 14px;
-            background: linear-gradient(135deg, #ef4444, #f97316);
+            width: 46px; height: 46px; border-radius: 14px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
             display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 1.1rem; color: white;
-            flex-shrink: 0;
+            font-weight: 800; font-size: 1rem; color: white;
+            flex-shrink: 0; box-shadow: 0 4px 12px rgba(99,102,241,0.3);
         }
-        .c-info { flex: 1; padding-left: 0.8rem; }
-        .c-name { font-size: 1rem; font-weight: 800; color: #f1f5f9; }
-        .c-phone { font-size: 0.8rem; color: #475569; margin-top: 2px; font-weight: 500; }
+        .c-name { font-size: 1rem; font-weight: 800; color: #0f172a; }
+        .c-phone { font-size: 0.8rem; color: #94a3b8; margin-top: 2px; font-weight: 500; }
 
         .c-bal-section {
-            background: rgba(239,68,68,0.08);
-            border: 1px solid rgba(239,68,68,0.15);
-            border-radius: 12px; padding: 0.9rem 1rem;
+            background: linear-gradient(135deg, #fff1f2, #ffe4e6);
+            border: 1.5px solid #fecdd3;
+            border-radius: 14px; padding: 1rem 1.1rem;
         }
-        .c-bal-label { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #f87171; }
+        .c-bal-label {
+            font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em;
+            text-transform: uppercase; color: #f43f5e; margin-bottom: 3px;
+        }
         .c-bal-value {
-            font-size: 1.7rem; font-weight: 900; color: #ef4444;
-            letter-spacing: -0.02em; margin-top: 2px; line-height: 1;
+            font-size: 1.75rem; font-weight: 900; color: #e11d48;
+            letter-spacing: -0.02em; line-height: 1;
         }
 
         .btn-settle {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white; border: none; border-radius: 12px;
             padding: 0.8rem 0; width: 100%; font-weight: 700;
-            font-size: 0.9rem; font-family: 'Inter', sans-serif;
+            font-size: 0.88rem; font-family: 'Inter', sans-serif;
             cursor: pointer; transition: all 0.2s;
             display: flex; justify-content: center; align-items: center; gap: 7px;
-            box-shadow: 0 4px 16px rgba(16,185,129,0.25);
+            box-shadow: 0 4px 14px rgba(16,185,129,0.2);
         }
         .btn-settle:hover {
             background: linear-gradient(135deg, #059669, #047857);
             transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(16,185,129,0.4);
+            box-shadow: 0 8px 22px rgba(16,185,129,0.35);
         }
 
         /* ── Empty State ── */
         .empty-state {
-            text-align: center; padding: 4rem 1rem;
-            color: #475569; grid-column: 1 / -1;
+            text-align: center; padding: 5rem 1rem;
+            color: #94a3b8; grid-column: 1 / -1;
         }
-        .empty-icon {
-            font-size: 3rem; margin-bottom: 1rem;
-            opacity: 0.4;
-        }
-        .empty-state h3 { font-size: 1.15rem; color: #94a3b8; margin-bottom: 0.4rem; font-weight: 700; }
-        .empty-state p { font-size: 0.875rem; color: #334155; }
+        .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.5; }
+        .empty-state h3 { font-size: 1.1rem; color: #475569; margin-bottom: 0.4rem; font-weight: 700; }
+        .empty-state p { font-size: 0.85rem; color: #94a3b8; }
 
         /* ── Modal ── */
         .modal-overlay {
             position: fixed; inset: 0;
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            background: rgba(15,23,42,0.4); backdrop-filter: blur(8px);
             display: flex; align-items: center; justify-content: center; z-index: 999;
             opacity: 0; pointer-events: none; transition: opacity 0.25s;
         }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
 
         .modal {
-            background: #0f172a;
-            border: 1px solid rgba(255,255,255,0.1);
+            background: white;
+            border: 1.5px solid #e0e7ff;
             border-radius: 24px; padding: 2rem; width: 90%; max-width: 400px;
-            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+            box-shadow: 0 24px 60px rgba(99,102,241,0.2);
             transform: scale(0.94) translateY(10px);
             transition: transform 0.25s ease;
             position: relative; overflow: hidden;
         }
         .modal::before {
             content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, #10b981, #34d399);
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
         }
         .modal-overlay.open .modal { transform: scale(1) translateY(0); }
-        .modal h2 { font-size: 1.3rem; font-weight: 800; color: #f1f5f9; margin-bottom: 0.4rem; }
-        .modal p { color: #475569; font-size: 0.88rem; margin-bottom: 1.5rem; }
+        .modal h2 { font-size: 1.3rem; font-weight: 800; color: #0f172a; margin-bottom: 0.4rem; }
+        .modal p { color: #94a3b8; font-size: 0.88rem; margin-bottom: 1.5rem; }
 
         .form-group { margin-bottom: 1.4rem; }
         .form-group label {
-            display: block; font-size: 0.8rem; font-weight: 700;
-            color: #64748b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em;
+            display: block; font-size: 0.78rem; font-weight: 700; color: #475569;
+            margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em;
         }
         .form-group input {
             width: 100%; padding: 0.9rem 1.2rem;
-            border-radius: 12px;
-            border: 1.5px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
-            color: #f1f5f9;
+            border-radius: 12px; border: 1.5px solid #e0e7ff;
+            background: #f8faff;
+            color: #0f172a;
             font-size: 1.2rem; font-weight: 700; font-family: 'Inter', sans-serif;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .form-group input:focus {
-            outline: none;
-            border-color: #10b981;
-            box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+            outline: none; border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+            background: white;
         }
 
         .modal-actions { display: flex; gap: 0.8rem; }
         .btn-cancel {
-            flex: 1; background: rgba(255,255,255,0.06);
-            color: #64748b; border: 1px solid rgba(255,255,255,0.1);
+            flex: 1; background: #f8fafc; color: #64748b;
+            border: 1.5px solid #e2e8f0;
             padding: 0.9rem; border-radius: 12px; font-weight: 700;
             cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
         }
-        .btn-cancel:hover { background: rgba(255,255,255,0.1); color: #94a3b8; }
+        .btn-cancel:hover { background: #f1f5f9; }
         .btn-confirm {
             flex: 1; background: linear-gradient(135deg, #10b981, #059669);
             color: white; border: none;
             padding: 0.9rem; border-radius: 12px; font-weight: 700;
             cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;
-            box-shadow: 0 4px 14px rgba(16,185,129,0.3);
+            box-shadow: 0 4px 14px rgba(16,185,129,0.25);
         }
         .btn-confirm:hover { background: linear-gradient(135deg, #059669, #047857); }
 
@@ -304,9 +323,11 @@
     <header>
         <a href="index.html" class="logo">
             <div class="logo-icon">
-                <svg viewBox="0 0 100 100" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+                <svg viewBox="0 0 100 100" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                        <mask id="km"><rect width="100" height="100" fill="white"/><rect x="42" y="32" width="16" height="36" rx="4" fill="black"/><rect x="32" y="42" width="36" height="16" rx="4" fill="black"/></mask>
+                        <mask id="km"><rect width="100" height="100" fill="white"/>
+                        <rect x="42" y="32" width="16" height="36" rx="4" fill="black"/>
+                        <rect x="32" y="42" width="36" height="16" rx="4" fill="black"/></mask>
                         <g id="kleaf"><path d="M 50 50 C 35 45, 30 30, 30 20 C 30 10, 45 10, 50 20 C 55 10, 70 10, 70 20 C 70 30, 65 45, 50 50 Z" fill="#ffffff"/></g>
                     </defs>
                     <g mask="url(#km)">
@@ -315,10 +336,10 @@
                     </g>
                 </svg>
             </div>
-            <div class="logo-text" id="shopNameHeader">Loading...</div>
+            <div class="logo-text" id="shopNameHeader">...</div>
         </a>
         <a href="javascript:history.back()" class="back-btn">
-            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
             Back
@@ -329,10 +350,9 @@
         <div class="page-header">
             <div class="page-tag">Accounts Ledger</div>
             <h1>Credit Accounts</h1>
-            <p>Track and manage pending payments from your customers.</p>
+            <p>Track and manage pending payments from your credit customers.</p>
         </div>
 
-        <!-- Stat Banner -->
         <div class="stat-card">
             <div class="stat-left">
                 <div class="stat-label">Total Outstanding Dues</div>
@@ -342,20 +362,19 @@
             <div class="stat-icon">💰</div>
         </div>
 
-        <!-- Search -->
         <div class="search-bar">
-            <svg width="16" height="16" fill="none" stroke="#475569" stroke-width="2.5" viewBox="0 0 24 24">
+            <svg width="16" height="16" fill="none" stroke="#a5b4fc" stroke-width="2.5" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/>
             </svg>
-            <input type="text" id="searchInput" placeholder="Search customer name..." oninput="filterKhata(this.value)">
+            <input type="text" id="searchInput" placeholder="Search customer name…" oninput="filterKhata(this.value)">
         </div>
 
         <div class="khata-grid" id="khataGrid">
-            <div style="text-align:center;padding:3rem;color:#475569;grid-column:1/-1;">Loading accounts...</div>
+            <div style="text-align:center;padding:3rem;color:#94a3b8;grid-column:1/-1;font-size:0.9rem;">Loading accounts…</div>
         </div>
     </div>
 
-    <!-- Settle Dues Modal -->
+    <!-- Settle Modal -->
     <div class="modal-overlay" id="settleModal">
         <div class="modal">
             <h2 id="modalTitle">Settle Dues</h2>
@@ -373,34 +392,34 @@
 
     <script>
         let currentCustIndex = -1;
-        let _khataCustomers = [];
         let _allKhataCustomers = [];
+        let _khataCustomers   = [];
 
-        // ── Load shop name ──
+        // ── Load shop name from Supabase profile ──
         (async function loadShopName() {
             try {
                 const profile = await dbGetShopProfile();
-                const name = (profile && profile.shop_name) ? profile.shop_name
-                           : localStorage.getItem('mm_shop_name') || 'My Shop';
+                const name = (profile && profile.shop_name && profile.shop_name.trim())
+                    ? profile.shop_name
+                    : (JSON.parse(localStorage.getItem('mm_profile') || '{}').shopName)
+                    || (JSON.parse(localStorage.getItem('mm_profile') || '{}').shop_name)
+                    || 'My Shop';
                 document.getElementById('shopNameHeader').textContent = name;
             } catch(e) {
-                document.getElementById('shopNameHeader').textContent = localStorage.getItem('mm_shop_name') || 'My Shop';
+                document.getElementById('shopNameHeader').textContent = 'My Shop';
             }
         })();
 
-        // ── Filter ──
-        function filterKhata(query) {
-            const q = (query || '').trim().toLowerCase();
-            _khataCustomers = q
-                ? _allKhataCustomers.filter(c => c.name.toLowerCase().includes(q))
+        function filterKhata(q) {
+            const query = (q || '').trim().toLowerCase();
+            _khataCustomers = query
+                ? _allKhataCustomers.filter(c => c.name.toLowerCase().includes(query))
                 : [..._allKhataCustomers];
             renderKhata();
         }
 
         async function loadAndRenderKhata() {
-            const grid = document.getElementById('khataGrid');
             let debtors = [];
-
             try {
                 if (typeof dbGetKhataData === 'function') {
                     const rows = await dbGetKhataData();
@@ -424,24 +443,22 @@
             }
 
             _allKhataCustomers = debtors.sort((a, b) => b.balance - a.balance);
-            _khataCustomers = [..._allKhataCustomers];
+            _khataCustomers    = [..._allKhataCustomers];
             renderKhata();
         }
 
         function getInitials(name) {
-            return (name || '?').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+            return (name || '?').trim().split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase();
         }
 
         function renderKhata() {
-            const grid = document.getElementById('khataGrid');
+            const grid    = document.getElementById('khataGrid');
             const totalEl = document.getElementById('totalOutstanding');
-            const debtors = _khataCustomers;
 
-            // Total across ALL customers (not just filtered)
             const grandTotal = _allKhataCustomers.reduce((s, c) => s + c.balance, 0);
             totalEl.textContent = '₹' + grandTotal.toFixed(2);
 
-            if (debtors.length === 0) {
+            if (_khataCustomers.length === 0) {
                 grid.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">😊</div>
@@ -452,13 +469,14 @@
             }
 
             grid.innerHTML = '';
-            debtors.forEach((cust, idx) => {
+            _khataCustomers.forEach((cust) => {
+                const realIdx = _allKhataCustomers.indexOf(cust);
                 const card = document.createElement('div');
                 card.className = 'customer-card';
                 card.innerHTML = `
                     <div class="c-header">
                         <div class="c-avatar">${getInitials(cust.name)}</div>
-                        <div class="c-info">
+                        <div>
                             <div class="c-name">${cust.name}</div>
                             <div class="c-phone">${cust.phone || 'No phone added'}</div>
                         </div>
@@ -467,8 +485,8 @@
                         <div class="c-bal-label">Pending Balance</div>
                         <div class="c-bal-value">₹${cust.balance.toFixed(2)}</div>
                     </div>
-                    <button class="btn-settle" onclick="openSettleModal(${_allKhataCustomers.indexOf(cust)}, '${cust.name.replace(/'/g, "\\'")}', ${cust.balance})">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <button class="btn-settle" onclick="openSettleModal(${realIdx}, '${cust.name.replace(/'/g,"\\'")}', ${cust.balance})">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                         Mark as Settled
                     </button>`;
                 grid.appendChild(card);
@@ -493,15 +511,12 @@
         async function confirmSettle() {
             if (currentCustIndex < 0) return;
             const amount = parseFloat(document.getElementById('settleAmount').value);
-            if (isNaN(amount) || amount <= 0) {
-                alert("Please enter a valid amount greater than 0.");
-                return;
-            }
+            if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount greater than 0."); return; }
             const cust = _allKhataCustomers[currentCustIndex];
             if (!cust) return;
 
             if (amount > cust.balance) {
-                if (!confirm(`The amount (₹${amount}) is greater than the pending balance (₹${cust.balance}). This will result in an advance payment. Continue?`)) return;
+                if (!confirm(`₹${amount} is more than the balance (₹${cust.balance.toFixed(2)}). Continue?`)) return;
             }
 
             cust.balance = Math.max(0, parseFloat((cust.balance - amount).toFixed(2)));
@@ -513,12 +528,11 @@
             } catch(e) { console.warn('Settle sync failed:', e); }
 
             const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
-            const lc = customers.find(c => (c.name || '').toLowerCase() === cust.name.toLowerCase());
+            const lc = customers.find(c => (c.name||'').toLowerCase() === cust.name.toLowerCase());
             if (lc) { lc.balance = cust.balance; localStorage.setItem('mm_customers', JSON.stringify(customers)); }
 
             if (cust.balance <= 0) _allKhataCustomers.splice(currentCustIndex, 1);
             _khataCustomers = [..._allKhataCustomers];
-
             closeModal();
             renderKhata();
         }
