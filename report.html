@@ -2731,8 +2731,8 @@
 
                 if (diff < 0)        expired.push(row);
                 else if (diff === 0) thisMonth.push(row);
-                else if (diff <= months) soon.push(row);
-                else ok.push(row);
+                else if (diff <= 3)  soon.push(row);   // fixed rule: <3 months = soon
+                else ok.push(row);                     // >3 months = OK
             });
 
             // Sort: most urgent first
