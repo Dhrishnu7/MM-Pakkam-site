@@ -1916,7 +1916,7 @@
                                             <td colspan="2" style="padding-top: 12px;">
                                                 <div style="display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: white; padding: 15px 20px; border-radius: 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
                                                     <span style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Net Payable</span>
-                                                    <span style="font-size: 22px; font-weight: 800;">₹${parseFloat(bill.total||0).toFixed(2)}</span>
+                                                    <span style="font-size: 22px; font-weight: 800;">₹${parseFloat(bill.grandTotal||bill.total||0).toFixed(2)}</span>
                                                 </div>
                                             </td>
                                         </tr>
