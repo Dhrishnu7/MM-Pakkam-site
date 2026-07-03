@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2604,25 +2604,31 @@
 
                 // Sub-rows per batch (only if multiple batches)
                 if (multiBatch) {
-                    const lastIdx = row.batches.length - 1;
                     row.batches.forEach((b, bi) => {
-                        const isLast    = bi === lastIdx;
-                        const connector = isLast ? '&#x2570;' : '&#x251C;'; // ╰ or ├
-                        const bCur      = b.current;
-                        let bQtyClass   = 'qty-good', bBadge = '&#x2705; OK';
-                        if (bCur <= 0)  { bQtyClass = 'qty-out'; bBadge = '&#x274C; Empty'; }
-                        else if (bCur <= 10) { bQtyClass = 'qty-low'; bBadge = '&#x26A0;&#xFE0F; Low'; }
+                        const bCur    = b.current;
+                        let bQtyClass = 'qty-good';
+                        let bDot      = 'background:#22c55e;';  // green dot
+                        let bBadge    = '<span style="color:#16a34a;font-weight:600;font-size:0.78rem;">In Stock</span>';
+                        if (bCur <= 0) {
+                            bQtyClass = 'qty-out'; bDot = 'background:#ef4444;';
+                            bBadge = '<span style="color:#dc2626;font-weight:600;font-size:0.78rem;">Empty</span>';
+                        } else if (bCur <= 10) {
+                            bQtyClass = 'qty-low'; bDot = 'background:#f59e0b;';
+                            bBadge = '<span style="color:#d97706;font-weight:600;font-size:0.78rem;">Low</span>';
+                        }
 
-                        html += `<tr style="background:#faf9ff;border-left:3px solid #c4b5fd;">
-                            <td style="color:#a5b4fc;font-size:1rem;padding-left:12px;">${connector}</td>
-                            <td style="padding-left:16px;">
-                                <code style="background:#ede9fe;color:#5b21b6;padding:3px 9px;border-radius:6px;font-size:0.82rem;font-weight:600;">${b.batch || '&#x2014;'}</code>
+                        html += `<tr style="background:#fafafa;border-left:3px solid #c4b5fd;">
+                            <td style="text-align:center;">
+                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;${bDot}opacity:0.8;"></span>
                             </td>
-                            <td colspan="2" style="color:#64748b;font-size:0.85rem;">${fmtExp(b.exp)}</td>
-                            <td style="color:#059669;font-size:0.88rem;font-weight:600;">${b.totalIn}</td>
-                            <td style="color:#94a3b8;font-size:0.8rem;">&#x2014;</td>
-                            <td><span class="stock-qty-number ${bQtyClass}" style="font-size:0.9rem;">${bCur}</span></td>
-                            <td><span style="font-size:0.75rem;color:#6b7280;">${bBadge}</span></td>
+                            <td style="padding-left:18px;">
+                                <code style="background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:6px;font-size:0.82rem;font-weight:600;letter-spacing:0.3px;">${b.batch || '&mdash;'}</code>
+                            </td>
+                            <td colspan="2" style="color:#64748b;font-size:0.84rem;">${fmtExp(b.exp)}</td>
+                            <td style="color:#059669;font-size:0.86rem;font-weight:600;">${b.totalIn}</td>
+                            <td style="color:#94a3b8;font-size:0.8rem;">&mdash;</td>
+                            <td><span class="stock-qty-number ${bQtyClass}" style="font-size:0.88rem;">${bCur}</span></td>
+                            <td>${bBadge}</td>
                         </tr>`;
                     });
                 }
