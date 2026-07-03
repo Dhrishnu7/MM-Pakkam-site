@@ -2863,7 +2863,7 @@
             printWin.document.close();
         }
 
-        /* Export GST - SpreadsheetML (.xls) format for perfect Excel rendering */
+        /* Export GST - SpreadsheetML (.xls) — Perfect Accountant Format */
         function exportGSTExcel() {
             if (!currentData || currentData.length === 0) {
                 alert("No data to export. Please click Generate first.");
@@ -2875,182 +2875,304 @@
             var sp        = window.mmShopProfile || {};
             var storeName = sp.shop_name || localStorage.getItem('mm_storeName') || localStorage.getItem('storeName') || 'My Store';
 
-            var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            /* Full month names so Excel cannot auto-convert to date format */
+            var MF = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
             function fmtDate(d) {
                 if (!d) return '';
                 var s = String(d).slice(0, 10);
                 var p = s.split('-');
                 if (p.length !== 3) return s;
-                var mIdx = parseInt(p[1], 10) - 1;
-                return p[2] + '-' + (MONTHS[mIdx] || p[1]) + '-' + p[0];
+                var y, mo, day;
+                if (p[0].length === 4) {                          /* YYYY-MM-DD */
+                    y = p[0]; mo = p[1]; day = p[2];
+                } else if (parseInt(p[0], 10) > 31) {            /* YY-MM-DD */
+                    y = '20' + p[0]; mo = p[1]; day = p[2];
+                } else {                                          /* DD-MM-YYYY */
+                    day = p[0]; mo = p[1]; y = (p[2].length === 2 ? '20' : '') + p[2];
+                }
+                var mi = parseInt(mo, 10) - 1;
+                return day + ' ' + (MF[mi] || mo) + ' ' + y;
             }
+
             function r2(n) { return (parseFloat(n) || 0).toFixed(2); }
+
             function xe(v) {
                 return String(v === null || v === undefined ? '' : v)
                     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
             }
-            function sc(v, sid) { return '<Cell' + (sid?' ss:StyleID="'+sid+'"':'') + '><Data ss:Type="String">' + xe(v) + '</Data></Cell>'; }
-            function nc(v, sid) { return '<Cell' + (sid?' ss:StyleID="'+sid+'"':'') + '><Data ss:Type="Number">' + r2(v) + '</Data></Cell>'; }
-            function ec()       { return '<Cell ss:StyleID="plain"/>'; }
+
+            /* SpreadsheetML cell builders */
+            function sc(v, sid) { return '<Cell' + (sid ? ' ss:StyleID="' + sid + '"' : '') + '><Data ss:Type="String">' + xe(v) + '</Data></Cell>'; }
+            function nc(v, sid) { return '<Cell' + (sid ? ' ss:StyleID="' + sid + '"' : '') + '><Data ss:Type="Number">' + r2(v) + '</Data></Cell>'; }
+            function ec()       { return '<Cell/>'; }
             function row(cells) { return '<Row>' + cells.join('') + '</Row>\n'; }
-            function erow()     { return '<Row ss:Height="8"/>\n'; }
-            var N = 11; // total columns
+            function erow()     { return '<Row ss:Height="7"/>\n'; }
 
-            /* ── data grouping ─────────────────────────────── */
-            var sales     = currentData.filter(function(r){ return r.type==='sales'; });
-            var purchases = currentData.filter(function(r){ return r.type==='purchase'; });
+            /* ── process data ──────────────────────────────── */
+            var sales     = currentData.filter(function(r){ return r.type === 'sales'; });
+            var purchases = currentData.filter(function(r){ return r.type === 'purchase'; });
 
+            /* Group sales by bill */
             var billsMap = {};
             sales.forEach(function(r) {
-                var k = r.billNo||'-';
+                var k = r.billNo || '-';
                 if (!billsMap[k]) {
-                    var raw = (_rawBillsMap&&_rawBillsMap[r.id])||null;
-                    billsMap[k]={ billNo:k, date:r.date, customer:(raw&&(raw.customer_name||raw.customerName))||'Walk-in', items:[] };
+                    var raw = (_rawBillsMap && _rawBillsMap[r.id]) || null;
+                    billsMap[k] = {
+                        billNo: k, date: r.date,
+                        customer: (raw && (raw.customer_name || raw.customerName)) || 'Walk-in',
+                        items: []
+                    };
                 }
                 billsMap[k].items.push(r);
             });
+
+            /* Group purchases by bill */
             var purMap = {};
             purchases.forEach(function(r) {
-                var k = r.billNo||'-';
+                var k = r.billNo || '-';
                 if (!purMap[k]) {
                     var rawArr = _rawPurchasesMap ? Object.values(_rawPurchasesMap) : [];
-                    var raw = rawArr.find(function(p){ return (p.bill_no||p.billNo)===k; })||null;
-                    purMap[k]={ billNo:k, date:r.date, firm:(raw&&(raw.firm||raw.supplierName))||'-', items:[] };
+                    var raw = rawArr.find(function(p){ return (p.bill_no || p.billNo) === k; }) || null;
+                    purMap[k] = {
+                        billNo: k, date: r.date,
+                        firm: (raw && (raw.firm || raw.supplierName)) || '-',
+                        items: []
+                    };
                 }
                 purMap[k].items.push(r);
             });
-            function gstSum(recs) {
-                var m={};
-                recs.forEach(function(r){
-                    var k=r2(r.gst)+'%';
-                    var base=parseFloat(r.total)/(1+parseFloat(r.gst)/100);
-                    var tax=parseFloat(r.total)-base;
-                    if(!m[k]) m[k]={taxable:0,cgst:0,sgst:0,total:0,count:0};
-                    m[k].taxable+=base; m[k].cgst+=tax/2; m[k].sgst+=tax/2;
-                    m[k].total+=parseFloat(r.total); m[k].count++;
+
+            function gstBreakdown(recs) {
+                var m = {};
+                recs.forEach(function(r) {
+                    var k   = r2(r.gst) + '%';
+                    var gst = parseFloat(r.gst) || 0;
+                    var tot = parseFloat(r.total) || 0;
+                    var base = (gst > 0) ? tot / (1 + gst / 100) : tot;
+                    var tax  = tot - base;
+                    if (!m[k]) m[k] = { taxable: 0, cgst: 0, sgst: 0, total: 0, count: 0 };
+                    m[k].taxable += base;  m[k].cgst += tax / 2;
+                    m[k].sgst   += tax / 2; m[k].total += tot; m[k].count++;
                 });
                 return m;
             }
 
-            /* ── build SpreadsheetML ────────────────────────── */
+            /* ── Build SpreadsheetML ────────────────────────── */
             var X = '<?xml version="1.0" encoding="UTF-8"?>\n'
                   + '<?mso-application progid="Excel.Sheet"?>\n'
                   + '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"'
                   + ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
 
-            /* Styles */
-            X += '<Styles>\n'
-               + '<Style ss:ID="plain"/>\n'
-               + '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="13" ss:Color="#1E3A5F"/><Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>\n'
-               + '<Style ss:ID="info"><Font ss:Italic="1" ss:Size="9" ss:Color="#64748B"/></Style>\n'
-               + '<Style ss:ID="sec"><Font ss:Bold="1" ss:Size="10" ss:Color="#FFFFFF"/><Interior ss:Color="#1D4ED8" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>\n'
-               + '<Style ss:ID="hdr"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#BFDBFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:WrapText="1"/></Style>\n'
-               + '<Style ss:ID="hdrR"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#BFDBFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:WrapText="1"/></Style>\n'
-               + '<Style ss:ID="dat"><Font ss:Size="9"/><Alignment ss:Horizontal="Left"/></Style>\n'
-               + '<Style ss:ID="num"><Font ss:Size="9"/><NumberFormat ss:Format="#,##0.00"/><Alignment ss:Horizontal="Right"/></Style>\n'
-               + '<Style ss:ID="bTL"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#EFF6FF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>\n'
-               + '<Style ss:ID="bTN"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#EFF6FF" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/><Alignment ss:Horizontal="Right"/></Style>\n'
-               + '<Style ss:ID="gtL"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#1D4ED8" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>\n'
-               + '<Style ss:ID="gtN"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#1D4ED8" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/><Alignment ss:Horizontal="Right"/></Style>\n'
-               + '<Style ss:ID="netL"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#DC2626" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>\n'
-               + '<Style ss:ID="netN"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#DC2626" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/><Alignment ss:Horizontal="Right"/></Style>\n'
-               + '<Style ss:ID="hl"><Interior ss:Color="#FEF9C3" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/><Alignment ss:Horizontal="Right"/></Style>\n'
-               + '</Styles>\n';
+            /* ── Styles ─────────────────────────────────────── */
+            X += '<Styles>\n';
+            X += '<Style ss:ID="s0"/>\n';
+            /* Force text (never date-convert) */
+            X += '<Style ss:ID="txt"><NumberFormat ss:Format="@"/><Alignment ss:Horizontal="Left"/></Style>\n';
+            X += '<Style ss:ID="dtxt"><NumberFormat ss:Format="@"/><Alignment ss:Horizontal="Left"/><Font ss:Size="9"/></Style>\n';
+            /* Header / title */
+            X += '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="13" ss:Color="#1E3A5F"/><Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>\n';
+            X += '<Style ss:ID="info"><Font ss:Italic="1" ss:Size="9" ss:Color="#64748B"/><NumberFormat ss:Format="@"/></Style>\n';
+            /* Section headers */
+            X += '<Style ss:ID="sec"><Font ss:Bold="1" ss:Size="10" ss:Color="#FFFFFF"/><Interior ss:Color="#1E40AF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>\n';
+            /* Column headers */
+            X += '<Style ss:ID="hL"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#BFDBFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:WrapText="1"/></Style>\n';
+            X += '<Style ss:ID="hR"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#BFDBFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:WrapText="1"/></Style>\n';
+            /* Data cells */
+            X += '<Style ss:ID="dL"><Font ss:Size="9"/><Alignment ss:Horizontal="Left"/><NumberFormat ss:Format="@"/></Style>\n';
+            X += '<Style ss:ID="dN"><Font ss:Size="9"/><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="#,##0.00"/></Style>\n';
+            /* Bill total row */
+            X += '<Style ss:ID="btL"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/><NumberFormat ss:Format="@"/></Style>\n';
+            X += '<Style ss:ID="btN"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="#,##0.00"/></Style>\n';
+            /* Grand total row */
+            X += '<Style ss:ID="gtL"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#1E40AF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>\n';
+            X += '<Style ss:ID="gtN"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#1E40AF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="#,##0.00"/></Style>\n';
+            /* Net payable (red) */
+            X += '<Style ss:ID="npL"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#B91C1C" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style>\n';
+            X += '<Style ss:ID="npN"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#B91C1C" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="#,##0.00"/></Style>\n';
+            /* Highlight (yellow) */
+            X += '<Style ss:ID="hlN"><Interior ss:Color="#FEF9C3" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="#,##0.00"/></Style>\n';
+            X += '</Styles>\n';
 
+            /* ── Worksheet ───────────────────────────────────── */
             X += '<Worksheet ss:Name="GST Report">\n<Table>\n';
-            /* Column widths */
-            X += '<Column ss:Width="85"/><Column ss:Width="75"/><Column ss:Width="125"/><Column ss:Width="170"/>'
-               + '<Column ss:Width="45"/><Column ss:Width="75"/><Column ss:Width="55"/>'
-               + '<Column ss:Width="105"/><Column ss:Width="85"/><Column ss:Width="85"/><Column ss:Width="95"/>\n';
+            /* Column widths (11 columns) */
+            X += '<Column ss:Width="100"/>\n';  /* A: Date         */
+            X += '<Column ss:Width="78"/>\n';   /* B: Bill No      */
+            X += '<Column ss:Width="130"/>\n';  /* C: Customer     */
+            X += '<Column ss:Width="175"/>\n';  /* D: Product      */
+            X += '<Column ss:Width="45"/>\n';   /* E: Qty          */
+            X += '<Column ss:Width="70"/>\n';   /* F: Rate         */
+            X += '<Column ss:Width="55"/>\n';   /* G: GST %        */
+            X += '<Column ss:Width="108"/>\n';  /* H: Taxable Val  */
+            X += '<Column ss:Width="88"/>\n';   /* I: CGST         */
+            X += '<Column ss:Width="88"/>\n';   /* J: SGST         */
+            X += '<Column ss:Width="105"/>\n';  /* K: Bill Total   */
 
-            function blank11(sid) { var a=[]; for(var i=0;i<N;i++) a.push(sid?sc('',sid):ec()); return a; }
+            var N = 11;
+            function blankRow(sid) { var a = []; for (var i = 0; i < N; i++) a.push(sc('', sid || 's0')); return a; }
 
-            /* HEADER */
-            var hdr1 = blank11('title'); hdr1[0] = sc('GST REPORT  —  ' + storeName, 'title'); X += row(hdr1);
-            var hdr2 = blank11('info');  hdr2[0] = sc('Period:  ' + (fmtDate(fromVal)||'All Time') + '   to   ' + (fmtDate(toVal)||'Today'), 'info'); X += row(hdr2);
-            var hdr3 = blank11('info');  hdr3[0] = sc('Generated On:  ' + fmtDate(new Date().toISOString()), 'info'); X += row(hdr3);
+            /* ── REPORT HEADER ─────────────────────────────── */
+            var r1 = blankRow('title'); r1[0] = sc('GST REPORT  —  ' + storeName, 'title'); X += row(r1);
+            var r2b = blankRow('info'); r2b[0] = sc('Period:   ' + (fmtDate(fromVal) || 'All Time') + '   to   ' + (fmtDate(toVal) || 'Today'), 'info'); X += row(r2b);
+            var r3 = blankRow('info'); r3[0] = sc('Generated On:   ' + fmtDate(new Date().toISOString()), 'info'); X += row(r3);
             X += erow();
 
-            /* ── SECTION 1: SALES ──────────────────────────── */
-            var s1h = blank11('sec'); s1h[0]=sc('SECTION 1:  OUTWARD SUPPLIES (SALES)  —  GSTR-1 / B2C','sec'); X += row(s1h);
-            X += row([sc('Date','hdr'),sc('Bill No','hdr'),sc('Customer Name','hdr'),sc('Product / Medicine','hdr'),
-                      sc('Qty','hdrR'),sc('Rate (Rs)','hdrR'),sc('GST %','hdrR'),
-                      sc('Taxable Value (Rs)','hdrR'),sc('CGST (Rs)','hdrR'),sc('SGST (Rs)','hdrR'),sc('Bill Total (Rs)','hdrR')]);
+            /* ═══════════════════════════════════════════════
+               SECTION 1 – OUTWARD SUPPLIES (SALES)
+            ═══════════════════════════════════════════════ */
+            var sh1 = blankRow('sec'); sh1[0] = sc('SECTION 1  ·  OUTWARD SUPPLIES (SALES)  —  GSTR-1 / B2C', 'sec'); X += row(sh1);
+            X += row([sc('Date','hL'), sc('Bill No','hL'), sc('Customer Name','hL'), sc('Product / Medicine','hL'),
+                      sc('Qty','hR'), sc('Rate (Rs)','hR'), sc('GST %','hR'),
+                      sc('Taxable Value (Rs)','hR'), sc('CGST (Rs)','hR'), sc('SGST (Rs)','hR'), sc('Bill Total (Rs)','hR')]);
 
-            var salBase=0,salCGST=0,salSGST=0,salAmt=0,salBills=0;
-            Object.values(billsMap).sort(function(a,b){return a.date>b.date?1:-1;}).forEach(function(bill){
-                var bBase=0,bCGST=0,bSGST=0,bTotal=0;
-                bill.items.forEach(function(r){
-                    var base=parseFloat(r.total)/(1+parseFloat(r.gst)/100);
-                    var tax=parseFloat(r.total)-base;
-                    bBase+=base;bCGST+=tax/2;bSGST+=tax/2;bTotal+=parseFloat(r.total);
-                    X+=row([sc(fmtDate(r.date),'dat'),sc(bill.billNo,'dat'),sc(bill.customer,'dat'),sc(r.product,'dat'),
-                            nc(r.qty,'num'),nc(r.rate,'num'),nc(r.gst,'num'),nc(base,'num'),nc(tax/2,'num'),nc(tax/2,'num'),sc('','dat')]);
+            var salBase=0, salCGST=0, salSGST=0, salAmt=0, salBills=0;
+            Object.values(billsMap).sort(function(a,b){ return String(a.date) > String(b.date) ? 1 : -1; }).forEach(function(bill) {
+                var bBase=0, bCGST=0, bSGST=0, bTotal=0;
+                bill.items.forEach(function(it, idx) {
+                    var gst  = parseFloat(it.gst) || 0;
+                    var tot  = parseFloat(it.total) || 0;
+                    var base = (gst > 0) ? tot / (1 + gst / 100) : tot;
+                    var cgst = (tot - base) / 2;
+                    var sgst = (tot - base) / 2;
+                    bBase += base; bCGST += cgst; bSGST += sgst; bTotal += tot;
+                    X += row([
+                        sc(fmtDate(it.date), 'dtxt'),
+                        sc(bill.billNo, 'dL'),
+                        sc(bill.customer, 'dL'),
+                        sc(it.product, 'dL'),
+                        nc(it.qty, 'dN'),
+                        nc(it.rate, 'dN'),
+                        nc(it.gst, 'dN'),
+                        nc(base, 'dN'),
+                        nc(cgst, 'dN'),
+                        nc(sgst, 'dN'),
+                        nc(tot, 'dN')      /* ← Item total in Bill Total column */
+                    ]);
                 });
-                X+=row([sc('','bTL'),sc('BILL TOTAL','bTL'),sc(bill.billNo,'bTL'),sc('','bTL'),sc('','bTL'),sc('','bTL'),sc('','bTL'),nc(bBase,'bTN'),nc(bCGST,'bTN'),nc(bSGST,'bTN'),nc(bTotal,'bTN')]);
-                salBase+=bBase;salCGST+=bCGST;salSGST+=bSGST;salAmt+=bTotal;salBills++;
-                X+=erow();
+                /* Bill subtotal row */
+                X += row([
+                    sc('', 'btL'),
+                    sc('BILL TOTAL', 'btL'),
+                    sc(bill.billNo, 'btL'),
+                    sc('', 'btL'), sc('', 'btL'), sc('', 'btL'), sc('', 'btL'),
+                    nc(bBase, 'btN'), nc(bCGST, 'btN'), nc(bSGST, 'btN'), nc(bTotal, 'btN')
+                ]);
+                salBase += bBase; salCGST += bCGST; salSGST += bSGST; salAmt += bTotal; salBills++;
+                X += erow();
             });
-            var gt1=blank11('gtN'); gt1[0]=sc('SALES GRAND TOTAL  ('+salBills+' bills)','gtL'); gt1[7]=nc(salBase,'gtN'); gt1[8]=nc(salCGST,'gtN'); gt1[9]=nc(salSGST,'gtN'); gt1[10]=nc(salAmt,'gtN');
-            for(var i=1;i<=6;i++) gt1[i]=sc('','gtL');
-            X+=row(gt1); X+=erow(); X+=erow();
 
-            /* ── SECTION 2: PURCHASES ─────────────────────── */
-            var s2h=blank11('sec'); s2h[0]=sc('SECTION 2:  INWARD SUPPLIES (PURCHASES)  —  GSTR-2 / Input Tax Credit','sec'); X+=row(s2h);
-            X+=row([sc('Date','hdr'),sc('Bill No','hdr'),sc('Supplier / Firm','hdr'),sc('Product / Medicine','hdr'),
-                    sc('Qty','hdrR'),sc('Rate (Rs)','hdrR'),sc('GST %','hdrR'),
-                    sc('Taxable Value (Rs)','hdrR'),sc('CGST ITC (Rs)','hdrR'),sc('SGST ITC (Rs)','hdrR'),sc('Total (Rs)','hdrR')]);
+            /* Sales grand total */
+            X += row([
+                sc('SALES GRAND TOTAL  (' + salBills + ' Bills)', 'gtL'),
+                sc('', 'gtL'), sc('', 'gtL'), sc('', 'gtL'), sc('', 'gtL'), sc('', 'gtL'), sc('', 'gtL'),
+                nc(salBase, 'gtN'), nc(salCGST, 'gtN'), nc(salSGST, 'gtN'), nc(salAmt, 'gtN')
+            ]);
+            X += erow(); X += erow();
 
-            var purBase=0,purCGST=0,purSGST=0,purAmt=0,purBills=0;
-            Object.values(purMap).sort(function(a,b){return a.date>b.date?1:-1;}).forEach(function(bill){
-                var bBase=0,bCGST=0,bSGST=0,bTotal=0;
-                bill.items.forEach(function(r){
-                    var base=parseFloat(r.total)/(1+parseFloat(r.gst)/100);
-                    var tax=parseFloat(r.total)-base;
-                    bBase+=base;bCGST+=tax/2;bSGST+=tax/2;bTotal+=parseFloat(r.total);
-                    X+=row([sc(fmtDate(r.date),'dat'),sc(bill.billNo,'dat'),sc(bill.firm,'dat'),sc(r.product,'dat'),
-                            nc(r.qty,'num'),nc(r.rate,'num'),nc(r.gst,'num'),nc(base,'num'),nc(tax/2,'num'),nc(tax/2,'num'),sc('','dat')]);
+            /* ═══════════════════════════════════════════════
+               SECTION 2 – INWARD SUPPLIES (PURCHASES)
+            ═══════════════════════════════════════════════ */
+            var sh2 = blankRow('sec'); sh2[0] = sc('SECTION 2  ·  INWARD SUPPLIES (PURCHASES)  —  GSTR-2 / Input Tax Credit', 'sec'); X += row(sh2);
+            X += row([sc('Date','hL'), sc('Bill No','hL'), sc('Supplier / Firm','hL'), sc('Product / Medicine','hL'),
+                      sc('Qty','hR'), sc('Rate (Rs)','hR'), sc('GST %','hR'),
+                      sc('Taxable Value (Rs)','hR'), sc('CGST ITC (Rs)','hR'), sc('SGST ITC (Rs)','hR'), sc('Total (Rs)','hR')]);
+
+            var purBase=0, purCGST=0, purSGST=0, purAmt=0, purBills=0;
+            Object.values(purMap).sort(function(a,b){ return String(a.date) > String(b.date) ? 1 : -1; }).forEach(function(bill) {
+                var bBase=0, bCGST=0, bSGST=0, bTotal=0;
+                bill.items.forEach(function(it) {
+                    var gst  = parseFloat(it.gst) || 0;
+                    var tot  = parseFloat(it.total) || 0;
+                    var base = (gst > 0) ? tot / (1 + gst / 100) : tot;
+                    var cgst = (tot - base) / 2;
+                    var sgst = (tot - base) / 2;
+                    bBase += base; bCGST += cgst; bSGST += sgst; bTotal += tot;
+                    X += row([
+                        sc(fmtDate(it.date), 'dtxt'),
+                        sc(bill.billNo, 'dL'),
+                        sc(bill.firm, 'dL'),
+                        sc(it.product, 'dL'),
+                        nc(it.qty, 'dN'),
+                        nc(it.rate, 'dN'),
+                        nc(it.gst, 'dN'),
+                        nc(base, 'dN'),
+                        nc(cgst, 'dN'),
+                        nc(sgst, 'dN'),
+                        nc(tot, 'dN')      /* ← Item total in Total column */
+                    ]);
                 });
-                X+=row([sc('','bTL'),sc('BILL TOTAL','bTL'),sc(bill.billNo,'bTL'),sc('','bTL'),sc('','bTL'),sc('','bTL'),sc('','bTL'),nc(bBase,'bTN'),nc(bCGST,'bTN'),nc(bSGST,'bTN'),nc(bTotal,'bTN')]);
-                purBase+=bBase;purCGST+=bCGST;purSGST+=bSGST;purAmt+=bTotal;purBills++;
-                X+=erow();
+                X += row([
+                    sc('', 'btL'),
+                    sc('BILL TOTAL', 'btL'),
+                    sc(bill.billNo, 'btL'),
+                    sc('', 'btL'), sc('', 'btL'), sc('', 'btL'), sc('', 'btL'),
+                    nc(bBase, 'btN'), nc(bCGST, 'btN'), nc(bSGST, 'btN'), nc(bTotal, 'btN')
+                ]);
+                purBase += bBase; purCGST += bCGST; purSGST += bSGST; purAmt += bTotal; purBills++;
+                X += erow();
             });
-            var gt2=blank11('gtN'); gt2[0]=sc('PURCHASES GRAND TOTAL  ('+purBills+' bills)','gtL'); gt2[7]=nc(purBase,'gtN'); gt2[8]=nc(purCGST,'gtN'); gt2[9]=nc(purSGST,'gtN'); gt2[10]=nc(purAmt,'gtN');
-            for(var i=1;i<=6;i++) gt2[i]=sc('','gtL');
-            X+=row(gt2); X+=erow(); X+=erow();
 
-            /* ── SECTION 3: GST SUMMARY ───────────────────── */
-            var s3h=blank11('sec'); s3h[0]=sc('SECTION 3:  GST SUMMARY BY TAX RATE','sec'); X+=row(s3h);
-            X+=erow();
-            var salSub=blank11('hdr'); salSub[0]=sc('SALES','hdr'); X+=row(salSub);
-            X+=row([sc('GST Rate','hdr'),sc('Items','hdrR'),sc('Taxable Value (Rs)','hdrR'),sc('CGST (Rs)','hdrR'),sc('SGST (Rs)','hdrR'),sc('Total Tax (Rs)','hdrR'),sc('Invoice Value (Rs)','hdrR'),sc('','hdr'),sc('','hdr'),sc('','hdr'),sc('','hdr')]);
-            var ss=gstSum(sales);
-            Object.keys(ss).sort().forEach(function(k){ var v=ss[k]; X+=row([sc(k,'dat'),nc(v.count,'num'),nc(v.taxable,'num'),nc(v.cgst,'num'),nc(v.sgst,'num'),nc(v.cgst+v.sgst,'num'),nc(v.total,'num'),ec(),ec(),ec(),ec()]); });
-            X+=row([sc('TOTAL','gtL'),nc(sales.length,'gtN'),nc(salBase,'gtN'),nc(salCGST,'gtN'),nc(salSGST,'gtN'),nc(salCGST+salSGST,'gtN'),nc(salAmt,'gtN'),sc('','gtL'),sc('','gtL'),sc('','gtL'),sc('','gtL')]);
-            X+=erow();
-            var purSub=blank11('hdr'); purSub[0]=sc('PURCHASES','hdr'); X+=row(purSub);
-            X+=row([sc('GST Rate','hdr'),sc('Items','hdrR'),sc('Taxable Value (Rs)','hdrR'),sc('CGST ITC (Rs)','hdrR'),sc('SGST ITC (Rs)','hdrR'),sc('Total ITC (Rs)','hdrR'),sc('Invoice Value (Rs)','hdrR'),sc('','hdr'),sc('','hdr'),sc('','hdr'),sc('','hdr')]);
-            var ps=gstSum(purchases);
-            Object.keys(ps).sort().forEach(function(k){ var v=ps[k]; X+=row([sc(k,'dat'),nc(v.count,'num'),nc(v.taxable,'num'),nc(v.cgst,'num'),nc(v.sgst,'num'),nc(v.cgst+v.sgst,'num'),nc(v.total,'num'),ec(),ec(),ec(),ec()]); });
-            X+=row([sc('TOTAL','gtL'),nc(purchases.length,'gtN'),nc(purBase,'gtN'),nc(purCGST,'gtN'),nc(purSGST,'gtN'),nc(purCGST+purSGST,'gtN'),nc(purAmt,'gtN'),sc('','gtL'),sc('','gtL'),sc('','gtL'),sc('','gtL')]);
-            X+=erow(); X+=erow();
+            X += row([
+                sc('PURCHASES GRAND TOTAL  (' + purBills + ' Bills)', 'gtL'),
+                sc('', 'gtL'), sc('', 'gtL'), sc('', 'gtL'), sc('', 'gtL'), sc('', 'gtL'), sc('', 'gtL'),
+                nc(purBase, 'gtN'), nc(purCGST, 'gtN'), nc(purSGST, 'gtN'), nc(purAmt, 'gtN')
+            ]);
+            X += erow(); X += erow();
 
-            /* ── SECTION 4: NET GST PAYABLE ───────────────── */
-            var netCGST=salCGST-purCGST, netSGST=salSGST-purSGST;
-            var s4h=blank11('sec'); s4h[0]=sc('SECTION 4:  NET GST PAYABLE  (After Input Tax Credit)','sec'); X+=row(s4h);
-            X+=row([sc('','hdr'),sc('CGST (Rs)','hdrR'),sc('SGST (Rs)','hdrR'),sc('Total GST (Rs)','hdrR'),ec(),ec(),ec(),ec(),ec(),ec(),ec()]);
-            X+=row([sc('Output Tax  (Sales)','dat'),nc(salCGST,'num'),nc(salSGST,'num'),nc(salCGST+salSGST,'hl'),ec(),ec(),ec(),ec(),ec(),ec(),ec()]);
-            X+=row([sc('Input Tax Credit  (Purchases)','dat'),nc(purCGST,'num'),nc(purSGST,'num'),nc(purCGST+purSGST,'hl'),ec(),ec(),ec(),ec(),ec(),ec(),ec()]);
-            X+=row([sc('NET GST PAYABLE','netL'),nc(netCGST,'netN'),nc(netSGST,'netN'),nc(netCGST+netSGST,'netN'),ec(),ec(),ec(),ec(),ec(),ec(),ec()]);
+            /* ═══════════════════════════════════════════════
+               SECTION 3 – GST SUMMARY BY RATE
+            ═══════════════════════════════════════════════ */
+            var sh3 = blankRow('sec'); sh3[0] = sc('SECTION 3  ·  GST SUMMARY BY TAX RATE', 'sec'); X += row(sh3);
+            X += erow();
 
-            X+='</Table>\n</Worksheet>\n</Workbook>';
+            /* Sales summary */
+            var ss3 = blankRow('hL'); ss3[0] = sc('SALES', 'hL'); X += row(ss3);
+            X += row([sc('GST Rate','hL'), sc('No. of Items','hR'), sc('Taxable Value (Rs)','hR'),
+                      sc('CGST (Rs)','hR'), sc('SGST (Rs)','hR'), sc('Total Tax (Rs)','hR'), sc('Invoice Value (Rs)','hR'),
+                      ec(), ec(), ec(), ec()]);
+            var salGst = gstBreakdown(sales);
+            Object.keys(salGst).sort().forEach(function(k) {
+                var v = salGst[k];
+                X += row([sc(k,'dL'), nc(v.count,'dN'), nc(v.taxable,'dN'), nc(v.cgst,'dN'), nc(v.sgst,'dN'), nc(v.cgst+v.sgst,'dN'), nc(v.total,'dN'), ec(), ec(), ec(), ec()]);
+            });
+            X += row([sc('TOTAL','gtL'), nc(sales.length,'gtN'), nc(salBase,'gtN'), nc(salCGST,'gtN'), nc(salSGST,'gtN'), nc(salCGST+salSGST,'gtN'), nc(salAmt,'gtN'), ec(), ec(), ec(), ec()]);
+            X += erow();
 
-            var blob=new Blob([X],{type:'application/vnd.ms-excel;charset=utf-8;'});
-            var url=URL.createObjectURL(blob);
-            var link=document.createElement('a');
-            var safe=storeName.replace(/[^a-zA-Z0-9]/g,'_');
-            link.setAttribute('href',url);
-            link.setAttribute('download','GST_Report_'+safe+'_'+(fromVal||'AllTime')+'_to_'+(toVal||'Today')+'.xls');
+            /* Purchases summary */
+            var ps3 = blankRow('hL'); ps3[0] = sc('PURCHASES', 'hL'); X += row(ps3);
+            X += row([sc('GST Rate','hL'), sc('No. of Items','hR'), sc('Taxable Value (Rs)','hR'),
+                      sc('CGST ITC (Rs)','hR'), sc('SGST ITC (Rs)','hR'), sc('Total ITC (Rs)','hR'), sc('Invoice Value (Rs)','hR'),
+                      ec(), ec(), ec(), ec()]);
+            var purGst = gstBreakdown(purchases);
+            Object.keys(purGst).sort().forEach(function(k) {
+                var v = purGst[k];
+                X += row([sc(k,'dL'), nc(v.count,'dN'), nc(v.taxable,'dN'), nc(v.cgst,'dN'), nc(v.sgst,'dN'), nc(v.cgst+v.sgst,'dN'), nc(v.total,'dN'), ec(), ec(), ec(), ec()]);
+            });
+            X += row([sc('TOTAL','gtL'), nc(purchases.length,'gtN'), nc(purBase,'gtN'), nc(purCGST,'gtN'), nc(purSGST,'gtN'), nc(purCGST+purSGST,'gtN'), nc(purAmt,'gtN'), ec(), ec(), ec(), ec()]);
+            X += erow(); X += erow();
+
+            /* ═══════════════════════════════════════════════
+               SECTION 4 – NET GST PAYABLE
+            ═══════════════════════════════════════════════ */
+            var netC = salCGST - purCGST;
+            var netS = salSGST - purSGST;
+            var sh4 = blankRow('sec'); sh4[0] = sc('SECTION 4  ·  NET GST PAYABLE  (After Input Tax Credit)', 'sec'); X += row(sh4);
+            X += row([sc('', 'hL'), sc('CGST (Rs)', 'hR'), sc('SGST (Rs)', 'hR'), sc('Total GST (Rs)', 'hR'), ec(), ec(), ec(), ec(), ec(), ec(), ec()]);
+            X += row([sc('Output Tax  (Sales)',          'dL'), nc(salCGST, 'dN'), nc(salSGST, 'dN'), nc(salCGST+salSGST, 'hlN'), ec(), ec(), ec(), ec(), ec(), ec(), ec()]);
+            X += row([sc('Input Tax Credit  (Purchases)','dL'), nc(purCGST, 'dN'), nc(purSGST, 'dN'), nc(purCGST+purSGST, 'hlN'), ec(), ec(), ec(), ec(), ec(), ec(), ec()]);
+            X += row([sc('NET GST PAYABLE',              'npL'), nc(netC, 'npN'), nc(netS, 'npN'), nc(netC+netS, 'npN'), ec(), ec(), ec(), ec(), ec(), ec(), ec()]);
+
+            X += '</Table>\n</Worksheet>\n</Workbook>';
+
+            /* ── Download ───────────────────────────────────── */
+            var blob = new Blob([X], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            var url  = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            var safe = storeName.replace(/[^a-zA-Z0-9]/g, '_');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'GST_Report_' + safe + '_' + (fromVal || 'All') + '_to_' + (toVal || 'Today') + '.xls');
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
