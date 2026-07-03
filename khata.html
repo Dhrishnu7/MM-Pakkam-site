@@ -402,7 +402,7 @@
             <p>Manually add or restore a credit balance for a customer.</p>
             <div class="form-group">
                 <label>Customer Name</label>
-                <input type="text" id="addBalName" placeholder="e.g. Madhan Kumar" style="font-size:1rem;">
+                <input type="text" id="addBalName" placeholder="e.g. Ravi Kumar" style="font-size:1rem;">
             </div>
             <div class="form-group">
                 <label>Balance Amount (₹)</label>
@@ -424,14 +424,16 @@
         async function loadShopName() {
             try {
                 const profile = await dbGetShopProfile();
+                // Use Supabase data first, then scoped localStorage fallback
+                const cached = mmLsGet('profile') || {};
                 const name = (profile && profile.shop_name && profile.shop_name.trim())
                     ? profile.shop_name
-                    : (JSON.parse(localStorage.getItem('mm_profile') || '{}').shopName)
-                    || (JSON.parse(localStorage.getItem('mm_profile') || '{}').shop_name)
-                    || 'My Shop';
+                    : (cached.shopName || cached.shop_name || 'My Shop');
                 document.getElementById('shopNameHeader').textContent = name;
             } catch(e) {
-                document.getElementById('shopNameHeader').textContent = 'My Shop';
+                const cached = mmLsGet('profile') || {};
+                document.getElementById('shopNameHeader').textContent =
+                    cached.shopName || cached.shop_name || 'My Shop';
             }
         }
 
@@ -460,8 +462,9 @@
                 }
             } catch(e) { console.warn('Supabase khata load failed, falling back to localStorage', e); }
 
+            // Fallback: scoped localStorage (mm_susan_customers)
             if (debtors.length === 0) {
-                const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+                const customers = mmLsGet('customers') || [];
                 debtors = customers
                     .filter(c => parseFloat(c.balance || 0) > 0)
                     .map(c => ({ id: null, name: c.name, phone: c.phone || '', address: c.address || '', balance: parseFloat(c.balance) }));
