@@ -1491,24 +1491,17 @@
         }
 
         function generateReport() {
-            const fromStr = document.getElementById('fromDate').value;
-            const toStr   = document.getElementById('toDate').value;
-            const type    = document.getElementById('reportType').value;
+            const from = document.getElementById('fromDate').value; // YYYY-MM-DD from input
+            const to   = document.getElementById('toDate').value;   // YYYY-MM-DD from input
+            const type = document.getElementById('reportType').value;
 
             const shList = JSON.parse(localStorage.getItem('mm_schedule_h_drugs') || '[]').map(d => String(d || "").trim().toLowerCase());
 
-            // Use Date objects for fully robust inclusive comparison
-            // Adding T00:00:00 to FROM and T23:59:59 to TO so records on the exact TO date are included
-            const fromDate = fromStr ? new Date(fromStr + 'T00:00:00') : null;
-            const toDate   = toStr   ? new Date(toStr   + 'T23:59:59') : null;
-
             currentData = allData.filter(r => {
-                // Normalize record date to YYYY-MM-DD, then compare as Date
-                const rDateStr = (r.date || '').slice(0, 10);
-                if (!rDateStr) return false;
-                const rDate = new Date(rDateStr + 'T12:00:00'); // midday to avoid timezone edge cases
-
-                const inDate = (!fromDate || rDate >= fromDate) && (!toDate || rDate <= toDate);
+                // Slice to YYYY-MM-DD to strip any time component (e.g. "2026-06-23T10:30:00Z" → "2026-06-23")
+                // YYYY-MM-DD strings compare correctly as plain strings
+                const rDate = (r.date || '').slice(0, 10);
+                const inDate = (!from || rDate >= from) && (!to || rDate <= to);
 
                 let inType = false;
                 if (type === 'all') {
