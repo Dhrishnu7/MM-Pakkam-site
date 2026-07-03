@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1326,13 +1326,7 @@
                 return;
             }
 
-            for (const med of medicines) {
-                const stock = getStock(med.product, med.batch);
-                if (med.qty > stock) {
-                    alert(`Cannot proceed. Quantity (${med.qty}) for "${med.product}" (Batch: ${med.batch}) is more than available stock (${stock}).`);
-                    return;
-                }
-            }
+            // Removed strict stock validation to allow selling physical stock even if not entered yet
 
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;

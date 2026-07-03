@@ -2419,59 +2419,37 @@
         }
 
         function buildStockData() {
-
-            const map = {};
+            // ── Build two flat maps: purchases and sales, keyed by PRODUCT NAME ONLY ──
+            // This avoids any name+batch mismatch issues entirely.
+            const purchaseMap = {};  // normName -> { name, batches[], totalIn }
+            const salesMap    = {};  // normName -> totalOut
 
             if (_dbPurchases && _dbPurchases.length > 0) {
-                // PASS 1: Add all purchased stock
+
+                // PASS 1: Aggregate all purchased quantities by product name
                 _dbPurchases.forEach(p => {
                     const name  = String(p.product_name || '').trim();
                     const batch = String(p.batch_no     || '').trim();
+                    const exp   = String(p.expire_date  || '');
                     if (!name) return;
-                    const key = name.toLowerCase() + '|' + batch.toLowerCase();
-                    if (!map[key]) {
-                        map[key] = { name, batch, exp: p.expire_date || '', totalIn: 0, totalOut: 0 };
+                    const norm = name.toLowerCase();
+                    if (!purchaseMap[norm]) {
+                        purchaseMap[norm] = { name, batches: [], totalIn: 0 };
                     }
                     const packSize = parseFloat(p.pack) > 0 ? parseFloat(p.pack) : 1;
-                    map[key].totalIn += (parseFloat(p.quantity) || 0) * packSize;
-                    if (p.expire_date && (!map[key].exp || p.expire_date > map[key].exp)) {
-                        map[key].exp = p.expire_date;
-                    }
+                    const qty      = (parseFloat(p.quantity) || 0) * packSize;
+                    purchaseMap[norm].totalIn += qty;
+                    // Track batches for display
+                    if (batch) purchaseMap[norm].batches.push({ batch, exp });
                 });
 
-                // Build reverse index: normalisedName -> [key, key, ...]
-                const nameIndex = {};
-                Object.keys(map).forEach(k => {
-                    const n = k.split('|')[0];
-                    if (!nameIndex[n]) nameIndex[n] = [];
-                    nameIndex[n].push(k);
-                });
-
-                // PASS 2: Subtract sold quantities
+                // PASS 2: Aggregate all sold quantities by product name
                 (_dbBills || []).forEach(bill => {
                     (bill.bill_items || []).forEach(m => {
-                        const rawName = String(m.product || m.product_name || '').trim();
-                        const batch   = String(m.batch   || m.batch_no    || '').trim();
-                        if (!rawName) return;
-                        const norm    = rawName.toLowerCase();
-                        const soldQty = parseFloat(m.qty) || 0;
-
-                        // Try exact match (same product name + same batch)
-                        const exactKey = norm + '|' + batch.toLowerCase();
-                        if (map[exactKey]) {
-                            map[exactKey].totalOut += soldQty;
-                            return;
-                        }
-                        // Try name-only match (product found in purchases under any batch)
-                        const candidates = nameIndex[norm] || [];
-                        if (candidates.length > 0) {
-                            map[candidates[0]].totalOut += soldQty;
-                            return;
-                        }
-                        // No purchase found - create orphan entry so we can see the sold qty
-                        map[exactKey] = { name: rawName, batch, exp: '', totalIn: 0, totalOut: soldQty };
-                        if (!nameIndex[norm]) nameIndex[norm] = [];
-                        nameIndex[norm].push(exactKey);
+                        const name = String(m.product || m.product_name || '').trim();
+                        if (!name) return;
+                        const norm = name.toLowerCase();
+                        salesMap[norm] = (salesMap[norm] || 0) + (parseFloat(m.qty) || 0);
                     });
                 });
 
@@ -2487,45 +2465,51 @@
                 lsPurchases.forEach(p => {
                     const name  = String(p.productName || '').trim();
                     const batch = String(p.batchNo     || '').trim();
+                    const exp   = String(p.expireDate  || '');
                     if (!name) return;
-                    const key = name.toLowerCase() + '|' + batch.toLowerCase();
-                    if (!map[key]) {
-                        map[key] = { name, batch, exp: p.expireDate || '', totalIn: 0, totalOut: 0 };
+                    const norm = name.toLowerCase();
+                    if (!purchaseMap[norm]) {
+                        purchaseMap[norm] = { name, batches: [], totalIn: 0 };
                     }
-                    map[key].totalIn += (parseFloat(p.quantity) || 0) * (parseFloat(p.pack) || 1);
-                    if (p.expireDate && (!map[key].exp || p.expireDate > map[key].exp)) {
-                        map[key].exp = p.expireDate;
-                    }
-                });
-
-                const nameIndexLs = {};
-                Object.keys(map).forEach(k => {
-                    const n = k.split('|')[0];
-                    if (!nameIndexLs[n]) nameIndexLs[n] = [];
-                    nameIndexLs[n].push(k);
+                    const packSize = parseFloat(p.pack) > 0 ? parseFloat(p.pack) : 1;
+                    purchaseMap[norm].totalIn += (parseFloat(p.quantity) || 0) * packSize;
+                    if (batch) purchaseMap[norm].batches.push({ batch, exp });
                 });
 
                 lsSales.forEach(bill => {
                     (bill.medicines || []).forEach(m => {
-                        const rawName = String(m.product || '').trim();
-                        const batch   = String(m.batch   || '').trim();
-                        if (!rawName) return;
-                        const norm    = rawName.toLowerCase();
-                        const soldQty = parseFloat(m.qty) || 0;
-                        const exactKey = norm + '|' + batch.toLowerCase();
-                        if (map[exactKey]) { map[exactKey].totalOut += soldQty; return; }
-                        const candidates = nameIndexLs[norm] || [];
-                        if (candidates.length > 0) { map[candidates[0]].totalOut += soldQty; return; }
-                        map[exactKey] = { name: rawName, batch, exp: '', totalIn: 0, totalOut: soldQty };
-                        if (!nameIndexLs[norm]) nameIndexLs[norm] = [];
-                        nameIndexLs[norm].push(exactKey);
+                        const name = String(m.product || '').trim();
+                        if (!name) return;
+                        const norm = name.toLowerCase();
+                        salesMap[norm] = (salesMap[norm] || 0) + (parseFloat(m.qty) || 0);
                     });
                 });
             }
 
-            _stockData = Object.values(map)
-                .map(row => ({ ...row, current: row.totalIn - row.totalOut }))
-                .sort((a, b) => a.name.localeCompare(b.name));
+            // Merge: start with all purchased medicines
+            const allNames = new Set([...Object.keys(purchaseMap), ...Object.keys(salesMap)]);
+            const rows = [];
+            allNames.forEach(norm => {
+                const p   = purchaseMap[norm];
+                const out = salesMap[norm] || 0;
+                // Pick most recent batch for display
+                let batch = '', exp = '';
+                if (p && p.batches.length > 0) {
+                    const recent = p.batches.reduce((a, b) => (b.exp > a.exp ? b : a));
+                    batch = recent.batch;
+                    exp   = recent.exp;
+                }
+                rows.push({
+                    name:     p ? p.name : norm,
+                    batch,
+                    exp,
+                    totalIn:  p ? p.totalIn : 0,
+                    totalOut: out,
+                    current:  (p ? p.totalIn : 0) - out
+                });
+            });
+
+            _stockData = rows.sort((a, b) => a.name.localeCompare(b.name));
         }
 
         function renderStockTable(query) {
