@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1341,6 +1341,10 @@
         let _rawPurchasesMap = {}; // id -> full purchase row
         let _rawBillsMap = {};     // id -> full bill row
 
+        // Module-level Supabase cache — used by stock report & GST export
+        let _dbPurchases = [];
+        let _dbBills = [];
+
         async function loadData() {
             let dbPurchases = [];
             let dbBills = [];
@@ -1363,7 +1367,9 @@
                         dbPurchases = data.purchases || [];
                         dbBills = data.bills || [];
                         useSupabase = true;
-                        // Cache raw data for restore/bin features
+                        // Cache raw data for restore/bin features AND stock report
+                        _dbPurchases = dbPurchases;
+                        _dbBills = dbBills;
                         _rawPurchasesMap = {};
                         dbPurchases.forEach(p => { _rawPurchasesMap[p.id] = p; });
                         _rawBillsMap = {};
@@ -2413,66 +2419,79 @@
         }
 
         function buildStockData() {
-            // Use Supabase-cached data if available, else fall back to scoped localStorage
-            let purchases, sales;
-            if (_allBillsFromDB && _allBillsFromDB.length > 0) {
-                // Use data already loaded from Supabase
-                sales = _allBillsFromDB;
-                purchases = dbPurchases ? dbPurchases.map(p => ({
-                    productName: p.product_name, batchNo: p.batch_no,
-                    expireDate: p.expire_date, quantity: p.quantity
-                })) : [];
-            } else {
-                purchases = (typeof mmLsGet === 'function') ? (mmLsGet('purchases') || []) : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
-                sales     = (typeof mmLsGet === 'function') ? (mmLsGet('sales')     || []) : JSON.parse(localStorage.getItem('mm_sales')     || '[]');
-            }
-
-            // Build map: key = "productname|batchno"
+            // ── SOURCE 1: Supabase purchases (_dbPurchases set by loadData) ─────
             const map = {};
 
-            // Add purchased quantities
-            purchases.forEach(p => {
-                const name  = (p.productName || '').trim();
-                const batch = (p.batchNo || '').trim();
-                if (!name) return;
-                const key = name.toLowerCase() + '|' + batch.toLowerCase();
-                if (!map[key]) {
-                    map[key] = {
-                        name:    name,
-                        batch:   batch,
-                        exp:     p.expireDate || '',
-                        totalIn: 0,
-                        totalOut: 0
-                    };
-                }
-                // Stock in loose units: strips × tablets-per-strip (e.g. 2 × 15 = 30 tablets)
-                map[key].totalIn += (parseFloat(p.quantity) || 0) * (parseFloat(p.pack) || 1);
-                // keep the most recent expiry
-                if (p.expireDate && (!map[key].exp || p.expireDate > map[key].exp)) {
-                    map[key].exp = p.expireDate;
-                }
-            });
-
-            // Subtract sold quantities
-            sales.forEach(bill => {
-                (bill.medicines || []).forEach(m => {
-                    const name  = String(m.product || "").trim();
-                    const batch = String(m.batch || "").trim();
+            if (_dbPurchases && _dbPurchases.length > 0) {
+                // Supabase path: raw purchase rows from DB
+                _dbPurchases.forEach(p => {
+                    const name  = String(p.product_name || '').trim();
+                    const batch = String(p.batch_no     || '').trim();
                     if (!name) return;
                     const key = name.toLowerCase() + '|' + batch.toLowerCase();
                     if (!map[key]) {
-                        // sold without a purchase record (manual entry)
-                        map[key] = { name, batch, exp: m.exp || '', totalIn: 0, totalOut: 0 };
+                        map[key] = { name, batch, exp: p.expire_date || '', totalIn: 0, totalOut: 0 };
                     }
-                    map[key].totalOut += parseFloat(m.qty) || 0;
+                    // quantity × pack size (strips × tablets-per-strip)
+                    map[key].totalIn += (parseFloat(p.quantity) || 0) * (parseFloat(p.pack) || 1);
+                    if (p.expire_date && (!map[key].exp || p.expire_date > map[key].exp)) {
+                        map[key].exp = p.expire_date;
+                    }
                 });
-            });
+
+                // Subtract sold quantities from Supabase bills
+                (_dbBills || []).forEach(bill => {
+                    (bill.bill_items || []).forEach(m => {
+                        const name  = String(m.product || m.product_name || '').trim();
+                        const batch = String(m.batch   || m.batch_no    || '').trim();
+                        if (!name) return;
+                        const key = name.toLowerCase() + '|' + batch.toLowerCase();
+                        if (!map[key]) {
+                            map[key] = { name, batch, exp: '', totalIn: 0, totalOut: 0 };
+                        }
+                        map[key].totalOut += parseFloat(m.qty) || 0;
+                    });
+                });
+
+            } else {
+                // ── SOURCE 2: localStorage fallback ─────────────────────────────
+                const lsPurchases = (typeof mmLsGet === 'function')
+                    ? (mmLsGet('purchases') || [])
+                    : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+                const lsSales = (typeof mmLsGet === 'function')
+                    ? (mmLsGet('sales') || [])
+                    : JSON.parse(localStorage.getItem('mm_sales') || '[]');
+
+                lsPurchases.forEach(p => {
+                    const name  = String(p.productName || '').trim();
+                    const batch = String(p.batchNo     || '').trim();
+                    if (!name) return;
+                    const key = name.toLowerCase() + '|' + batch.toLowerCase();
+                    if (!map[key]) {
+                        map[key] = { name, batch, exp: p.expireDate || '', totalIn: 0, totalOut: 0 };
+                    }
+                    map[key].totalIn += (parseFloat(p.quantity) || 0) * (parseFloat(p.pack) || 1);
+                    if (p.expireDate && (!map[key].exp || p.expireDate > map[key].exp)) {
+                        map[key].exp = p.expireDate;
+                    }
+                });
+
+                lsSales.forEach(bill => {
+                    (bill.medicines || []).forEach(m => {
+                        const name  = String(m.product || '').trim();
+                        const batch = String(m.batch   || '').trim();
+                        if (!name) return;
+                        const key = name.toLowerCase() + '|' + batch.toLowerCase();
+                        if (!map[key]) {
+                            map[key] = { name, batch, exp: '', totalIn: 0, totalOut: 0 };
+                        }
+                        map[key].totalOut += parseFloat(m.qty) || 0;
+                    });
+                });
+            }
 
             _stockData = Object.values(map)
-                .map(row => ({
-                    ...row,
-                    current: row.totalIn - row.totalOut
-                }))
+                .map(row => ({ ...row, current: row.totalIn - row.totalOut }))
                 .sort((a, b) => a.name.localeCompare(b.name));
         }
 
