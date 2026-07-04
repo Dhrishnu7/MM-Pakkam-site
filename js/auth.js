@@ -745,6 +745,12 @@ function mmInjectUserBar() {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.356-3.712M9 20H4v-2a4 4 0 015.356-3.712M15 7a4 4 0 11-8 0 4 4 0 018 0zm6 4a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
             Users
+        </a>
+        <a class="mm-manage-btn" href="directory.html" title="Customers & Doctors Directory" style="border-color:rgba(99,102,241,0.35);background:rgba(238,242,255,0.85);color:#4f46e5;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5.356-3.712M9 20H4v-2a4 4 0 015.356-3.712M15 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            Directory
         </a>` : ''}
         <div class="mm-user-pill">
             <div class="mm-avatar">${shopInitials}</div>
