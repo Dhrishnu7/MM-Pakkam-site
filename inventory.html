@@ -1005,6 +1005,93 @@
         });
     }
 
+    // ═══════════════════════════════════════════════════════
+    // SUBSTITUTE FINDER TAB
+    // ═══════════════════════════════════════════════════════
+    function runSubstituteFinder(query) {
+        const area = document.getElementById('sfResultsArea');
+        if (!area) return;
+        const q = (query || '').trim();
+
+        if (!q) {
+            area.innerHTML = `<div class="sf-prompt">
+                <span class="sf-prompt-icon">&#x1F48A;</span>
+                <div class="sf-prompt-text">Type any medicine name to find same-salt substitutes available in your stock</div>
+            </div>`;
+            return;
+        }
+
+        if (!_stockData || !_stockData.length) {
+            area.innerHTML = `<div class="sf-empty"><span class="sf-empty-icon">&#x23F3;</span>Stock data loading... please wait.</div>`;
+            return;
+        }
+
+        const qLower = q.toLowerCase();
+        const qKw    = getKeywords(q);
+
+        // Direct matches — name contains the search string
+        const directMatches = _stockData.filter(r =>
+            r.name.toLowerCase().includes(qLower) && r.current > 0
+        );
+
+        // Same-salt / similar — keyword overlap, not already in direct matches, must be in stock
+        const directNames = new Set(directMatches.map(r => r.name.toLowerCase()));
+        const saltMatches = _stockData.filter(r => {
+            if (directNames.has(r.name.toLowerCase())) return false;
+            if (r.current <= 0) return false;
+            if (!qKw.length) return false;
+            const rKw = getKeywords(r.name);
+            return qKw.some(kw => rKw.includes(kw));
+        });
+
+        if (!directMatches.length && !saltMatches.length) {
+            area.innerHTML = `<div class="sf-empty">
+                <span class="sf-empty-icon">&#x1F615;</span>
+                No substitutes found for "<strong>${q}</strong>" in your current stock.<br>
+                <span style="font-size:0.8rem;color:#cbd5e1;">Try a shorter or generic name, e.g. "Metformin" instead of "Metformin 500mg Tab"</span>
+            </div>`;
+            return;
+        }
+
+        function fmtExp(exp) {
+            if (!exp) return '&mdash;';
+            try { return new Date(exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); }
+            catch(e) { return exp; }
+        }
+
+        function renderCard(r, badge) {
+            const singleBatch = r.batches && r.batches.length === 1 ? r.batches[0] : null;
+            const batchInfo   = singleBatch
+                ? `Batch: <strong>${singleBatch.batch || '&mdash;'}</strong> &bull; Exp: ${fmtExp(singleBatch.exp)}`
+                : (r.batches && r.batches.length > 1 ? `<strong>${r.batches.length} batches</strong>` : '');
+            const qtyClass    = r.current <= 10 ? 'low' : '';
+            const marginBadge = r.bestMargin > 40
+                ? `<div class="sf-card-margin">&#x1F4B0; ${Math.round(r.bestMargin)}% Margin</div>` : '';
+            return `<div class="sf-card">
+                <div>
+                    <div class="sf-card-name">${r.name} ${badge}</div>
+                    <div class="sf-card-meta">${batchInfo}</div>
+                    ${marginBadge}
+                </div>
+                <div class="sf-card-stock">
+                    <div class="sf-card-qty ${qtyClass}">${r.current}</div>
+                    <div class="sf-card-qty-label">units in stock</div>
+                </div>
+            </div>`;
+        }
+
+        let html = '';
+        if (directMatches.length) {
+            html += `<div class="sf-section-label">&#x1F4CB; Direct Matches &mdash; ${directMatches.length} result${directMatches.length > 1 ? 's' : ''}</div>`;
+            directMatches.forEach(r => { html += renderCard(r, '<span class="sf-match-badge">Match</span>'); });
+        }
+        if (saltMatches.length) {
+            html += `<div class="sf-section-label" style="margin-top:1.2rem;">&#x1F9EA; Same-Salt / Similar &mdash; ${saltMatches.length} substitute${saltMatches.length > 1 ? 's' : ''}</div>`;
+            saltMatches.forEach(r => { html += renderCard(r, '<span class="sf-sub-badge">Substitute</span>'); });
+        }
+        area.innerHTML = html;
+    }
+
     // "?"? Live search with dropdown "?"?
     let _ddHighlight = -1;
     function onStockSearch(val) {
