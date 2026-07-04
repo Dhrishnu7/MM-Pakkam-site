@@ -249,17 +249,24 @@
         }
         .sub-finder-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(13,148,136,0.18); background: #ccfbf1; }
 
-        /* "?"? SUMMARY PILLS "?"? */
+        /* SUMMARY PILLS */
         .stock-summary-pills {
             display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.2rem;
         }
         .stock-pill {
             padding: 0.4rem 1rem; border-radius: 20px;
             font-size: 0.78rem; font-weight: 700; border: 1.5px solid;
+            cursor: pointer; transition: all 0.18s; user-select: none;
         }
+        .stock-pill:hover { opacity: 0.82; transform: translateY(-1px); }
+        .stock-pill.active { box-shadow: 0 0 0 3px rgba(13,148,136,0.25); transform: translateY(-1px); }
         .pill-in-stock  { background: #f0fdf4; color: #15803d; border-color: #86efac; }
         .pill-low-stock { background: #fef3c7; color: #92400e; border-color: #fde68a; }
         .pill-out-stock { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+        .pill-in-stock.active  { background: #15803d; color: white; }
+        .pill-low-stock.active { background: #92400e; color: white; }
+        .pill-out-stock.active { background: #991b1b; color: white; }
+
 
         /* "?"? STOCK TABLE "?"? */
         .table-wrap { overflow-x: auto; }
@@ -793,6 +800,14 @@
     let _dbBills      = [];
     let _stockData    = [];
     let _dataLoaded   = false;
+    let _stockStatusFilter = null; // null=all, 'in'|'low'|'out'|'purchase'
+
+    function filterStockByStatus(status) {
+        _stockStatusFilter = (_stockStatusFilter === status) ? null : status;
+        const input = document.getElementById('stockSearchInput');
+        renderStockTable(input ? input.value : '');
+    }
+
 
     // ═══════════════════════════════════════════════════════
     // TAB SWITCHER
@@ -1231,6 +1246,7 @@
             })
             : _stockData;
 
+        // Count by status for pill badges
         let inCnt = 0, lowCnt = 0, outCnt = 0, noPurchaseCnt = 0;
         filtered.forEach(r => {
             if (r.noPurchase)        noPurchaseCnt++;
@@ -1239,18 +1255,34 @@
             else inCnt++;
         });
 
-        document.getElementById('stockSummaryPills').innerHTML = `
-            <div class="stock-pill pill-in-stock">&#x2705; ${inCnt} In Stock</div>
-            <div class="stock-pill pill-low-stock">&#x26A0;&#xFE0F; ${lowCnt} Low Stock (&le;10)</div>
-            <div class="stock-pill pill-out-stock">&#x274C; ${outCnt} Out of Stock</div>
-            ${noPurchaseCnt > 0 ? `<div class="stock-pill" style="background:#fff7ed;color:#c2410c;border:1.5px solid #fb923c;font-weight:700;">&#x1F6D2; ${noPurchaseCnt} Purchase Entry Needed</div>` : ''}
-            <div class="stock-pill" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;">&#x1F4E6; ${filtered.length} Total</div>
-        `;
+        // Apply status filter on top of search filter
+        const sf = _stockStatusFilter;
+
+        const display = sf ? filtered.filter(r => {
+            if (sf === 'in')       return !r.noPurchase && r.current > 10;
+            if (sf === 'low')      return !r.noPurchase && r.current > 0 && r.current <= 10;
+            if (sf === 'out')      return !r.noPurchase && r.current <= 0;
+            if (sf === 'purchase') return r.noPurchase;
+            return true;
+        }) : filtered;
+
+        document.getElementById('stockSummaryPills').innerHTML =
+            `<div class="stock-pill pill-in-stock ${sf==='in'?'active':''}"
+                onclick="filterStockByStatus('in')">&#x2705; ${inCnt} In Stock</div>` +
+            `<div class="stock-pill pill-low-stock ${sf==='low'?'active':''}"
+                onclick="filterStockByStatus('low')">&#x26A0;&#xFE0F; ${lowCnt} Low Stock (&le;10)</div>` +
+            `<div class="stock-pill pill-out-stock ${sf==='out'?'active':''}"
+                onclick="filterStockByStatus('out')">&#x274C; ${outCnt} Out of Stock</div>` +
+            (noPurchaseCnt > 0 ?
+                `<div class="stock-pill ${sf==='purchase'?'active':''}"
+                    style="background:${sf==='purchase'?'#c2410c':'#fff7ed'};color:${sf==='purchase'?'white':'#c2410c'};border:1.5px solid #fb923c;font-weight:700;"
+                    onclick="filterStockByStatus('purchase')">&#x1F6D2; ${noPurchaseCnt} Purchase Entry Needed</div>` : '') +
+            `<div class="stock-pill" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;cursor:default;">&#x1F4E6; ${filtered.length} Total</div>`;
 
         const tbody   = document.getElementById('stockTableBody');
         const emptyEl = document.getElementById('stockEmptyState');
 
-        if (filtered.length === 0) {
+        if (display.length === 0) {
             tbody.innerHTML = '';
             emptyEl.style.display = 'block';
             return;
@@ -1264,7 +1296,8 @@
         };
 
         let html = '';
-        filtered.forEach((row, idx) => {
+        display.forEach((row, idx) => {
+
             const cur        = row.current;
             const noPurchase = row.noPurchase;
             const multiBatch = row.batches.length > 1;
