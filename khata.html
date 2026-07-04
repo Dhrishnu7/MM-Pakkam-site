@@ -447,42 +447,55 @@
         }
 
         async function loadAndRenderKhata() {
-            let debtors = [];
+            let supabaseDebtors = [];
+            let localDebtors    = [];
 
-            // 1️⃣ Try Supabase first
+            // ─── Layer 1: Supabase ───────────────────────────────
             try {
                 if (typeof dbGetKhataData === 'function') {
                     const rows = await dbGetKhataData();
                     if (rows && rows.length > 0) {
-                        debtors = rows.map(r => ({
-                            id:      r.id,
-                            name:    r.name    || '',
-                            phone:   r.phone   || '',
-                            address: r.address || '',
-                            balance: parseFloat(r.balance) || 0,
-                        }));
+                        supabaseDebtors = rows
+                            .filter(r => parseFloat(r.balance) > 0)
+                            .map(r => ({
+                                id:      r.id,
+                                name:    r.name    || '',
+                                phone:   r.phone   || '',
+                                address: r.address || '',
+                                balance: parseFloat(r.balance) || 0,
+                            }));
                     }
                 }
             } catch(e) { console.warn('Supabase khata load failed:', e); }
 
-            // 2️⃣ Fallback: unscoped localStorage (mm_customers) — same key used by sales.html
-            if (debtors.length === 0) {
-                const raw = localStorage.getItem('mm_customers') || localStorage.getItem(_lsKey ? _lsKey('customers') : 'mm_customers');
+            // ─── Layer 2: Unscoped localStorage (mm_customers) ─────
+            try {
+                const raw = localStorage.getItem('mm_customers');
                 const customers = JSON.parse(raw || '[]');
-                debtors = customers
+                localDebtors = customers
                     .filter(c => parseFloat(c.balance || 0) > 0)
                     .map(c => ({ id: null, name: c.name, phone: c.phone || '', address: c.address || '', balance: parseFloat(c.balance) }));
-            }
+            } catch(e) {}
 
-            // 3️⃣ Last fallback: scoped localStorage (mm_susan_customers)
-            if (debtors.length === 0) {
-                const customers = mmLsGet('customers') || [];
-                debtors = customers
+            // ─── Layer 3: Scoped localStorage (mm_{user}_customers) ─
+            try {
+                const scopedCustomers = mmLsGet('customers') || [];
+                scopedCustomers
                     .filter(c => parseFloat(c.balance || 0) > 0)
-                    .map(c => ({ id: null, name: c.name, phone: c.phone || '', address: c.address || '', balance: parseFloat(c.balance) }));
-            }
+                    .forEach(c => {
+                        const exists = localDebtors.find(lc => lc.name.toLowerCase() === c.name.toLowerCase());
+                        if (!exists) localDebtors.push({ id: null, name: c.name, phone: c.phone || '', address: c.address || '', balance: parseFloat(c.balance) });
+                    });
+            } catch(e) {}
 
-            _allKhataCustomers = debtors.sort((a, b) => b.balance - a.balance);
+            // ─── MERGE: Supabase wins on balance; add localStorage-only entries ─
+            const merged = [...supabaseDebtors];
+            localDebtors.forEach(lc => {
+                const inSupabase = merged.find(sc => sc.name.toLowerCase() === lc.name.toLowerCase());
+                if (!inSupabase) merged.push(lc); // only add if Supabase doesn't already have them
+            });
+
+            _allKhataCustomers = merged.filter(c => c.balance > 0).sort((a, b) => b.balance - a.balance);
             _khataCustomers    = [..._allKhataCustomers];
             renderKhata();
         }
@@ -569,15 +582,54 @@
 
             cust.balance = willBeLeft;
 
+            // ─── Save to Supabase ──────────────────────────────────────────────
             try {
-                if (cust.id && typeof _supabase !== 'undefined') {
-                    await _supabase.from('customers').update({ balance: cust.balance }).eq('id', cust.id);
+                if (typeof _supabase !== 'undefined') {
+                    if (cust.id) {
+                        // We have the id — direct update
+                        await _supabase.from('customers').update({ balance: cust.balance }).eq('id', cust.id);
+                    } else {
+                        // No id (came from localStorage) — look up by name to get id, then update
+                        const user = (typeof _currentUser === 'function') ? _currentUser() : null;
+                        if (user) {
+                            const { data: existing } = await _supabase.from('customers')
+                                .select('id').eq('name', cust.name).eq('user_id', user).maybeSingle();
+                            if (existing) {
+                                await _supabase.from('customers').update({ balance: cust.balance }).eq('id', existing.id);
+                                cust.id = existing.id; // cache for next time
+                            } else {
+                                // Not in Supabase at all — insert new record
+                                await _supabase.from('customers').insert({ name: cust.name, phone: cust.phone || '', address: cust.address || '', balance: cust.balance, user_id: user });
+                            }
+                        }
+                    }
                 }
-            } catch(e) { console.warn('Settle sync failed:', e); }
+            } catch(e) { console.warn('Settle Supabase sync failed:', e); }
 
-            const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
-            const lc = customers.find(c => (c.name||'').toLowerCase() === cust.name.toLowerCase());
-            if (lc) { lc.balance = cust.balance; localStorage.setItem('mm_customers', JSON.stringify(customers)); }
+            // ─── Save to localStorage (BOTH stores) ───────────────────────────
+            try {
+                // Unscoped store (mm_customers) — used by sales.html
+                const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+                const lc = customers.find(c => (c.name||'').toLowerCase() === cust.name.toLowerCase());
+                if (lc) {
+                    lc.balance = cust.balance;
+                } else {
+                    customers.push({ name: cust.name, phone: cust.phone || '', address: cust.address || '', balance: cust.balance });
+                }
+                localStorage.setItem('mm_customers', JSON.stringify(customers));
+            } catch(e) { console.warn('Unscoped localStorage settle failed:', e); }
+
+            try {
+                // Scoped store (mm_{user}_customers)
+                const scoped = mmLsGet('customers') || [];
+                const sc = scoped.find(c => (c.name||'').toLowerCase() === cust.name.toLowerCase());
+                if (sc) {
+                    sc.balance = cust.balance;
+                } else {
+                    scoped.push({ name: cust.name, phone: cust.phone || '', address: cust.address || '', balance: cust.balance });
+                }
+                mmLsSet('customers', scoped);
+            } catch(e) { console.warn('Scoped localStorage settle failed:', e); }
 
             if (cust.balance <= 0) _allKhataCustomers.splice(currentCustIndex, 1);
             _khataCustomers = [..._allKhataCustomers];
