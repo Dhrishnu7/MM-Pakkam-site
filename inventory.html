@@ -387,7 +387,7 @@
         }
         .expiry-empty span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
 
-        /* "?"? DEAD STOCK TAB "?"? */
+        /* DEAD STOCK TAB */
         .dead-info-banner {
             background: linear-gradient(90deg, #fffbeb, #fef3c7);
             border: 1.5px solid #fde68a;
@@ -428,6 +428,97 @@
             transition: all 0.2s;
         }
         .dead-action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(217,119,6,0.3); }
+
+        /* SUBSTITUTE FINDER TAB */
+        .sf-hero {
+            background: linear-gradient(135deg, #0d9488 0%, #0891b2 100%);
+            border-radius: 16px;
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+        .sf-hero h3 { font-size: 1.1rem; font-weight: 800; margin: 0 0 0.3rem; }
+        .sf-hero p  { font-size: 0.85rem; opacity: 0.85; margin: 0 0 1.1rem; }
+        .sf-search-wrap {
+            position: relative;
+        }
+        .sf-search-input {
+            width: 100%; padding: 0.85rem 1rem 0.85rem 2.8rem;
+            border-radius: 12px; border: none;
+            font-size: 0.95rem; font-family: 'Inter', sans-serif;
+            background: rgba(255,255,255,0.95);
+            color: #0f172a; outline: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+            box-sizing: border-box;
+        }
+        .sf-search-input:focus { background: white; }
+        .sf-search-icon {
+            position: absolute; left: 0.85rem; top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem; pointer-events: none;
+        }
+        .sf-results-area { margin-top: 0.5rem; }
+        .sf-section-label {
+            font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.07em; color: #64748b;
+            padding: 0.9rem 0 0.4rem;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 0.6rem;
+        }
+        .sf-card {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.9rem 1.1rem;
+            background: white; border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            margin-bottom: 0.55rem;
+            transition: all 0.18s;
+            cursor: default;
+        }
+        .sf-card:hover { border-color: #0d9488; box-shadow: 0 4px 16px rgba(13,148,136,0.12); }
+        .sf-card-name { font-weight: 700; font-size: 0.92rem; color: #0f172a; }
+        .sf-card-meta { font-size: 0.75rem; color: #64748b; margin-top: 3px; }
+        .sf-card-stock {
+            text-align: right; white-space: nowrap;
+        }
+        .sf-card-qty {
+            font-size: 1.1rem; font-weight: 900;
+            color: #059669;
+        }
+        .sf-card-qty.low { color: #d97706; }
+        .sf-card-qty-label { font-size: 0.7rem; color: #94a3b8; font-weight: 600; }
+        .sf-card-margin {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #dcfce7; color: #15803d;
+            border: 1px solid #86efac;
+            border-radius: 20px; padding: 2px 8px;
+            font-size: 0.7rem; font-weight: 700;
+            margin-top: 3px;
+        }
+        .sf-empty {
+            text-align: center; padding: 3rem 1rem;
+            color: #94a3b8; font-size: 0.9rem; font-weight: 600;
+        }
+        .sf-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+        .sf-prompt {
+            text-align: center; padding: 3rem 1rem;
+            color: #94a3b8;
+        }
+        .sf-prompt-icon { font-size: 3rem; display: block; margin-bottom: 0.75rem; }
+        .sf-prompt-text { font-size: 0.92rem; font-weight: 600; }
+        .sf-match-badge {
+            display: inline-block;
+            background: #dbeafe; color: #1d4ed8;
+            border-radius: 20px; padding: 1px 8px;
+            font-size: 0.68rem; font-weight: 700;
+            margin-left: 6px; vertical-align: middle;
+        }
+        .sf-sub-badge {
+            display: inline-block;
+            background: #ede9fe; color: #6d28d9;
+            border-radius: 20px; padding: 1px 8px;
+            font-size: 0.68rem; font-weight: 700;
+            margin-left: 6px; vertical-align: middle;
+        }
 
         /* "?"? LOADING SPINNER "?"? */
         .loading-state {
@@ -529,6 +620,7 @@
             <button class="tab-btn active" id="tabBtnLedger" onclick="switchTab('ledger')">&#x1F4E6; Master Ledger</button>
             <button class="tab-btn" id="tabBtnExpiry" onclick="switchTab('expiry')">&#x23F3; Expiry Checker</button>
             <button class="tab-btn" id="tabBtnDead" onclick="switchTab('dead')">&#x1F480; Dead Stock</button>
+            <button class="tab-btn" id="tabBtnSubFinder" onclick="switchTab('subfinder')">&#x1F504; Substitute Finder</button>
         </div>
     </div>
 
@@ -656,9 +748,32 @@
                     </table>
                     <div id="deadEmptyState" style="display:none;">
                         <div class="empty-state">
-                            <span class="empty-state-icon">YZ?</span>
+                            <span class="empty-state-icon">&#x1F4A4;</span>
                             No dead stock found! Everything is moving well.
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUBSTITUTE FINDER TAB -->
+        <div class="tab-panel" id="tab-subfinder">
+            <div class="panel-card">
+                <div class="sf-hero">
+                    <h3>&#x1F504; Substitute Finder</h3>
+                    <p>Search any medicine &mdash; instantly see same-salt alternatives available in your stock.</p>
+                    <div class="sf-search-wrap">
+                        <span class="sf-search-icon">&#x1F50D;</span>
+                        <input type="text" id="sfSearchInput" class="sf-search-input"
+                            placeholder="e.g. Paracetamol, Metformin, Amlodipine&hellip;"
+                            oninput="runSubstituteFinder(this.value)"
+                            autocomplete="off">
+                    </div>
+                </div>
+                <div class="sf-results-area" id="sfResultsArea">
+                    <div class="sf-prompt">
+                        <span class="sf-prompt-icon">&#x1F48A;</span>
+                        <div class="sf-prompt-text">Type a medicine name above to find same-salt substitutes from your inventory</div>
                     </div>
                 </div>
             </div>
@@ -686,11 +801,15 @@
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + name).classList.add('active');
-        document.getElementById('tabBtn' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+        // Handle camelCase button IDs
+        const btnMap = { ledger:'tabBtnLedger', expiry:'tabBtnExpiry', dead:'tabBtnDead', subfinder:'tabBtnSubFinder' };
+        const btnId = btnMap[name] || ('tabBtn' + name.charAt(0).toUpperCase() + name.slice(1));
+        const btn = document.getElementById(btnId);
+        if (btn) btn.classList.add('active');
 
-        // Auto-run content when switching to expiry
-        if (name === 'expiry' && _dataLoaded) checkExpiry();
-        if (name === 'dead'   && _dataLoaded) renderDeadStock();
+        if (name === 'expiry'    && _dataLoaded) checkExpiry();
+        if (name === 'dead'      && _dataLoaded) renderDeadStock();
+        if (name === 'subfinder' && _dataLoaded) runSubstituteFinder('');
     }
 
     // ═══════════════════════════════════════════════════════
