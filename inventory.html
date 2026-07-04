@@ -401,6 +401,7 @@
             .panel-card      { padding: 1.2rem; }
         }
     </style>
+    <script src="js/substitutes.js"></script>
 </head>
 
 <body>
@@ -698,9 +699,15 @@
             const norm     = name.toLowerCase();
             const packSize = parseFloat(p.pack) > 0 ? parseFloat(p.pack) : 1;
             const qty      = (parseFloat(p.quantity) || 0) * packSize;
+            
+            // Calculate Margin
+            const mrp  = parseFloat(p.mrp) || 0;
+            const rate = parseFloat(p.rate) || 0;
+            const margin = (mrp && rate && mrp > rate) ? ((mrp - rate) / mrp) * 100 : 0;
 
-            if (!purchaseMap[norm]) purchaseMap[norm] = { name, batchMap: {}, totalIn: 0 };
+            if (!purchaseMap[norm]) purchaseMap[norm] = { name, batchMap: {}, totalIn: 0, bestMargin: 0 };
             purchaseMap[norm].totalIn += qty;
+            if (margin > purchaseMap[norm].bestMargin) purchaseMap[norm].bestMargin = margin;
 
             const bk = (batch || '_no_batch_').toLowerCase();
             if (!purchaseMap[norm].batchMap[bk]) purchaseMap[norm].batchMap[bk] = { batch, exp, totalIn: 0, current: 0 };
@@ -747,7 +754,9 @@
                 totalOut:   out,
                 current:    totalIn - out,
                 noPurchase: (totalIn - out) < 0,
-                lastSold:   lastSoldMap[norm] || null
+                lastSold:   lastSoldMap[norm] || null,
+                bestMargin: p ? (p.bestMargin || 0) : 0
+
             });
         });
 
@@ -793,10 +802,22 @@
     // ════════════════════════════════════════════════════════
     function renderStockTable(query) {
         const q = String(query || '').trim().toLowerCase();
+
+        let substituteQ = [];
+        if(typeof getMedKnowledge === 'function' && q) {
+            const knowledge = getMedKnowledge(q);
+            if(knowledge) substituteQ = knowledge.genericMatches || [];
+        }
+
         const filtered = q
-            ? _stockData.filter(r =>
-                r.name.toLowerCase().includes(q) ||
-                r.batches.some(b => b.batch.toLowerCase().includes(q)))
+            ? _stockData.filter(r => {
+                const name = r.name.toLowerCase();
+                if (name.includes(q) || r.batches.some(b => b.batch.toLowerCase().includes(q))) return true;
+                for(let sub of substituteQ) {
+                    if(name.includes(sub)) return true;
+                }
+                return false;
+            })
             : _stockData;
 
         let inCnt = 0, lowCnt = 0, outCnt = 0, noPurchaseCnt = 0;
@@ -863,10 +884,27 @@
             const purchaseNote = noPurchase
                 ? `<div style="font-size:0.72rem;color:#c2410c;margin-top:2px;font-weight:600;">&#x26A0;&#xFE0F; Sold without purchase entry</div>`
                 : '';
+                
+            let marginTag = '';
+            if(row.bestMargin > 40) {
+                marginTag = `<span style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;padding:2px 6px;border-radius:4px;font-size:0.68rem;font-weight:800;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px rgba(5,150,105,0.1);">💰 High Margin</span>`;
+            }
+
+            let subBtn = '';
+            let knowledge = null;
+            if(typeof getMedKnowledge === 'function') knowledge = getMedKnowledge(row.name);
+            if(knowledge && cur <= 0 && !noPurchase) {
+                const subSalt = knowledge.salt;
+                const searchStr = (knowledge.genericMatches && knowledge.genericMatches[0]) ? knowledge.genericMatches[0] : subSalt;
+                subBtn = `<div style="margin-top:6px;"><button onclick="document.getElementById('stockSearchInput').value='${searchStr}'; renderStockTable(document.getElementById('stockSearchInput').value);" style="background:linear-gradient(135deg,#f0fdfa,#ccfbf1);border:1px solid #5eead4;color:#0d9488;padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 2px 6px rgba(13,148,136,0.15)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    Find ${subSalt} Substitutes in stock
+                </button></div>`;
+            }
 
             html += `<tr style="${rowBg}">
                 <td style="color:#94a3b8;font-weight:700;">${idx + 1}</td>
-                <td><strong style="color:#0f172a;">${row.name}</strong>${purchaseNote}</td>
+                <td><strong style="color:#0f172a;">${row.name}</strong>${marginTag}${purchaseNote}${subBtn}</td>
                 <td>${batchDisplay}</td>
                 <td style="color:#64748b;">${expDisplay}</td>
                 <td style="color:#059669;font-weight:700;">${row.totalIn}</td>
