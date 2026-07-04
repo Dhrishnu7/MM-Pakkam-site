@@ -188,6 +188,10 @@
         .card-khata::before { background: linear-gradient(90deg, #d97706, #f59e0b); }
         .card-khata:hover { box-shadow: 0 20px 40px rgba(217,119,6,0.2); }
 
+        .card-inventory { --c: #0d9488; }
+        .card-inventory::before { background: linear-gradient(90deg, #0d9488, #0891b2); }
+        .card-inventory:hover { box-shadow: 0 20px 40px rgba(13,148,136,0.2); }
+
         /* -- Icon -- */
         .icon-wrapper {
             width: 68px; height: 68px;
@@ -580,7 +584,7 @@
                     </svg>
                 </div>
                 <h3>REPORT</h3>
-                <p>View sales summaries, stock levels and daily analytics.</p>
+                <p>View daily sales summaries, profit analytics and GST reports.</p>
             </a>
 
             <!-- SCHEDULE H DRUG -->
@@ -603,6 +607,17 @@
                 </div>
                 <h3>ACCOUNT / LEDGER</h3>
                 <p>Manage customer credit, pending balances and payments.</p>
+            </a>
+
+            <!-- INVENTORY -->
+            <a class="section-card card-inventory" href="inventory.html">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
+                <h3>INVENTORY</h3>
+                <p>Track stock levels, check expiry dates and spot dead stock.</p>
             </a>
 
         </div>

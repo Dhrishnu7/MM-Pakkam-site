@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Inventory — Billware</title>
+    <meta name="description" content="Manage your medicine stock, expiry dates, and identify dead stock with Billware Inventory."/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
+    <!-- Supabase & Auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #0f172a;
+        }
+
+        /* ── HEADER (shared) ── */
+        header {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.6);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+        .logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+        .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #0d9488, #0891b2); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .logo-text { font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
+        .header-right { display: flex; align-items: center; gap: 0.75rem; }
+
+        /* ── PAGE HERO ── */
+        .inv-hero {
+            padding: 2.2rem 2rem 0;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .inv-hero-inner {
+            background: linear-gradient(135deg, #0d9488 0%, #0891b2 60%, #6366f1 100%);
+            border-radius: 20px;
+            padding: 2rem 2.5rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            box-shadow: 0 12px 40px rgba(13,148,136,0.28);
+            position: relative;
+            overflow: hidden;
+        }
+        .inv-hero-inner::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
+        }
+        .inv-hero-inner::after {
+            content: '';
+            position: absolute;
+            bottom: -60px; right: 80px;
+            width: 280px; height: 280px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 50%;
+        }
+        .inv-hero h1 { font-size: 1.9rem; font-weight: 900; letter-spacing: -0.03em; }
+        .inv-hero p  { font-size: 0.95rem; opacity: 0.85; margin-top: 0.3rem; }
+        .inv-hero-icon { font-size: 3.5rem; opacity: 0.9; z-index: 1; }
+        .inv-hero-loading {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 20px; padding: 0.35rem 1rem;
+            font-size: 0.8rem; font-weight: 600; margin-top: 0.75rem;
+        }
+
+        /* ── METRIC CARDS ── */
+        .metrics-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            max-width: 1300px;
+            margin: 1.5rem auto 0;
+            padding: 0 2rem;
+        }
+        @media (max-width: 900px) { .metrics-row { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .metrics-row { grid-template-columns: 1fr 1fr; gap: 0.6rem; padding: 0 1rem; } }
+
+        .metric-card {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: 16px;
+            padding: 1.2rem 1.4rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            display: flex; flex-direction: column; gap: 0.4rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); }
+        .metric-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; }
+        .metric-value { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; line-height: 1; }
+        .metric-sub   { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
+        .metric-card.m-total  .metric-value { color: #0d9488; }
+        .metric-card.m-in     .metric-value { color: #16a34a; }
+        .metric-card.m-low    .metric-value { color: #d97706; }
+        .metric-card.m-expiry .metric-value { color: #dc2626; }
+
+        /* ── TAB NAV ── */
+        .tab-nav-wrap {
+            max-width: 1300px;
+            margin: 1.5rem auto 0;
+            padding: 0 2rem;
+        }
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 14px;
+            padding: 0.4rem;
+            width: fit-content;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .tab-btn {
+            padding: 0.6rem 1.3rem;
+            border-radius: 10px;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            background: transparent;
+            color: #64748b;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .tab-btn:hover { background: rgba(13,148,136,0.08); color: #0d9488; }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #0d9488, #0891b2);
+            color: white;
+            box-shadow: 0 4px 14px rgba(13,148,136,0.3);
+        }
+
+        /* ── TAB PANELS ── */
+        .tab-content {
+            max-width: 1300px;
+            margin: 1.5rem auto 3rem;
+            padding: 0 2rem;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── PANEL CARD (wrapper for tab content) ── */
+        .panel-card {
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 1.8rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.07);
+        }
+
+        /* ── SEARCH BAR ── */
+        .inv-search-wrap { margin-bottom: 1.2rem; }
+        .inv-search-input {
+            width: 100%; max-width: 420px;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: #0f172a;
+            outline: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath stroke-linecap='round' d='M21 21l-4.35-4.35'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 0.75rem center;
+            transition: all 0.2s;
+        }
+        .inv-search-input:focus { border-color: #0d9488; background: white; box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+
+        /* ── SUMMARY PILLS ── */
+        .stock-summary-pills {
+            display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+        .stock-pill {
+            padding: 0.4rem 1rem; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 700; border: 1.5px solid;
+        }
+        .pill-in-stock  { background: #f0fdf4; color: #15803d; border-color: #86efac; }
+        .pill-low-stock { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .pill-out-stock { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+        /* ── STOCK TABLE ── */
+        .table-wrap { overflow-x: auto; }
+        .stock-table { width: 100%; border-collapse: collapse; }
+        .stock-table th {
+            font-size: 0.7rem; font-weight: 800;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            color: #64748b; background: #f8fafc;
+            padding: 0.75rem 1rem; text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .stock-table td {
+            padding: 0.8rem 1rem; font-size: 0.87rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        .stock-table tbody tr { transition: background 0.15s; }
+        .stock-table tbody tr:hover { background: #f0fdfa; }
+        .stock-table tbody tr:last-child td { border-bottom: none; }
+
+        .stock-status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 0.3rem 0.75rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 700; white-space: nowrap;
+        }
+        .badge-in  { background: #dcfce7; color: #16a34a; }
+        .badge-low { background: #fef9c3; color: #a16207; }
+        .badge-out { background: #fee2e2; color: #dc2626; }
+        .badge-no-purchase { background: #ffedd5; color: #c2410c; }
+
+        .stock-qty-number {
+            font-weight: 800; font-size: 1rem;
+            padding: 0.2rem 0.5rem; border-radius: 6px;
+        }
+        .qty-good { color: #16a34a; background: #dcfce7; }
+        .qty-low  { color: #d97706; background: #fef9c3; }
+        .qty-out  { color: #dc2626; background: #fee2e2; }
+
+        .empty-state {
+            text-align: center; padding: 3rem 1rem;
+            color: #94a3b8; font-size: 0.92rem;
+        }
+        .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+
+        /* ── EXPIRY TAB ── */
+        .expiry-controls {
+            display: flex; flex-wrap: wrap; gap: 1.2rem;
+            align-items: flex-end; margin-bottom: 1.4rem;
+        }
+        .expiry-ctrl-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .expiry-ctrl-group label {
+            font-size: 0.72rem; font-weight: 800;
+            letter-spacing: 0.07em; text-transform: uppercase; color: #92400e;
+        }
+        .expiry-month-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .month-pill {
+            padding: 0.5rem 1rem; border-radius: 20px;
+            border: 1.5px solid #fde68a; background: #fef3c7;
+            font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 700;
+            color: #92400e; cursor: pointer; transition: all 0.2s ease;
+        }
+        .month-pill:hover { background: #fcd34d; border-color: #f59e0b; }
+        .month-pill.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white; border-color: #d97706;
+            box-shadow: 0 3px 10px rgba(245,158,11,0.35);
+        }
+        .expiry-custom-input {
+            font-family: 'Inter', sans-serif; font-size: 0.88rem; color: #0f172a;
+            background: #fef3c7; border: 1.5px solid #fde68a;
+            border-radius: 10px; padding: 0.5rem 0.9rem;
+            outline: none; width: 90px; transition: all 0.2s;
+        }
+        .expiry-custom-input:focus { border-color: #f59e0b; background: white; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+        .btn-check-expiry {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 0.6rem 1.4rem; border-radius: 10px;
+            font-size: 0.88rem; font-weight: 700; font-family: 'Inter', sans-serif;
+            cursor: pointer; border: none;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white; box-shadow: 0 4px 14px rgba(245,158,11,0.3);
+            transition: all 0.25s ease; white-space: nowrap;
+        }
+        .btn-check-expiry:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245,158,11,0.4); }
+
+        .expiry-summary { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+        .expiry-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 0.5rem 1.1rem; border-radius: 20px;
+            font-size: 0.82rem; font-weight: 700;
+            cursor: pointer; border: none; font-family: 'Inter', sans-serif;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .expiry-pill:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .expiry-pill.pill-active { outline: 3px solid #1e293b; outline-offset: 2px; transform: scale(1.04); font-weight: 800; }
+        .pill-expired   { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
+        .pill-thismonth { background: #fff7ed; color: #9a3412; border: 1.5px solid #fdba74; }
+        .pill-soon      { background: #fefce8; color: #713f12; border: 1.5px solid #fde047; }
+        .pill-ok        { background: #f0fdf4; color: #14532d; border: 1.5px solid #86efac; }
+
+        .expiry-table { width: 100%; border-collapse: collapse; }
+        .expiry-table th {
+            font-size: 0.7rem; font-weight: 800;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            color: #64748b; background: #fffbeb;
+            padding: 0.75rem 1rem; text-align: left;
+            border-bottom: 2px solid #fde68a;
+        }
+        .expiry-table td { padding: 0.8rem 1rem; font-size: 0.87rem; border-bottom: 1px solid #fef9c3; vertical-align: middle; }
+        .expiry-table tbody tr { transition: background 0.15s; }
+        .expiry-table tbody tr:hover { background: #fffbeb; }
+        .expiry-table tbody tr:last-child td { border-bottom: none; }
+
+        .expiry-status {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 0.3rem 0.85rem; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 700;
+        }
+        .status-expired   { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
+        .status-thismonth { background: #fff7ed; color: #9a3412; border: 1.5px solid #fdba74; }
+        .status-soon      { background: #fefce8; color: #713f12; border: 1.5px solid #fde047; }
+
+        .expiry-empty {
+            text-align: center; padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.92rem;
+        }
+        .expiry-empty span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+
+        /* ── DEAD STOCK TAB ── */
+        .dead-info-banner {
+            background: linear-gradient(90deg, #fffbeb, #fef3c7);
+            border: 1.5px solid #fde68a;
+            border-radius: 12px;
+            padding: 0.9rem 1.2rem;
+            margin-bottom: 1.4rem;
+            font-size: 0.85rem;
+            color: #92400e;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .dead-table { width: 100%; border-collapse: collapse; }
+        .dead-table th {
+            font-size: 0.7rem; font-weight: 800;
+            letter-spacing: 0.07em; text-transform: uppercase;
+            color: #64748b; background: #f8fafc;
+            padding: 0.75rem 1rem; text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .dead-table td { padding: 0.8rem 1rem; font-size: 0.87rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .dead-table tbody tr { transition: background 0.15s; }
+        .dead-table tbody tr:hover { background: #fef9c3; }
+        .dead-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 0.28rem 0.75rem; border-radius: 20px;
+            font-size: 0.74rem; font-weight: 700;
+            background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5;
+        }
+        .dead-units { font-weight: 800; color: #92400e; }
+        .dead-action-btn {
+            padding: 0.35rem 0.9rem; border-radius: 8px;
+            font-size: 0.78rem; font-weight: 700;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white; border: none; cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .dead-action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(217,119,6,0.3); }
+
+        /* ── LOADING SPINNER ── */
+        .loading-state {
+            text-align: center; padding: 3rem 1rem;
+            color: #64748b; font-size: 0.9rem; font-weight: 600;
+            display: flex; flex-direction: column; align-items: center; gap: 1rem;
+        }
+        .spin-ring {
+            width: 40px; height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #0d9488;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 700px) {
+            .inv-hero        { padding: 1.2rem 1rem 0; }
+            .inv-hero-inner  { padding: 1.4rem 1.5rem; }
+            .inv-hero h1     { font-size: 1.5rem; }
+            .metrics-row     { padding: 0 1rem; }
+            .tab-nav-wrap    { padding: 0 1rem; }
+            .tab-btn         { padding: 0.5rem 0.9rem; font-size: 0.8rem; }
+            .tab-content     { padding: 0 1rem; margin-bottom: 2rem; }
+            .panel-card      { padding: 1.2rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        mmRequireAuth();
+        document.addEventListener('DOMContentLoaded', () => mmInjectUserBar());
+    </script>
+
+    <!-- Navbar -->
+    <header>
+        <a class="logo" href="index.html">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+            </div>
+            <span class="logo-text">Billware</span>
+        </a>
+        <div class="header-right" id="headerRight"></div>
+    </header>
+
+    <!-- Hero -->
+    <div class="inv-hero">
+        <div class="inv-hero-inner">
+            <div>
+                <h1>📦 Inventory</h1>
+                <p>Your complete medicine stock command centre</p>
+                <div class="inv-hero-loading" id="heroStatus">
+                    <div class="spin-ring" style="width:14px;height:14px;border-width:2px;"></div>
+                    Loading stock data…
+                </div>
+            </div>
+            <div class="inv-hero-icon">🏪</div>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="metrics-row">
+        <div class="metric-card m-total">
+            <div class="metric-label">📦 Total SKUs</div>
+            <div class="metric-value" id="metricTotal">—</div>
+            <div class="metric-sub">Unique medicines</div>
+        </div>
+        <div class="metric-card m-in">
+            <div class="metric-label">✅ In Stock</div>
+            <div class="metric-value" id="metricIn">—</div>
+            <div class="metric-sub">Healthy levels</div>
+        </div>
+        <div class="metric-card m-low">
+            <div class="metric-label">⚠️ Low / Out</div>
+            <div class="metric-value" id="metricLow">—</div>
+            <div class="metric-sub">Need restocking</div>
+        </div>
+        <div class="metric-card m-expiry">
+            <div class="metric-label">🔴 Expiring Soon</div>
+            <div class="metric-value" id="metricExpiry">—</div>
+            <div class="metric-sub">Within 3 months</div>
+        </div>
+    </div>
+
+    <!-- Tab Nav -->
+    <div class="tab-nav-wrap">
+        <div class="tab-nav">
+            <button class="tab-btn active" id="tabBtnLedger" onclick="switchTab('ledger')">📦 Master Ledger</button>
+            <button class="tab-btn" id="tabBtnExpiry" onclick="switchTab('expiry')">⏳ Expiry Checker</button>
+            <button class="tab-btn" id="tabBtnDead" onclick="switchTab('dead')">💀 Dead Stock</button>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+
+        <!-- ═══ TAB: MASTER LEDGER ═══ -->
+        <div class="tab-panel active" id="tab-ledger">
+            <div class="panel-card">
+                <div class="inv-search-wrap">
+                    <input type="text" id="stockSearchInput" class="inv-search-input"
+                        placeholder="Search medicine or batch…"
+                        oninput="renderStockTable(this.value)">
+                </div>
+                <div class="stock-summary-pills" id="stockSummaryPills"></div>
+                <div class="table-wrap">
+                    <table class="stock-table" id="stockTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Medicine</th>
+                                <th>Batch</th>
+                                <th>Expiry</th>
+                                <th>In (Total)</th>
+                                <th>Out (Sold)</th>
+                                <th>Current Stock</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody">
+                            <tr><td colspan="8"><div class="loading-state"><div class="spin-ring"></div>Loading medicines…</div></td></tr>
+                        </tbody>
+                    </table>
+                    <div id="stockEmptyState" style="display:none;">
+                        <div class="empty-state">
+                            <span class="empty-state-icon">📭</span>
+                            No medicines found. Try a different search.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ TAB: EXPIRY CHECKER ═══ -->
+        <div class="tab-panel" id="tab-expiry">
+            <div class="panel-card">
+                <div class="expiry-controls">
+                    <div class="expiry-ctrl-group">
+                        <label>Quick Filter</label>
+                        <div class="expiry-month-btns">
+                            <button class="month-pill active" data-months="1" onclick="selectMonthPill(this)">This Month</button>
+                            <button class="month-pill" data-months="3" onclick="selectMonthPill(this)">3 Months</button>
+                            <button class="month-pill" data-months="6" onclick="selectMonthPill(this)">6 Months</button>
+                            <button class="month-pill" data-months="12" onclick="selectMonthPill(this)">1 Year</button>
+                        </div>
+                    </div>
+                    <div class="expiry-ctrl-group">
+                        <label>Custom (months)</label>
+                        <input type="number" class="expiry-custom-input" id="customMonths"
+                            min="0" max="120" placeholder="e.g. 9"
+                            oninput="clearMonthPillSelection()">
+                    </div>
+                    <button class="btn-check-expiry" onclick="checkExpiry()">
+                        🔍 Check Expiry
+                    </button>
+                </div>
+
+                <div class="expiry-summary" id="expirySummary" style="display:none">
+                    <button class="expiry-pill pill-expired"   id="pillExpired"   onclick="filterExpiryCategory('expired')">🔴 0 Already Expired</button>
+                    <button class="expiry-pill pill-thismonth" id="pillThisMonth" onclick="filterExpiryCategory('thisMonth')">🟠 0 Expiring This Month</button>
+                    <button class="expiry-pill pill-soon"      id="pillSoon"      onclick="filterExpiryCategory('soon')">🟡 0 Expiring Soon</button>
+                    <button class="expiry-pill pill-ok"        id="pillOk"        onclick="filterExpiryCategory('ok')">✅ 0 OK</button>
+                </div>
+
+                <div style="overflow-x:auto;" id="expiryTableWrap" style="display:none">
+                    <table class="expiry-table" id="expiryTable">
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Batch No.</th>
+                                <th>Bill / Invoice No.</th>
+                                <th>Purchase Date</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expiryBody"></tbody>
+                    </table>
+                </div>
+                <div class="expiry-empty" id="expiryEmpty" style="display:none">
+                    <span>✅</span>
+                    No medicines match this filter. All good!
+                </div>
+                <div id="expiryInitialMsg" style="text-align:center;padding:2.5rem 1rem;color:#94a3b8;font-size:0.9rem;font-weight:600;">
+                    Click <strong>Check Expiry</strong> to scan your stock
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ TAB: DEAD STOCK ═══ -->
+        <div class="tab-panel" id="tab-dead">
+            <div class="panel-card">
+                <div class="dead-info-banner">
+                    💡 Dead Stock = medicines purchased but not sold in the last 6 months. Return these to your distributor before they expire.
+                </div>
+                <div class="table-wrap">
+                    <table class="dead-table" id="deadTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Medicine</th>
+                                <th>Batch</th>
+                                <th>Units Sitting</th>
+                                <th>Earliest Expiry</th>
+                                <th>Last Sold</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deadTableBody">
+                            <tr><td colspan="7"><div class="loading-state"><div class="spin-ring"></div>Analysing stock…</div></td></tr>
+                        </tbody>
+                    </table>
+                    <div id="deadEmptyState" style="display:none;">
+                        <div class="empty-state">
+                            <span class="empty-state-icon">🎉</span>
+                            No dead stock found! Everything is moving well.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /tab-content -->
+
+    <footer style="text-align:center;padding:1.2rem;font-size:0.82rem;color:#94a3b8;border-top:1px solid rgba(0,0,0,0.05);">
+        &copy; 2026 Billware. All rights reserved.
+    </footer>
+
+    <script>
+    // ════════════════════════════════════════════════════════
+    // DATA CACHE
+    // ════════════════════════════════════════════════════════
+    let _dbPurchases  = [];
+    let _dbBills      = [];
+    let _stockData    = [];
+    let _dataLoaded   = false;
+
+    // ════════════════════════════════════════════════════════
+    // TAB SWITCHER
+    // ════════════════════════════════════════════════════════
+    function switchTab(name) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        document.getElementById('tabBtn' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+
+        // Auto-run content when switching to expiry
+        if (name === 'expiry' && _dataLoaded) checkExpiry();
+        if (name === 'dead'   && _dataLoaded) renderDeadStock();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // DATA LOADING
+    // ════════════════════════════════════════════════════════
+    async function loadData() {
+        try {
+            let session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
+            if (!session) {
+                for (let i = 0; i < 15 && !session; i++) {
+                    await new Promise(r => setTimeout(r, 200));
+                    session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
+                }
+            }
+
+            if (session && typeof dbGetReportData === 'function') {
+                const data = await dbGetReportData();
+                if (data && (Array.isArray(data.bills) || Array.isArray(data.purchases))) {
+                    _dbPurchases = data.purchases || [];
+                    _dbBills     = data.bills     || [];
+                }
+            }
+        } catch(e) { console.warn('Supabase load failed, using localStorage:', e); }
+
+        // localStorage fallback
+        if (_dbPurchases.length === 0) {
+            _dbPurchases = (typeof mmLsGet === 'function')
+                ? (mmLsGet('purchases') || [])
+                : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+        }
+        if (_dbBills.length === 0) {
+            _dbBills = (typeof mmLsGet === 'function')
+                ? (mmLsGet('sales') || [])
+                : JSON.parse(localStorage.getItem('mm_sales') || '[]');
+        }
+
+        buildStockData();
+        renderStockTable('');
+        updateMetrics();
+        _dataLoaded = true;
+
+        document.getElementById('heroStatus').innerHTML = '✅ Stock data loaded';
+        setTimeout(() => {
+            const hs = document.getElementById('heroStatus');
+            if (hs) hs.style.display = 'none';
+        }, 2500);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // STOCK DATA BUILDER (FIFO)
+    // ════════════════════════════════════════════════════════
+    function buildStockData() {
+        const purchaseMap = {};
+        const salesMap    = {};
+        const lastSoldMap = {}; // normName -> lastSaleDate
+
+        // ── Process purchases ──
+        const isSupabase = _dbPurchases.length > 0 && _dbPurchases[0].product_name !== undefined;
+        _dbPurchases.forEach(p => {
+            const name  = String(isSupabase ? (p.product_name || '') : (p.productName || '')).trim();
+            const batch = String(isSupabase ? (p.batch_no || '')     : (p.batchNo || '')).trim();
+            const exp   = String(isSupabase ? (p.expire_date || '')  : (p.expireDate || ''));
+            if (!name) return;
+            const norm     = name.toLowerCase();
+            const packSize = parseFloat(p.pack) > 0 ? parseFloat(p.pack) : 1;
+            const qty      = (parseFloat(p.quantity) || 0) * packSize;
+
+            if (!purchaseMap[norm]) purchaseMap[norm] = { name, batchMap: {}, totalIn: 0 };
+            purchaseMap[norm].totalIn += qty;
+
+            const bk = (batch || '_no_batch_').toLowerCase();
+            if (!purchaseMap[norm].batchMap[bk]) purchaseMap[norm].batchMap[bk] = { batch, exp, totalIn: 0, current: 0 };
+            purchaseMap[norm].batchMap[bk].totalIn += qty;
+            if (exp && exp > (purchaseMap[norm].batchMap[bk].exp || '')) purchaseMap[norm].batchMap[bk].exp = exp;
+        });
+
+        // ── Process sales ──
+        const isSBills = _dbBills.length > 0 && _dbBills[0].bill_items !== undefined;
+        _dbBills.forEach(bill => {
+            const billDate = bill.date || bill.created_at || '';
+            const items = isSBills ? (bill.bill_items || []) : (bill.medicines || []);
+            items.forEach(m => {
+                const name = String(isSBills ? (m.product || m.product_name || '') : (m.product || '')).trim();
+                if (!name) return;
+                const norm = name.toLowerCase();
+                salesMap[norm] = (salesMap[norm] || 0) + (parseFloat(m.qty) || 0);
+                if (!lastSoldMap[norm] || billDate > lastSoldMap[norm]) lastSoldMap[norm] = billDate;
+            });
+        });
+
+        const allNames = new Set([...Object.keys(purchaseMap), ...Object.keys(salesMap)]);
+        const rows = [];
+        allNames.forEach(norm => {
+            const p       = purchaseMap[norm];
+            const out     = salesMap[norm] || 0;
+            const totalIn = p ? p.totalIn : 0;
+
+            const batches = p
+                ? Object.values(p.batchMap).sort((a, b) => (a.exp || '9999').localeCompare(b.exp || '9999'))
+                : [];
+
+            let remaining = out;
+            batches.forEach(b => {
+                const deducted = Math.min(b.totalIn, remaining);
+                b.current  = b.totalIn - deducted;
+                remaining -= deducted;
+            });
+
+            rows.push({
+                name:       p ? p.name : norm,
+                batches,
+                totalIn,
+                totalOut:   out,
+                current:    totalIn - out,
+                noPurchase: (totalIn - out) < 0,
+                lastSold:   lastSoldMap[norm] || null
+            });
+        });
+
+        _stockData = rows.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    // ════════════════════════════════════════════════════════
+    // UPDATE TOP METRICS
+    // ════════════════════════════════════════════════════════
+    function updateMetrics() {
+        const total   = _stockData.length;
+        let inCnt = 0, lowOrOutCnt = 0;
+
+        _stockData.forEach(r => {
+            if (r.noPurchase) { lowOrOutCnt++; return; }
+            if (r.current <= 0)  lowOrOutCnt++;
+            else if (r.current <= 10) lowOrOutCnt++;
+            else inCnt++;
+        });
+
+        // Expiring within 3 months
+        const today = new Date();
+        const thisYM = today.getFullYear() * 12 + today.getMonth();
+        let expiringSoon = 0;
+        _dbPurchases.forEach(p => {
+            const exp = String(p.expire_date || p.expireDate || '');
+            if (!exp) return;
+            const parts = exp.split('-').map(Number);
+            if (parts.length < 2) return;
+            const expYM = parts[0] * 12 + (parts[1] - 1);
+            const diff  = expYM - thisYM;
+            if (diff >= 0 && diff <= 3) expiringSoon++;
+        });
+
+        document.getElementById('metricTotal').textContent  = total;
+        document.getElementById('metricIn').textContent     = inCnt;
+        document.getElementById('metricLow').textContent    = lowOrOutCnt;
+        document.getElementById('metricExpiry').textContent = expiringSoon;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // RENDER STOCK TABLE
+    // ════════════════════════════════════════════════════════
+    function renderStockTable(query) {
+        const q = String(query || '').trim().toLowerCase();
+        const filtered = q
+            ? _stockData.filter(r =>
+                r.name.toLowerCase().includes(q) ||
+                r.batches.some(b => b.batch.toLowerCase().includes(q)))
+            : _stockData;
+
+        let inCnt = 0, lowCnt = 0, outCnt = 0, noPurchaseCnt = 0;
+        filtered.forEach(r => {
+            if (r.noPurchase)        noPurchaseCnt++;
+            else if (r.current <= 0)  outCnt++;
+            else if (r.current <= 10) lowCnt++;
+            else inCnt++;
+        });
+
+        document.getElementById('stockSummaryPills').innerHTML = `
+            <div class="stock-pill pill-in-stock">&#x2705; ${inCnt} In Stock</div>
+            <div class="stock-pill pill-low-stock">&#x26A0;&#xFE0F; ${lowCnt} Low Stock (&le;10)</div>
+            <div class="stock-pill pill-out-stock">&#x274C; ${outCnt} Out of Stock</div>
+            ${noPurchaseCnt > 0 ? `<div class="stock-pill" style="background:#fff7ed;color:#c2410c;border:1.5px solid #fb923c;font-weight:700;">&#x1F6D2; ${noPurchaseCnt} Purchase Entry Needed</div>` : ''}
+            <div class="stock-pill" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;">&#x1F4E6; ${filtered.length} Total</div>
+        `;
+
+        const tbody   = document.getElementById('stockTableBody');
+        const emptyEl = document.getElementById('stockEmptyState');
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            emptyEl.style.display = 'block';
+            return;
+        }
+        emptyEl.style.display = 'none';
+
+        const fmtExp = exp => {
+            if (!exp) return '<span style="color:#94a3b8;">&mdash;</span>';
+            try { return new Date(exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); }
+            catch(e) { return exp; }
+        };
+
+        let html = '';
+        filtered.forEach((row, idx) => {
+            const cur        = row.current;
+            const noPurchase = row.noPurchase;
+            const multiBatch = row.batches.length > 1;
+
+            let statusClass, qtyClass, statusText, icon;
+            if (noPurchase) {
+                statusClass = 'badge-no-purchase'; qtyClass = 'qty-out'; statusText = 'Add Purchase Entry'; icon = '&#x1F6D2;';
+            } else if (cur <= 0) {
+                statusClass = 'badge-out'; qtyClass = 'qty-out'; statusText = 'Out of Stock'; icon = '&#x274C;';
+            } else if (cur <= 10) {
+                statusClass = 'badge-low'; qtyClass = 'qty-low'; statusText = 'Low Stock'; icon = '&#x26A0;&#xFE0F;';
+            } else {
+                statusClass = 'badge-in'; qtyClass = 'qty-good'; statusText = 'In Stock'; icon = '&#x2705;';
+            }
+
+            const rowBg = noPurchase
+                ? 'background:linear-gradient(90deg,#fff7ed,#fff);border-left:3px solid #f97316;'
+                : multiBatch ? 'background:#f5f3ff;border-left:3px solid #6366f1;' : '';
+
+            const singleBatch  = row.batches.length === 1 ? row.batches[0] : null;
+            const batchDisplay = singleBatch
+                ? `<code style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:6px;font-size:0.82rem;">${singleBatch.batch || '&mdash;'}</code>`
+                : multiBatch
+                    ? `<span style="font-size:0.78rem;color:#6366f1;font-weight:700;background:#ede9fe;padding:2px 8px;border-radius:6px;">&#x25A6; ${row.batches.length} Batches</span>`
+                    : '<span style="color:#94a3b8;">&mdash;</span>';
+
+            const expDisplay = singleBatch ? fmtExp(singleBatch.exp) : (multiBatch ? '<span style="color:#94a3b8;font-size:0.78rem;">Mixed</span>' : '&mdash;');
+            const purchaseNote = noPurchase
+                ? `<div style="font-size:0.72rem;color:#c2410c;margin-top:2px;font-weight:600;">&#x26A0;&#xFE0F; Sold without purchase entry</div>`
+                : '';
+
+            html += `<tr style="${rowBg}">
+                <td style="color:#94a3b8;font-weight:700;">${idx + 1}</td>
+                <td><strong style="color:#0f172a;">${row.name}</strong>${purchaseNote}</td>
+                <td>${batchDisplay}</td>
+                <td style="color:#64748b;">${expDisplay}</td>
+                <td style="color:#059669;font-weight:700;">${row.totalIn}</td>
+                <td style="color:#e11d48;font-weight:700;">${row.totalOut}</td>
+                <td><span class="stock-qty-number ${qtyClass}">${cur}</span></td>
+                <td>${noPurchase
+                    ? `<button class="stock-status-badge badge-no-purchase" onclick="window.location='purchase.html?prefill='+encodeURIComponent('${row.name}')" style="cursor:pointer;border:none;font:inherit;">${icon} ${statusText}</button>`
+                    : `<span class="stock-status-badge ${statusClass}">${icon} ${statusText}</span>`
+                }</td>
+            </tr>`;
+
+            if (multiBatch) {
+                row.batches.forEach(b => {
+                    const bCur = b.current;
+                    let bQtyClass = 'qty-good';
+                    let bDot     = 'background:#22c55e;';
+                    let bBadge   = '<span style="color:#16a34a;font-weight:600;font-size:0.78rem;">In Stock</span>';
+                    if (bCur <= 0) {
+                        bQtyClass = 'qty-out'; bDot = 'background:#ef4444;';
+                        bBadge = '<span style="color:#dc2626;font-weight:600;font-size:0.78rem;">Empty</span>';
+                    } else if (bCur <= 10) {
+                        bQtyClass = 'qty-low'; bDot = 'background:#f59e0b;';
+                        bBadge = '<span style="color:#d97706;font-weight:600;font-size:0.78rem;">Low</span>';
+                    }
+                    html += `<tr style="background:#fafafa;border-left:3px solid #c4b5fd;">
+                        <td style="text-align:center;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;${bDot}opacity:0.8;"></span></td>
+                        <td style="padding-left:18px;"><code style="background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:6px;font-size:0.82rem;font-weight:600;">${b.batch || '&mdash;'}</code></td>
+                        <td colspan="2" style="color:#64748b;font-size:0.84rem;">${fmtExp(b.exp)}</td>
+                        <td style="color:#059669;font-size:0.86rem;font-weight:600;">${b.totalIn}</td>
+                        <td style="color:#94a3b8;font-size:0.8rem;">&mdash;</td>
+                        <td><span class="stock-qty-number ${bQtyClass}" style="font-size:0.88rem;">${bCur}</span></td>
+                        <td>${bBadge}</td>
+                    </tr>`;
+                });
+            }
+        });
+        tbody.innerHTML = html;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // EXPIRY CHECKER
+    // ════════════════════════════════════════════════════════
+    let _expiryMonths = 1;
+    let _expiryGroups = { expired: [], thisMonth: [], soon: [], ok: [] };
+
+    function selectMonthPill(el) {
+        document.querySelectorAll('.month-pill').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        _expiryMonths = parseInt(el.dataset.months);
+        document.getElementById('customMonths').value = '';
+    }
+
+    function clearMonthPillSelection() {
+        document.querySelectorAll('.month-pill').forEach(b => b.classList.remove('active'));
+        _expiryMonths = -1;
+    }
+
+    function checkExpiry() {
+        const customVal = document.getElementById('customMonths').value;
+        const months    = customVal !== '' ? Math.max(0, parseInt(customVal) || 0) : _expiryMonths;
+
+        const isSupabase = _dbPurchases.length > 0 && _dbPurchases[0].product_name !== undefined;
+        const purchases  = _dbPurchases.map(p => ({
+            productName: String(isSupabase ? (p.product_name || '') : (p.productName || '')).trim() || '-',
+            batchNo:     String(isSupabase ? (p.batch_no     || '') : (p.batchNo     || '')).trim() || '-',
+            billNo:      isSupabase ? (p.invoice_no || p.bill_no || '-') : (p.billNo || '-'),
+            date:        isSupabase ? (p.date || p.created_at || '') : (p.date || ''),
+            expireDate:  String(isSupabase ? (p.expire_date  || '') : (p.expireDate  || ''))
+        }));
+
+        const today  = new Date();
+        const thisYM = today.getFullYear() * 12 + today.getMonth();
+        let expired = [], thisMonth = [], soon = [], ok = [];
+
+        purchases.forEach(p => {
+            if (!p.expireDate) return;
+            const parts = p.expireDate.split('-').map(Number);
+            const yr = parts[0], mo = parts[1];
+            if (!yr || !mo) return;
+            const expYM = yr * 12 + (mo - 1);
+            const diff  = expYM - thisYM;
+            const row = { name: p.productName, batchNo: p.batchNo, billNo: p.billNo, purchDate: p.date, expireDate: p.expireDate, diff };
+
+            if (diff < 0)       expired.push(row);
+            else if (diff === 0) thisMonth.push(row);
+            else if (diff <= 3)  soon.push(row);
+            else ok.push(row);
+        });
+
+        expired.sort((a, b) => a.diff - b.diff);
+        thisMonth.sort((a, b) => a.diff - b.diff);
+        soon.sort((a, b) => a.diff - b.diff);
+        _expiryGroups = { expired, thisMonth, soon, ok };
+
+        document.getElementById('expirySummary').style.display = 'flex';
+        document.getElementById('expiryInitialMsg').style.display = 'none';
+        document.getElementById('pillExpired').innerHTML   = `🔴 ${expired.length} Already Expired`;
+        document.getElementById('pillThisMonth').innerHTML = `🟠 ${thisMonth.length} Expiring This Month`;
+        document.getElementById('pillSoon').innerHTML      = `🟡 ${soon.length} Expiring Soon`;
+        document.getElementById('pillOk').innerHTML        = `✅ ${ok.length} OK`;
+
+        filterExpiryCategory('all');
+    }
+
+    function filterExpiryCategory(cat) {
+        document.querySelectorAll('.expiry-pill').forEach(p => p.classList.remove('pill-active'));
+        const pillMap = { expired: 'pillExpired', thisMonth: 'pillThisMonth', soon: 'pillSoon', ok: 'pillOk' };
+        if (pillMap[cat]) document.getElementById(pillMap[cat])?.classList.add('pill-active');
+
+        let rows;
+        if      (cat === 'expired')   rows = _expiryGroups.expired;
+        else if (cat === 'thisMonth') rows = _expiryGroups.thisMonth;
+        else if (cat === 'soon')      rows = _expiryGroups.soon;
+        else if (cat === 'ok')        rows = _expiryGroups.ok;
+        else rows = [..._expiryGroups.expired, ..._expiryGroups.thisMonth, ..._expiryGroups.soon];
+
+        const wrap  = document.getElementById('expiryTableWrap');
+        const empty = document.getElementById('expiryEmpty');
+        const tbody = document.getElementById('expiryBody');
+        wrap.style.display = 'block';
+
+        if (rows.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+
+        tbody.innerHTML = rows.map(r => {
+            let statusHtml;
+            if (cat === 'ok') {
+                statusHtml = `<span class="expiry-status" style="background:#dcfce7;color:#16a34a;border:1.5px solid #86efac;">✅ Safe &mdash; ${r.diff} month(s) left</span>`;
+            } else if (r.diff < 0) {
+                statusHtml = `<span class="expiry-status status-expired">🔴 Expired ${Math.abs(r.diff)} month(s) ago</span>`;
+            } else if (r.diff === 0) {
+                statusHtml = `<span class="expiry-status status-thismonth">🟠 Expiring This Month</span>`;
+            } else {
+                statusHtml = `<span class="expiry-status status-soon">🟡 Expires in ${r.diff} month(s)</span>`;
+            }
+            return `<tr>
+                <td><strong>${r.name}</strong></td>
+                <td>${r.batchNo}</td>
+                <td>${r.billNo}</td>
+                <td>${formatDate(r.purchDate)}</td>
+                <td><strong>${formatExpireDate(r.expireDate)}</strong></td>
+                <td>${statusHtml}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function formatDate(d) {
+        if (!d) return '-';
+        const p = d.split('-');
+        return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : d;
+    }
+
+    function formatExpireDate(ym) {
+        if (!ym) return '-';
+        const [yr, mo] = ym.split('-');
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return `${months[parseInt(mo)-1] || mo} ${yr}`;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // DEAD STOCK ANALYSIS
+    // ════════════════════════════════════════════════════════
+    function renderDeadStock() {
+        const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000;
+        const now = new Date();
+        const cutoff = new Date(now.getTime() - SIX_MONTHS_MS);
+
+        // Build last-sold map from bills
+        const lastSoldMap = {};
+        const isSBills = _dbBills.length > 0 && _dbBills[0].bill_items !== undefined;
+        _dbBills.forEach(bill => {
+            const billDate = new Date(bill.date || bill.created_at || 0);
+            const items = isSBills ? (bill.bill_items || []) : (bill.medicines || []);
+            items.forEach(m => {
+                const name = String(isSBills ? (m.product || m.product_name || '') : (m.product || '')).trim();
+                if (!name) return;
+                const norm = name.toLowerCase();
+                if (!lastSoldMap[norm] || billDate > lastSoldMap[norm]) lastSoldMap[norm] = billDate;
+            });
+        });
+
+        // Find dead stock: items with current stock > 0, not sold in 6 months
+        const dead = _stockData.filter(r => {
+            if (r.current <= 0 || r.noPurchase) return false;
+            const lastSold = lastSoldMap[r.name.toLowerCase()];
+            return !lastSold || lastSold < cutoff;
+        });
+
+        const tbody   = document.getElementById('deadTableBody');
+        const emptyEl = document.getElementById('deadEmptyState');
+
+        if (dead.length === 0) {
+            tbody.innerHTML = '';
+            emptyEl.style.display = 'block';
+            return;
+        }
+        emptyEl.style.display = 'none';
+
+        const fmtExp = exp => {
+            if (!exp) return '<span style="color:#94a3b8;">&mdash;</span>';
+            try { return new Date(exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); }
+            catch(e) { return exp; }
+        };
+
+        tbody.innerHTML = dead.sort((a, b) => b.current - a.current).map((row, idx) => {
+            const lastSold = lastSoldMap[row.name.toLowerCase()];
+            const lastSoldStr = lastSold ? lastSold.toLocaleDateString('en-IN') : '<span style="color:#dc2626;font-weight:700;">Never Sold</span>';
+            const earliestExp = row.batches.length > 0 && row.batches[0].exp ? fmtExp(row.batches[0].exp) : '&mdash;';
+
+            return `<tr>
+                <td style="color:#94a3b8;font-weight:700;">${idx + 1}</td>
+                <td><strong>${row.name}</strong></td>
+                <td>${row.batches.length > 0 ? `<code style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:6px;font-size:0.8rem;">${row.batches[0].batch || '&mdash;'}</code>` : '&mdash;'}</td>
+                <td><span class="dead-units">${row.current} units</span></td>
+                <td>${earliestExp}</td>
+                <td>${lastSoldStr}</td>
+                <td>
+                    <button class="dead-action-btn" onclick="window.location='purchase.html?prefill='+encodeURIComponent('${row.name}')">
+                        🛒 Reorder / Return
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // ════════════════════════════════════════════════════════
+    // INIT
+    // ════════════════════════════════════════════════════════
+    (async function init() {
+        await new Promise(r => setTimeout(r, 120));
+        await loadData();
+    })();
+
+    window.addEventListener('storage', e => {
+        if (e.key && (e.key.includes('purchases') || e.key.includes('sales'))) loadData();
+    });
+    </script>
+</body>
+</html>

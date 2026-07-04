@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1188,120 +1188,23 @@
             </div>
         </div>
 
-        <!-- ══ Stock Report ══ -->
-        <div class="stock-section">
-            <button class="stock-toggle-btn" id="stockToggleBtn" onclick="toggleStockPanel()">
-                <div class="stock-toggle-left">
-                    <div class="stock-toggle-icon">📦</div>
-                    <div class="stock-toggle-text">
-                        <div class="stock-toggle-title">Medicine Stock Report</div>
-                        <div class="stock-toggle-sub">View current stock levels for all medicines by batch</div>
-                    </div>
-                </div>
-                <div class="stock-chevron" id="stockChevron">▼</div>
-            </button>
 
-            <div class="stock-panel" id="stockPanel">
-                <!-- Search + Filters -->
-                <div class="stock-search-bar">
-                    <input type="text" id="stockSearchInput" class="stock-search-input"
-                        placeholder="Search by medicine name or batch no..."
-                        oninput="renderStockTable(this.value)">
-                </div>
-                <!-- Summary Pills -->
-                <div class="stock-summary-pills" id="stockSummaryPills"></div>
-                <!-- Table -->
-                <div style="overflow-x:auto;">
-                    <table class="stock-table" id="stockTable">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Medicine Name</th>
-                                <th>Batch No</th>
-                                <th>Exp. Date</th>
-                                <th>Total In (Purchased)</th>
-                                <th>Total Out (Sold)</th>
-                                <th>Current Stock</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stockTableBody"></tbody>
-                    </table>
-                    <div id="stockEmptyState" style="display:none; text-align:center; padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.92rem;">
-                        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📦</span>
-                        No medicines found matching your search.
-                    </div>
+        <!-- ══ Inventory Moved ══ -->
+        <div style="background:linear-gradient(135deg,#f0fdfa,#e0f2fe);border:1.5px solid #99f6e4;border-radius:16px;padding:1.4rem 1.8rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="font-size:2rem;">📦</div>
+                <div>
+                    <div style="font-weight:800;color:#0f172a;font-size:0.95rem;">Medicine Stock &amp; Expiry Checker</div>
+                    <div style="color:#64748b;font-size:0.82rem;margin-top:2px;">These features have moved to the dedicated <strong>Inventory</strong> section for a better experience.</div>
                 </div>
             </div>
+            <a href="inventory.html" style="background:linear-gradient(135deg,#0d9488,#0891b2);color:white;text-decoration:none;padding:0.65rem 1.4rem;border-radius:10px;font-weight:700;font-size:0.88rem;white-space:nowrap;box-shadow:0 4px 14px rgba(13,148,136,0.3);transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                Go to Inventory →
+            </a>
         </div>
 
-        <!-- ══ Medicine Expiry Checker ══ -->
-        <div class="expiry-section">
-            <button class="expiry-toggle-btn" id="expiryToggleBtn" onclick="toggleExpiryPanel()">
-                <div class="expiry-toggle-left">
-                    <div class="expiry-toggle-icon">💊</div>
-                    <div class="expiry-toggle-text">
-                        <div class="expiry-toggle-title">Medicine Expiry Checker</div>
-                        <div class="expiry-toggle-sub">Check which medicines are expired or about to expire</div>
-                    </div>
-                </div>
-                <div class="expiry-chevron" id="expiryChevron">▼</div>
-            </button>
 
-            <div class="expiry-panel" id="expiryPanel">
-                <!-- Controls -->
-                <div class="expiry-controls">
-                    <div class="expiry-ctrl-group">
-                        <label>Check within</label>
-                        <div class="expiry-month-btns">
-                            <button class="month-pill active" data-months="0" onclick="selectMonthPill(this)">This Month</button>
-                            <button class="month-pill" data-months="1" onclick="selectMonthPill(this)">1 Month</button>
-                            <button class="month-pill" data-months="2" onclick="selectMonthPill(this)">2 Months</button>
-                            <button class="month-pill" data-months="3" onclick="selectMonthPill(this)">3 Months</button>
-                            <button class="month-pill" data-months="6" onclick="selectMonthPill(this)">6 Months</button>
-                        </div>
-                    </div>
-                    <div class="expiry-ctrl-group">
-                        <label>Custom (months)</label>
-                        <input type="number" class="expiry-custom-input" id="customMonths"
-                               placeholder="e.g. 4" min="0" max="60"
-                               oninput="clearMonthPillSelection()">
-                    </div>
-                    <button class="btn-check-expiry" onclick="checkExpiry()">
-                        🔍 Check Now
-                    </button>
-                </div>
 
-                <!-- Summary Pills -->
-                <div class="expiry-summary" id="expirySummary" style="display:none">
-                    <button class="expiry-pill pill-expired"   id="pillExpired"   onclick="filterExpiryCategory('expired')">🔴 0 Already Expired</button>
-                    <button class="expiry-pill pill-thismonth" id="pillThisMonth" onclick="filterExpiryCategory('thisMonth')">🟠 0 Expiring This Month</button>
-                    <button class="expiry-pill pill-soon"      id="pillSoon"      onclick="filterExpiryCategory('soon')">🟡 0 Expiring Soon</button>
-                    <button class="expiry-pill pill-ok"        id="pillOk"        onclick="filterExpiryCategory('ok')">✅ 0 All OK</button>
-                </div>
-
-                <!-- Results Table -->
-                <div style="overflow-x:auto;" id="expiryTableWrap" style="display:none">
-                    <table class="expiry-table" id="expiryTable">
-                        <thead>
-                            <tr>
-                                <th>Medicine Name</th>
-                                <th>Batch No</th>
-                                <th>Bill No</th>
-                                <th>Purchase Date</th>
-                                <th>Expire Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expiryBody">
-                        </tbody>
-                    </table>
-                    <div class="expiry-empty" id="expiryEmpty" style="display:none">
-                        <span>✅</span>
-                        No medicines found expiring within the selected period!
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- ══ Recycle Bin ══ -->
