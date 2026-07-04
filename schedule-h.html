@@ -1148,6 +1148,18 @@
             return d.innerHTML;
         }
 
+        // Safe to embed inside a single-quoted JS string literal that itself
+        // sits inside a double-quoted HTML attribute (e.g. onclick="fn('${escAttr(x)}')").
+        function escAttr(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'");
+        }
+
         function deleteEntry(id) {
             if (!confirm('Delete this register entry?')) return;
             const register = getRegister().filter(e => e.id !== id);
@@ -1223,7 +1235,7 @@
             grid.innerHTML = filtered.map(name => `
                 <div class="drug-chip">
                     <span>${esc(name)}</span>
-                    <button class="del-chip" onclick="removeDrug('${name.replace(/'/g, "\\'")}')" title="Remove">✕</button>
+                    <button class="del-chip" onclick="removeDrug('${escAttr(name)}')" title="Remove">✕</button>
                 </div>
             `).join('');
         }

@@ -504,6 +504,25 @@
             return (name || '?').trim().split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase();
         }
 
+        // Escape untrusted text before it's placed into innerHTML
+        function escHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str || '';
+            return d.innerHTML;
+        }
+
+        // Safe to embed inside a single-quoted JS string literal that itself
+        // sits inside a double-quoted HTML attribute (e.g. onclick="fn('${escAttr(x)}')").
+        function escAttr(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'");
+        }
+
         function renderKhata() {
             const grid    = document.getElementById('khataGrid');
             const totalEl = document.getElementById('totalOutstanding');
@@ -528,17 +547,17 @@
                 card.className = 'customer-card';
                 card.innerHTML = `
                     <div class="c-header">
-                        <div class="c-avatar">${getInitials(cust.name)}</div>
+                        <div class="c-avatar">${escHtml(getInitials(cust.name))}</div>
                         <div>
-                            <div class="c-name">${cust.name}</div>
-                            <div class="c-phone">${cust.phone || 'No phone added'}</div>
+                            <div class="c-name">${escHtml(cust.name)}</div>
+                            <div class="c-phone">${escHtml(cust.phone) || 'No phone added'}</div>
                         </div>
                     </div>
                     <div class="c-bal-section">
                         <div class="c-bal-label">Pending Balance</div>
                         <div class="c-bal-value">₹${cust.balance.toFixed(2)}</div>
                     </div>
-                    <button class="btn-settle" onclick="openSettleModal(${realIdx}, '${cust.name.replace(/'/g,"\\'")}', ${cust.balance})">
+                    <button class="btn-settle" onclick="openSettleModal(${realIdx}, '${escAttr(cust.name)}', ${cust.balance})">
                         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                         Mark as Settled
                     </button>`;
@@ -610,7 +629,7 @@
             try {
                 // Unscoped store (mm_customers) — used by sales.html
                 const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
-                const lc = customers.find(c => (c.name||'').toLowerCase() === cust.name.toLowerCase());
+                const lc = customers.find(c => (c.name||'').toLowerCase() === cust.name.toLowerCase() && (c.phone||'') === (cust.phone||''));
                 if (lc) {
                     lc.balance = cust.balance;
                 } else {
@@ -622,7 +641,7 @@
             try {
                 // Scoped store (mm_{user}_customers)
                 const scoped = mmLsGet('customers') || [];
-                const sc = scoped.find(c => (c.name||'').toLowerCase() === cust.name.toLowerCase());
+                const sc = scoped.find(c => (c.name||'').toLowerCase() === cust.name.toLowerCase() && (c.phone||'') === (cust.phone||''));
                 if (sc) {
                     sc.balance = cust.balance;
                 } else {

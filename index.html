@@ -699,8 +699,8 @@
             function setWelcome() {
                 try {
                     const session = JSON.parse(
-                        localStorage.getItem('mm_session') ||
-                        sessionStorage.getItem('mm_session') ||
+                        localStorage.getItem('mm_auth_session') ||
+                        sessionStorage.getItem('mm_auth_session') ||
                         'null'
                     );
                     const el = document.getElementById('dashWelcome');
@@ -771,7 +771,7 @@
             updateBellBadge();
             updateTabCounts();
             
-            const drawer = document.getElementById('mmInboxDrawer');
+            const drawer = document.getElementById('inboxDrawer');
             if (drawer && drawer.classList.contains('open')) {
                 renderInbox();
             }

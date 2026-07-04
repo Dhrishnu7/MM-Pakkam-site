@@ -486,6 +486,25 @@
             return (name || '?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
         }
 
+        // Escape untrusted text before it's placed into innerHTML
+        function escHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str || '';
+            return d.innerHTML;
+        }
+
+        // Safe to embed inside a single-quoted JS string literal that itself
+        // sits inside a double-quoted HTML attribute (e.g. onclick="fn('${escAttr(x)}')").
+        function escAttr(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, "\\'");
+        }
+
         function showToast(msg) {
             const t = document.getElementById('toast');
             document.getElementById('toastMsg').textContent = msg;
@@ -575,16 +594,16 @@
                     const balShow  = parseFloat(item.balance || 0) > 0
                         ? `<span class="c-balance">₹${parseFloat(item.balance).toFixed(2)} due</span>` : '';
                     return `<div class="contact-card" style="animation:fadeUp 0.3s ease ${i*0.04}s both;">
-                        <div class="c-avatar">${initials}</div>
+                        <div class="c-avatar">${escHtml(initials)}</div>
                         <div class="c-info">
-                            <div class="c-name">${item.name}</div>
+                            <div class="c-name">${escHtml(item.name)}</div>
                             <div class="c-sub">
-                                ${item.phone ? `<span>📞 ${item.phone}</span>` : ''}
-                                ${item.address ? `<span>📍 ${item.address}</span>` : ''}
+                                ${item.phone ? `<span>📞 ${escHtml(item.phone)}</span>` : ''}
+                                ${item.address ? `<span>📍 ${escHtml(item.address)}</span>` : ''}
                             </div>
                         </div>
                         ${balShow}
-                        <button class="c-del-btn" title="Delete" onclick="deleteEntry('customer', '${(item.name||'').replace(/'/g,"\\'")}')" aria-label="Delete ${item.name}">
+                        <button class="c-del-btn" title="Delete" onclick="deleteEntry('customer', '${escAttr(item.name||'')}', '${escAttr(item.phone||'')}')" aria-label="Delete ${escAttr(item.name)}">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
@@ -594,16 +613,16 @@
                     const name     = item.name || item.doctorName || '';
                     const initials = getInitials(name);
                     return `<div class="contact-card" style="animation:fadeUp 0.3s ease ${i*0.04}s both;">
-                        <div class="c-avatar doctor">${initials}</div>
+                        <div class="c-avatar doctor">${escHtml(initials)}</div>
                         <div class="c-info">
-                            <div class="c-name">${name}</div>
+                            <div class="c-name">${escHtml(name)}</div>
                             <div class="c-sub">
-                                ${item.phone ? `<span>📞 ${item.phone}</span>` : ''}
-                                ${item.clinic ? `<span>🏥 ${item.clinic}</span>` : ''}
-                                ${item.address ? `<span>📍 ${item.address}</span>` : ''}
+                                ${item.phone ? `<span>📞 ${escHtml(item.phone)}</span>` : ''}
+                                ${item.clinic ? `<span>🏥 ${escHtml(item.clinic)}</span>` : ''}
+                                ${item.address ? `<span>📍 ${escHtml(item.address)}</span>` : ''}
                             </div>
                         </div>
-                        <button class="c-del-btn" title="Delete" onclick="deleteEntry('doctor', '${name.replace(/'/g,"\\'")}')" aria-label="Delete ${name}">
+                        <button class="c-del-btn" title="Delete" onclick="deleteEntry('doctor', '${escAttr(name)}', '${escAttr(item.phone||'')}')" aria-label="Delete ${escAttr(name)}">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
@@ -657,7 +676,7 @@
 
                 // Always save to localStorage too
                 const custs = JSON.parse(localStorage.getItem('mm_customers') || '[]');
-                if (!custs.find(c => c.name.toLowerCase() === name.toLowerCase())) {
+                if (!custs.find(c => c.name.toLowerCase() === name.toLowerCase() && (c.phone||'') === phone)) {
                     custs.push({ name, phone, address, balance: 0 });
                     localStorage.setItem('mm_customers', JSON.stringify(custs));
                     ok = true;
@@ -688,7 +707,7 @@
                 } catch(e) { console.warn('Supabase doctor save failed:', e); }
 
                 const docs = JSON.parse(localStorage.getItem('mm_doctors') || '[]');
-                if (!docs.find(d => (d.name||'').toLowerCase() === name.toLowerCase())) {
+                if (!docs.find(d => (d.name||'').toLowerCase() === name.toLowerCase() && (d.phone||'') === phone)) {
                     docs.push({ name, phone, clinic, address });
                     localStorage.setItem('mm_doctors', JSON.stringify(docs));
                     ok = true;
@@ -707,33 +726,38 @@
         }
 
         // ── Delete ──
-        async function deleteEntry(type, name) {
+        // Matches on name+phone (not name alone) so two entries sharing a name
+        // aren't both wiped out / the wrong one deleted.
+        async function deleteEntry(type, name, phone) {
             const confirmed = confirm(`⚠️ Delete "${name}" from ${type === 'customer' ? 'Customers' : 'Doctors'}?\n\nThis cannot be undone.`);
             if (!confirmed) return;
+            phone = phone || '';
+
+            const matches = (r) => (r.name||'').toLowerCase() === name.toLowerCase() && (r.phone||'') === phone;
 
             if (type === 'customer') {
                 // Remove from localStorage
                 const custs = JSON.parse(localStorage.getItem('mm_customers') || '[]');
-                const updated = custs.filter(c => (c.name||'').toLowerCase() !== name.toLowerCase());
+                const updated = custs.filter(c => !matches(c));
                 localStorage.setItem('mm_customers', JSON.stringify(updated));
 
                 // Remove from Supabase customers table
                 try {
                     if (typeof _supabase !== 'undefined' && _currentUser) {
                         const user = _currentUser();
-                        if (user) await _supabase.from('customers').delete().eq('name', name).eq('user_id', user);
+                        if (user) await _supabase.from('customers').delete().eq('name', name).eq('phone', phone).eq('user_id', user);
                     }
                 } catch(e) { console.warn('Supabase customer delete failed:', e); }
 
             } else {
                 const docs = JSON.parse(localStorage.getItem('mm_doctors') || '[]');
-                const updated = docs.filter(d => (d.name||'').toLowerCase() !== name.toLowerCase());
+                const updated = docs.filter(d => !matches(d));
                 localStorage.setItem('mm_doctors', JSON.stringify(updated));
 
                 try {
                     if (typeof _supabase !== 'undefined' && _currentUser) {
                         const user = _currentUser();
-                        if (user) await _supabase.from('doctors').delete().eq('name', name).eq('user_id', user);
+                        if (user) await _supabase.from('doctors').delete().eq('name', name).eq('phone', phone).eq('user_id', user);
                     }
                 } catch(e) { console.warn('Supabase doctor delete failed:', e); }
             }

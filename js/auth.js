@@ -605,7 +605,7 @@ async function mmDeleteAccountPermanently() {
             u.username  === tenantId  // owner record (old format)
         );
         for (const u of tenantUsers) {
-            await _deleteUser(u.username);
+            await _deleteUser(u.username, tenantId);
         }
 
         // ── 3. Clear all localStorage keys for this tenant ──
