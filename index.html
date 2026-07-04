@@ -106,11 +106,17 @@
 
         /* -- Cards Grid -- */
         .dashboard {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            display: flex;
+            flex-wrap: wrap;
             gap: 1.6rem;
             width: 100%;
             max-width: 1280px;
+            justify-content: center;
+        }
+
+        .dashboard > a {
+            flex: 0 0 calc(33.333% - 1.1rem);
+            min-width: 240px;
         }
 
         /* -- Card -- */
@@ -245,10 +251,11 @@
 
         /* -- Responsive -- */
         @media (max-width: 1100px) {
-            .dashboard { grid-template-columns: repeat(2, 1fr); }
+            .dashboard > a { flex: 0 0 calc(50% - 0.8rem); }
         }
         @media (max-width: 700px) {
-            .dashboard { grid-template-columns: 1fr 1fr; gap: 1rem; }
+            .dashboard { gap: 1rem; }
+            .dashboard > a { flex: 0 0 calc(50% - 0.5rem); min-width: 140px; }
             .logo-text { font-size: 1rem; }
             .dashboard-header h2 { font-size: 1.6rem; }
         }
@@ -587,11 +594,7 @@
                 <p>Manage restricted drugs register and log prescription sales.</p>
             </a>
 
-        </div>
-
-        <!-- NEW ROW: Account -->
-        <div class="sections-grid" style="margin-top:2rem;">
-            <!-- ACCOUNT -->
+            <!-- ACCOUNT / LEDGER -->
             <a class="section-card card-khata" href="khata.html">
                 <div class="icon-wrapper">
                     <svg viewBox="0 0 24 24" stroke="currentColor">
@@ -601,6 +604,7 @@
                 <h3>ACCOUNT / LEDGER</h3>
                 <p>Manage customer credit, pending balances and payments.</p>
             </a>
+
         </div>
     </div>
 
