@@ -803,7 +803,8 @@
     let _stockStatusFilter = null; // null=all, 'in'|'low'|'out'|'purchase'
 
     function filterStockByStatus(status) {
-        _stockStatusFilter = (_stockStatusFilter === status) ? null : status;
+        // null = explicit reset (Total pill); same status = toggle off
+        _stockStatusFilter = (status === null || _stockStatusFilter === status) ? null : status;
         const input = document.getElementById('stockSearchInput');
         renderStockTable(input ? input.value : '');
     }
@@ -1277,7 +1278,7 @@
                 `<div class="stock-pill ${sf==='purchase'?'active':''}"
                     style="background:${sf==='purchase'?'#c2410c':'#fff7ed'};color:${sf==='purchase'?'white':'#c2410c'};border:1.5px solid #fb923c;font-weight:700;"
                     onclick="filterStockByStatus('purchase')">&#x1F6D2; ${noPurchaseCnt} Purchase Entry Needed</div>` : '') +
-            `<div class="stock-pill" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;cursor:default;">&#x1F4E6; ${filtered.length} Total</div>`;
+            `<div class="stock-pill ${!sf?'active':''}" style="background:${!sf?'#475569':'#f1f5f9'};color:${!sf?'white':'#475569'};border:1.5px solid #cbd5e1;" onclick="filterStockByStatus(null)">&#x1F4E6; ${filtered.length} Total</div>`;
 
         const tbody   = document.getElementById('stockTableBody');
         const emptyEl = document.getElementById('stockEmptyState');
