@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Inventory — Billware</title>
+    <title>Inventory â€” Billware</title>
     <meta name="description" content="Manage your medicine stock, expiry dates, and identify dead stock with Billware Inventory."/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -23,7 +23,7 @@
             color: #0f172a;
         }
 
-        /* ── HEADER (shared) ── */
+        /* â”€â”€ HEADER (shared) â”€â”€ */
         header {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(20px);
@@ -41,7 +41,7 @@
         .logo-text { font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
         .header-right { display: flex; align-items: center; gap: 0.75rem; }
 
-        /* ── PAGE HERO ── */
+        /* â”€â”€ PAGE HERO â”€â”€ */
         .inv-hero {
             padding: 2.2rem 2rem 0;
             max-width: 1300px;
@@ -87,7 +87,7 @@
             font-size: 0.8rem; font-weight: 600; margin-top: 0.75rem;
         }
 
-        /* ── METRIC CARDS ── */
+        /* â”€â”€ METRIC CARDS â”€â”€ */
         .metrics-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -118,7 +118,7 @@
         .metric-card.m-low    .metric-value { color: #d97706; }
         .metric-card.m-expiry .metric-value { color: #dc2626; }
 
-        /* ── TAB NAV ── */
+        /* â”€â”€ TAB NAV â”€â”€ */
         .tab-nav-wrap {
             max-width: 1300px;
             margin: 1.5rem auto 0;
@@ -155,7 +155,7 @@
             box-shadow: 0 4px 14px rgba(13,148,136,0.3);
         }
 
-        /* ── TAB PANELS ── */
+        /* â”€â”€ TAB PANELS â”€â”€ */
         .tab-content {
             max-width: 1300px;
             margin: 1.5rem auto 3rem;
@@ -165,7 +165,7 @@
         .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ── PANEL CARD (wrapper for tab content) ── */
+        /* â”€â”€ PANEL CARD (wrapper for tab content) â”€â”€ */
         .panel-card {
             background: rgba(255,255,255,0.88);
             backdrop-filter: blur(20px);
@@ -175,10 +175,10 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.07);
         }
 
-        /* ── SEARCH BAR ── */
-        .inv-search-wrap { margin-bottom: 1.2rem; }
+        /* â”€â”€ SEARCH BAR â”€â”€ */
+        .inv-search-wrap { margin-bottom: 1.2rem; position: relative; max-width: 480px; }
         .inv-search-input {
-            width: 100%; max-width: 420px;
+            width: 100%;
             padding: 0.75rem 1rem 0.75rem 2.75rem;
             border-radius: 12px;
             border: 1.5px solid #e2e8f0;
@@ -194,7 +194,62 @@
         }
         .inv-search-input:focus { border-color: #0d9488; background: white; box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
 
-        /* ── SUMMARY PILLS ── */
+        /* â”€â”€ SEARCH DROPDOWN â”€â”€ */
+        .search-dropdown {
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+            background: white; border: 1.5px solid #e2e8f0;
+            border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+            z-index: 999; overflow: hidden; max-height: 320px; overflow-y: auto;
+            display: none;
+        }
+        .search-dropdown.open { display: block; animation: dropIn 0.15s ease; }
+        @keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+        .sd-group-label {
+            padding: 8px 14px 4px;
+            font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em;
+            color: #94a3b8; text-transform: uppercase;
+        }
+        .sd-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 14px; cursor: pointer; gap: 8px;
+            transition: background 0.12s;
+        }
+        .sd-item:hover { background: #f0fdfa; }
+        .sd-item-name { font-size: 0.88rem; font-weight: 600; color: #0f172a; }
+        .sd-item-sub { font-size: 0.72rem; color: #64748b; margin-top: 1px; }
+        .sd-item-badge {
+            font-size: 0.65rem; font-weight: 800; padding: 2px 7px;
+            border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+        }
+        .sdb-in   { background:#dcfce7; color:#15803d; }
+        .sdb-low  { background:#fef3c7; color:#b45309; }
+        .sdb-out  { background:#fee2e2; color:#b91c1c; }
+        .sdb-sub  { background:#e0f2fe; color:#0369a1; }
+        .sd-separator { height: 1px; background: #f1f5f9; margin: 4px 0; }
+        .sd-no-results { padding: 14px; text-align: center; color: #94a3b8; font-size: 0.85rem; }
+
+        /* â”€â”€ MARGIN BANNER â”€â”€ */
+        .high-margin-tag {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: #ecfdf5; color: #059669;
+            border: 1px solid #a7f3d0;
+            padding: 2px 7px; border-radius: 20px;
+            font-size: 0.66rem; font-weight: 800;
+            margin-left: 6px; vertical-align: middle;
+            box-shadow: 0 1px 4px rgba(5,150,105,0.12);
+        }
+        .sub-finder-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            margin-top: 6px;
+            background: linear-gradient(135deg,#f0fdfa,#ccfbf1);
+            border: 1.5px solid #5eead4; color: #0d9488;
+            padding: 5px 12px; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 700; cursor: pointer;
+            transition: all 0.18s; font-family: 'Inter', sans-serif;
+        }
+        .sub-finder-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(13,148,136,0.18); background: #ccfbf1; }
+
+        /* â”€â”€ SUMMARY PILLS â”€â”€ */
         .stock-summary-pills {
             display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.2rem;
         }
@@ -206,7 +261,7 @@
         .pill-low-stock { background: #fef3c7; color: #92400e; border-color: #fde68a; }
         .pill-out-stock { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
 
-        /* ── STOCK TABLE ── */
+        /* â”€â”€ STOCK TABLE â”€â”€ */
         .table-wrap { overflow-x: auto; }
         .stock-table { width: 100%; border-collapse: collapse; }
         .stock-table th {
@@ -249,7 +304,7 @@
         }
         .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
 
-        /* ── EXPIRY TAB ── */
+        /* â”€â”€ EXPIRY TAB â”€â”€ */
         .expiry-controls {
             display: flex; flex-wrap: wrap; gap: 1.2rem;
             align-items: flex-end; margin-bottom: 1.4rem;
@@ -332,7 +387,7 @@
         }
         .expiry-empty span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
 
-        /* ── DEAD STOCK TAB ── */
+        /* â”€â”€ DEAD STOCK TAB â”€â”€ */
         .dead-info-banner {
             background: linear-gradient(90deg, #fffbeb, #fef3c7);
             border: 1.5px solid #fde68a;
@@ -374,7 +429,7 @@
         }
         .dead-action-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(217,119,6,0.3); }
 
-        /* ── LOADING SPINNER ── */
+        /* â”€â”€ LOADING SPINNER â”€â”€ */
         .loading-state {
             text-align: center; padding: 3rem 1rem;
             color: #64748b; font-size: 0.9rem; font-weight: 600;
@@ -389,7 +444,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── RESPONSIVE ── */
+        /* â”€â”€ RESPONSIVE â”€â”€ */
         @media (max-width: 700px) {
             .inv-hero        { padding: 1.2rem 1rem 0; }
             .inv-hero-inner  { padding: 1.4rem 1.5rem; }
@@ -433,37 +488,37 @@
     <div class="inv-hero">
         <div class="inv-hero-inner">
             <div>
-                <h1>📦 Inventory</h1>
+                <h1>ðŸ“¦ Inventory</h1>
                 <p>Your complete medicine stock command centre</p>
                 <div class="inv-hero-loading" id="heroStatus">
                     <div class="spin-ring" style="width:14px;height:14px;border-width:2px;"></div>
-                    Loading stock data…
+                    Loading stock dataâ€¦
                 </div>
             </div>
-            <div class="inv-hero-icon">🏪</div>
+            <div class="inv-hero-icon">ðŸª</div>
         </div>
     </div>
 
     <!-- Metric Cards -->
     <div class="metrics-row">
         <div class="metric-card m-total">
-            <div class="metric-label">📦 Total SKUs</div>
-            <div class="metric-value" id="metricTotal">—</div>
+            <div class="metric-label">ðŸ“¦ Total SKUs</div>
+            <div class="metric-value" id="metricTotal">â€”</div>
             <div class="metric-sub">Unique medicines</div>
         </div>
         <div class="metric-card m-in">
-            <div class="metric-label">✅ In Stock</div>
-            <div class="metric-value" id="metricIn">—</div>
+            <div class="metric-label">âœ… In Stock</div>
+            <div class="metric-value" id="metricIn">â€”</div>
             <div class="metric-sub">Healthy levels</div>
         </div>
         <div class="metric-card m-low">
-            <div class="metric-label">⚠️ Low / Out</div>
-            <div class="metric-value" id="metricLow">—</div>
+            <div class="metric-label">âš ï¸ Low / Out</div>
+            <div class="metric-value" id="metricLow">â€”</div>
             <div class="metric-sub">Need restocking</div>
         </div>
         <div class="metric-card m-expiry">
-            <div class="metric-label">🔴 Expiring Soon</div>
-            <div class="metric-value" id="metricExpiry">—</div>
+            <div class="metric-label">ðŸ”´ Expiring Soon</div>
+            <div class="metric-value" id="metricExpiry">â€”</div>
             <div class="metric-sub">Within 3 months</div>
         </div>
     </div>
@@ -471,22 +526,25 @@
     <!-- Tab Nav -->
     <div class="tab-nav-wrap">
         <div class="tab-nav">
-            <button class="tab-btn active" id="tabBtnLedger" onclick="switchTab('ledger')">📦 Master Ledger</button>
-            <button class="tab-btn" id="tabBtnExpiry" onclick="switchTab('expiry')">⏳ Expiry Checker</button>
-            <button class="tab-btn" id="tabBtnDead" onclick="switchTab('dead')">💀 Dead Stock</button>
+            <button class="tab-btn active" id="tabBtnLedger" onclick="switchTab('ledger')">ðŸ“¦ Master Ledger</button>
+            <button class="tab-btn" id="tabBtnExpiry" onclick="switchTab('expiry')">â³ Expiry Checker</button>
+            <button class="tab-btn" id="tabBtnDead" onclick="switchTab('dead')">ðŸ’€ Dead Stock</button>
         </div>
     </div>
 
     <!-- Tab Content -->
     <div class="tab-content">
 
-        <!-- ═══ TAB: MASTER LEDGER ═══ -->
+        <!-- â•â•â• TAB: MASTER LEDGER â•â•â• -->
         <div class="tab-panel active" id="tab-ledger">
             <div class="panel-card">
-                <div class="inv-search-wrap">
+                <div class="inv-search-wrap" id="searchWrap">
                     <input type="text" id="stockSearchInput" class="inv-search-input"
-                        placeholder="Search medicine or batch…"
-                        oninput="renderStockTable(this.value)">
+                        placeholder="Search medicine, batch, or saltâ€¦"
+                        oninput="onStockSearch(this.value)"
+                        onkeydown="onSearchKeydown(event)"
+                        autocomplete="off">
+                    <div class="search-dropdown" id="searchDropdown"></div>
                 </div>
                 <div class="stock-summary-pills" id="stockSummaryPills"></div>
                 <div class="table-wrap">
@@ -504,12 +562,12 @@
                             </tr>
                         </thead>
                         <tbody id="stockTableBody">
-                            <tr><td colspan="8"><div class="loading-state"><div class="spin-ring"></div>Loading medicines…</div></td></tr>
+                            <tr><td colspan="8"><div class="loading-state"><div class="spin-ring"></div>Loading medicinesâ€¦</div></td></tr>
                         </tbody>
                     </table>
                     <div id="stockEmptyState" style="display:none;">
                         <div class="empty-state">
-                            <span class="empty-state-icon">📭</span>
+                            <span class="empty-state-icon">ðŸ“­</span>
                             No medicines found. Try a different search.
                         </div>
                     </div>
@@ -517,7 +575,7 @@
             </div>
         </div>
 
-        <!-- ═══ TAB: EXPIRY CHECKER ═══ -->
+        <!-- â•â•â• TAB: EXPIRY CHECKER â•â•â• -->
         <div class="tab-panel" id="tab-expiry">
             <div class="panel-card">
                 <div class="expiry-controls">
@@ -537,15 +595,15 @@
                             oninput="clearMonthPillSelection()">
                     </div>
                     <button class="btn-check-expiry" onclick="checkExpiry()">
-                        🔍 Check Expiry
+                        ðŸ” Check Expiry
                     </button>
                 </div>
 
                 <div class="expiry-summary" id="expirySummary" style="display:none">
-                    <button class="expiry-pill pill-expired"   id="pillExpired"   onclick="filterExpiryCategory('expired')">🔴 0 Already Expired</button>
-                    <button class="expiry-pill pill-thismonth" id="pillThisMonth" onclick="filterExpiryCategory('thisMonth')">🟠 0 Expiring This Month</button>
-                    <button class="expiry-pill pill-soon"      id="pillSoon"      onclick="filterExpiryCategory('soon')">🟡 0 Expiring Soon</button>
-                    <button class="expiry-pill pill-ok"        id="pillOk"        onclick="filterExpiryCategory('ok')">✅ 0 OK</button>
+                    <button class="expiry-pill pill-expired"   id="pillExpired"   onclick="filterExpiryCategory('expired')">ðŸ”´ 0 Already Expired</button>
+                    <button class="expiry-pill pill-thismonth" id="pillThisMonth" onclick="filterExpiryCategory('thisMonth')">ðŸŸ  0 Expiring This Month</button>
+                    <button class="expiry-pill pill-soon"      id="pillSoon"      onclick="filterExpiryCategory('soon')">ðŸŸ¡ 0 Expiring Soon</button>
+                    <button class="expiry-pill pill-ok"        id="pillOk"        onclick="filterExpiryCategory('ok')">âœ… 0 OK</button>
                 </div>
 
                 <div style="overflow-x:auto;" id="expiryTableWrap" style="display:none">
@@ -564,7 +622,7 @@
                     </table>
                 </div>
                 <div class="expiry-empty" id="expiryEmpty" style="display:none">
-                    <span>✅</span>
+                    <span>âœ…</span>
                     No medicines match this filter. All good!
                 </div>
                 <div id="expiryInitialMsg" style="text-align:center;padding:2.5rem 1rem;color:#94a3b8;font-size:0.9rem;font-weight:600;">
@@ -573,11 +631,11 @@
             </div>
         </div>
 
-        <!-- ═══ TAB: DEAD STOCK ═══ -->
+        <!-- â•â•â• TAB: DEAD STOCK â•â•â• -->
         <div class="tab-panel" id="tab-dead">
             <div class="panel-card">
                 <div class="dead-info-banner">
-                    💡 Dead Stock = medicines purchased but not sold in the last 6 months. Return these to your distributor before they expire.
+                    ðŸ’¡ Dead Stock = medicines purchased but not sold in the last 6 months. Return these to your distributor before they expire.
                 </div>
                 <div class="table-wrap">
                     <table class="dead-table" id="deadTable">
@@ -593,12 +651,12 @@
                             </tr>
                         </thead>
                         <tbody id="deadTableBody">
-                            <tr><td colspan="7"><div class="loading-state"><div class="spin-ring"></div>Analysing stock…</div></td></tr>
+                            <tr><td colspan="7"><div class="loading-state"><div class="spin-ring"></div>Analysing stockâ€¦</div></td></tr>
                         </tbody>
                     </table>
                     <div id="deadEmptyState" style="display:none;">
                         <div class="empty-state">
-                            <span class="empty-state-icon">🎉</span>
+                            <span class="empty-state-icon">ðŸŽ‰</span>
                             No dead stock found! Everything is moving well.
                         </div>
                     </div>
@@ -613,17 +671,17 @@
     </footer>
 
     <script>
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // DATA CACHE
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     let _dbPurchases  = [];
     let _dbBills      = [];
     let _stockData    = [];
     let _dataLoaded   = false;
 
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // TAB SWITCHER
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     function switchTab(name) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -635,9 +693,9 @@
         if (name === 'dead'   && _dataLoaded) renderDeadStock();
     }
 
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // DATA LOADING
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     async function loadData() {
         try {
             let session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
@@ -674,22 +732,22 @@
         updateMetrics();
         _dataLoaded = true;
 
-        document.getElementById('heroStatus').innerHTML = '✅ Stock data loaded';
+        document.getElementById('heroStatus').innerHTML = 'âœ… Stock data loaded';
         setTimeout(() => {
             const hs = document.getElementById('heroStatus');
             if (hs) hs.style.display = 'none';
         }, 2500);
     }
 
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // STOCK DATA BUILDER (FIFO)
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     function buildStockData() {
         const purchaseMap = {};
         const salesMap    = {};
         const lastSoldMap = {}; // normName -> lastSaleDate
 
-        // ── Process purchases ──
+        // â”€â”€ Process purchases â”€â”€
         const isSupabase = _dbPurchases.length > 0 && _dbPurchases[0].product_name !== undefined;
         _dbPurchases.forEach(p => {
             const name  = String(isSupabase ? (p.product_name || '') : (p.productName || '')).trim();
@@ -715,7 +773,7 @@
             if (exp && exp > (purchaseMap[norm].batchMap[bk].exp || '')) purchaseMap[norm].batchMap[bk].exp = exp;
         });
 
-        // ── Process sales ──
+        // â”€â”€ Process sales â”€â”€
         const isSBills = _dbBills.length > 0 && _dbBills[0].bill_items !== undefined;
         _dbBills.forEach(bill => {
             const billDate = bill.date || bill.created_at || '';
@@ -763,9 +821,9 @@
         _stockData = rows.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // UPDATE TOP METRICS
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     function updateMetrics() {
         const total   = _stockData.length;
         let inCnt = 0, lowOrOutCnt = 0;
@@ -797,9 +855,156 @@
         document.getElementById('metricExpiry').textContent = expiringSoon;
     }
 
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // SMART SEARCH ENGINE â€” Live dropdown + Substitute Finder
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+    // Common words to IGNORE when matching substitutes
+    const IGNORE_WORDS = new Set([
+        'tab','tablet','cap','capsule','syp','syrup','inj','injection','cream','gel','drops',
+        'mg','ml','gm','mcg','iu','sr','xr','er','od','bd','tds','plus','forte','junior',
+        'junior','pediatric','100','250','500','200','400','600','40','20','10','5','1',
+        '650','875','625','120','180','10mg','20mg','40mg','500mg','250mg'
+    ]);
+
+    function getKeywords(name) {
+        return name.toLowerCase()
+            .replace(/[^a-z0-9 ]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 2 && !IGNORE_WORDS.has(w));
+    }
+
+    function findSmartSubstitutes(outOfStockName) {
+        const keywords = getKeywords(outOfStockName);
+        if (!keywords.length) return [];
+
+        return _stockData.filter(row => {
+            if (row.name.toLowerCase() === outOfStockName.toLowerCase()) return false;
+            if (row.current <= 0 || row.noPurchase) return false; // only show ones IN stock
+            const rowKw = getKeywords(row.name);
+            return keywords.some(kw => rowKw.includes(kw));
+        });
+    }
+
+    // â”€â”€ Live search with dropdown â”€â”€
+    let _ddHighlight = -1;
+    function onStockSearch(val) {
+        renderStockTable(val);
+        buildSearchDropdown(val);
+    }
+
+    function closeDropdown() {
+        const dd = document.getElementById('searchDropdown');
+        if(dd) { dd.classList.remove('open'); dd.innerHTML = ''; }
+        _ddHighlight = -1;
+    }
+
+    function selectDropdownItem(name) {
+        const inp = document.getElementById('stockSearchInput');
+        if(inp) inp.value = name;
+        renderStockTable(name);
+        closeDropdown();
+    }
+
+    function buildSearchDropdown(val) {
+        const dd = document.getElementById('searchDropdown');
+        if (!dd) return;
+        const q = (val || '').trim().toLowerCase();
+        if (!q || q.length < 1) { closeDropdown(); return; }
+
+        // Direct matches
+        const directMatches = _stockData.filter(r =>
+            r.name.toLowerCase().includes(q) ||
+            r.batches.some(b => b.batch.toLowerCase().includes(q))
+        );
+
+        // Smart keyword substitutes (from same-salt / same keyword)
+        const qKeywords = getKeywords(q);
+        const substituteMatches = qKeywords.length
+            ? _stockData.filter(r => {
+                if (directMatches.includes(r)) return false; // already shown
+                const rowKw = getKeywords(r.name);
+                return qKeywords.some(kw => rowKw.includes(kw));
+            })
+            : [];
+
+        if (!directMatches.length && !substituteMatches.length) {
+            dd.innerHTML = `<div class="sd-no-results">ðŸ˜• No medicines found for "<strong>${q}</strong>"</div>`;
+            dd.classList.add('open');
+            return;
+        }
+
+        function statusBadge(row) {
+            if (row.noPurchase) return `<span class="sd-item-badge sdb-out">No Entry</span>`;
+            if (row.current <= 0) return `<span class="sd-item-badge sdb-out">Out of Stock</span>`;
+            if (row.current <= 10) return `<span class="sd-item-badge sdb-low">Low: ${row.current}</span>`;
+            return `<span class="sd-item-badge sdb-in">In Stock: ${row.current}</span>`;
+        }
+        function marginStr(row) {
+            return row.bestMargin > 40 ? `<span style="color:#059669;font-weight:700;font-size:0.68rem;"> &bull; ðŸ’° ${Math.round(row.bestMargin)}% margin</span>` : '';
+        }
+
+        let html = '';
+        if (directMatches.length) {
+            html += `<div class="sd-group-label">ðŸ” Matches</div>`;
+            directMatches.slice(0, 6).forEach((r, i) => {
+                html += `<div class="sd-item" data-idx="${i}" onclick="selectDropdownItem(${JSON.stringify(r.name)})">
+                    <div>
+                        <div class="sd-item-name">${r.name}</div>
+                        <div class="sd-item-sub">${r.batches.length} batch${r.batches.length>1?'es':''}${marginStr(r)}</div>
+                    </div>
+                    ${statusBadge(r)}
+                </div>`;
+            });
+        }
+
+        if (substituteMatches.length) {
+            if (directMatches.length) html += `<div class="sd-separator"></div>`;
+            html += `<div class="sd-group-label">ðŸ”„ Same-Salt / Similar</div>`;
+            substituteMatches.slice(0, 5).forEach(r => {
+                html += `<div class="sd-item" onclick="selectDropdownItem(${JSON.stringify(r.name)})">
+                    <div>
+                        <div class="sd-item-name">${r.name}</div>
+                        <div class="sd-item-sub">${r.batches.length} batch${r.batches.length>1?'es':''}${marginStr(r)}</div>
+                    </div>
+                    <span class="sd-item-badge sdb-sub">Substitute</span>
+                </div>`;
+            });
+        }
+
+        dd.innerHTML = html;
+        dd.classList.add('open');
+    }
+
+    function onSearchKeydown(e) {
+        const dd = document.getElementById('searchDropdown');
+        if (!dd || !dd.classList.contains('open')) return;
+        const items = dd.querySelectorAll('.sd-item');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            _ddHighlight = Math.min(_ddHighlight + 1, items.length - 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            _ddHighlight = Math.max(_ddHighlight - 1, -1);
+        } else if (e.key === 'Enter' && _ddHighlight >= 0) {
+            e.preventDefault();
+            items[_ddHighlight] && items[_ddHighlight].click();
+            return;
+        } else if (e.key === 'Escape') {
+            closeDropdown(); return;
+        }
+        items.forEach((el, i) => el.style.background = i === _ddHighlight ? '#f0fdfa' : '');
+    }
+
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+        const wrap = document.getElementById('searchWrap');
+        if (wrap && !wrap.contains(e.target)) closeDropdown();
+    });
+
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // RENDER STOCK TABLE
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     function renderStockTable(query) {
         const q = String(query || '').trim().toLowerCase();
 
@@ -885,26 +1090,24 @@
                 ? `<div style="font-size:0.72rem;color:#c2410c;margin-top:2px;font-weight:600;">&#x26A0;&#xFE0F; Sold without purchase entry</div>`
                 : '';
                 
+                
             let marginTag = '';
-            if(row.bestMargin > 40) {
-                marginTag = `<span style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;padding:2px 6px;border-radius:4px;font-size:0.68rem;font-weight:800;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px rgba(5,150,105,0.1);">💰 High Margin</span>`;
+            if (row.bestMargin > 40) {
+                marginTag = \\<span class='high-margin-tag'> \$\{Math.round(row.bestMargin)\}% Margin</span>\\;
             }
 
             let subBtn = '';
-            let knowledge = null;
-            if(typeof getMedKnowledge === 'function') knowledge = getMedKnowledge(row.name);
-            if(knowledge && cur <= 0 && !noPurchase) {
-                const subSalt = knowledge.salt;
-                const searchStr = (knowledge.genericMatches && knowledge.genericMatches[0]) ? knowledge.genericMatches[0] : subSalt;
-                subBtn = `<div style="margin-top:6px;"><button onclick="document.getElementById('stockSearchInput').value='${searchStr}'; renderStockTable(document.getElementById('stockSearchInput').value);" style="background:linear-gradient(135deg,#f0fdfa,#ccfbf1);border:1px solid #5eead4;color:#0d9488;padding:4px 10px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 2px 6px rgba(13,148,136,0.15)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    Find ${subSalt} Substitutes in stock
-                </button></div>`;
+            if (cur <= 0 && !noPurchase) {
+                const subs = findSmartSubstitutes(row.name);
+                if (subs.length) {
+                    const subNames = subs.map(s => s.name).join(', ');
+                    subBtn = \\<div style='margin-top:5px;'><button class='sub-finder-btn' onclick='selectDropdownItem(\$\{JSON.stringify(subs[0].name)\})'>\$\{subs.length\} Substitute\$\{subs.length > 1 ? 's' : ''\} In Stock</button><div style='font-size:0.68rem;color:#64748b;margin-top:3px;'>available: \$\{subNames.length > 60 ? subNames.slice(0,60)+'...' : subNames\}</div></div>\\;
+                }
             }
 
-            html += `<tr style="${rowBg}">
-                <td style="color:#94a3b8;font-weight:700;">${idx + 1}</td>
-                <td><strong style="color:#0f172a;">${row.name}</strong>${marginTag}${purchaseNote}${subBtn}</td>
+            html += \\<tr style='\$\{rowBg\}'>
+                <td style='color:#94a3b8;font-weight:700;'>\$\{idx + 1\}</td>
+                <td><strong style='color:#0f172a;'>\$\{row.name\}</strong>\$\{marginTag\}\$\{purchaseNote\}\$\{subBtn\}</td>\\;
                 <td>${batchDisplay}</td>
                 <td style="color:#64748b;">${expDisplay}</td>
                 <td style="color:#059669;font-weight:700;">${row.totalIn}</td>
@@ -944,9 +1147,9 @@
         tbody.innerHTML = html;
     }
 
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // EXPIRY CHECKER
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     let _expiryMonths = 1;
     let _expiryGroups = { expired: [], thisMonth: [], soon: [], ok: [] };
 
@@ -1001,10 +1204,10 @@
 
         document.getElementById('expirySummary').style.display = 'flex';
         document.getElementById('expiryInitialMsg').style.display = 'none';
-        document.getElementById('pillExpired').innerHTML   = `🔴 ${expired.length} Already Expired`;
-        document.getElementById('pillThisMonth').innerHTML = `🟠 ${thisMonth.length} Expiring This Month`;
-        document.getElementById('pillSoon').innerHTML      = `🟡 ${soon.length} Expiring Soon`;
-        document.getElementById('pillOk').innerHTML        = `✅ ${ok.length} OK`;
+        document.getElementById('pillExpired').innerHTML   = `ðŸ”´ ${expired.length} Already Expired`;
+        document.getElementById('pillThisMonth').innerHTML = `ðŸŸ  ${thisMonth.length} Expiring This Month`;
+        document.getElementById('pillSoon').innerHTML      = `ðŸŸ¡ ${soon.length} Expiring Soon`;
+        document.getElementById('pillOk').innerHTML        = `âœ… ${ok.length} OK`;
 
         filterExpiryCategory('all');
     }
@@ -1036,13 +1239,13 @@
         tbody.innerHTML = rows.map(r => {
             let statusHtml;
             if (cat === 'ok') {
-                statusHtml = `<span class="expiry-status" style="background:#dcfce7;color:#16a34a;border:1.5px solid #86efac;">✅ Safe &mdash; ${r.diff} month(s) left</span>`;
+                statusHtml = `<span class="expiry-status" style="background:#dcfce7;color:#16a34a;border:1.5px solid #86efac;">âœ… Safe &mdash; ${r.diff} month(s) left</span>`;
             } else if (r.diff < 0) {
-                statusHtml = `<span class="expiry-status status-expired">🔴 Expired ${Math.abs(r.diff)} month(s) ago</span>`;
+                statusHtml = `<span class="expiry-status status-expired">ðŸ”´ Expired ${Math.abs(r.diff)} month(s) ago</span>`;
             } else if (r.diff === 0) {
-                statusHtml = `<span class="expiry-status status-thismonth">🟠 Expiring This Month</span>`;
+                statusHtml = `<span class="expiry-status status-thismonth">ðŸŸ  Expiring This Month</span>`;
             } else {
-                statusHtml = `<span class="expiry-status status-soon">🟡 Expires in ${r.diff} month(s)</span>`;
+                statusHtml = `<span class="expiry-status status-soon">ðŸŸ¡ Expires in ${r.diff} month(s)</span>`;
             }
             return `<tr>
                 <td><strong>${r.name}</strong></td>
@@ -1068,9 +1271,9 @@
         return `${months[parseInt(mo)-1] || mo} ${yr}`;
     }
 
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // DEAD STOCK ANALYSIS
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     function renderDeadStock() {
         const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000;
         const now = new Date();
@@ -1127,16 +1330,16 @@
                 <td>${lastSoldStr}</td>
                 <td>
                     <button class="dead-action-btn" onclick="window.location='purchase.html?prefill='+encodeURIComponent('${row.name}')">
-                        🛒 Reorder / Return
+                        ðŸ›’ Reorder / Return
                     </button>
                 </td>
             </tr>`;
         }).join('');
     }
 
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // INIT
-    // ════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     (async function init() {
         await new Promise(r => setTimeout(r, 120));
         await loadData();
