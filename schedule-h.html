@@ -706,6 +706,27 @@
             .filter-bar { flex-direction: column; align-items: stretch; }
             .stats-bar { flex-direction: column; }
         }
+        @media print {
+            header, .tab-bar, .section-label:first-child, .form-grid, .form-actions, .filter-bar, .drug-list-actions {
+                display: none !important;
+            }
+            body { background: white; color: black; }
+            .page-content { padding: 0 !important; }
+            .form-card { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+            .table-wrap { box-shadow: none !important; border: none !important; max-height: none !important; overflow: visible !important; }
+            table { width: 100% !important; }
+            .tab-panel:not(.active) { display: none !important; }
+            
+            /* Print Header */
+            .tab-panel::before {
+                content: "Schedule H / H1 Register";
+                display: block;
+                font-size: 1.5rem;
+                font-weight: 800;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="js/auth.js?v=3"></script>
@@ -895,8 +916,11 @@
                         <input type="date" id="filterFrom" title="From date" oninput="renderRegisterLog()">
                         <span class="filter-date-sep">→</span>
                         <input type="date" id="filterTo" title="To date" oninput="renderRegisterLog()">
+                        <button class="btn-export" onclick="window.print()" title="Print Register">
+                            &#x1F5A8;&#xFE0F; Print Report
+                        </button>
                         <button class="btn-export" onclick="exportRegisterCSV()" title="Export to Excel/CSV">
-                            📥 Export CSV
+                            &#x1F4DD; Export CSV
                         </button>
                         <span class="filter-count" id="logCount"></span>
                     </div>
