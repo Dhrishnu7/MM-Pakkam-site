@@ -741,9 +741,14 @@
         </div>
 
         <!-- Tab Pills -->
-        <div class="tab-bar">
+        <div class="tab-bar" style="justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 5px;">
             <button class="tab-pill active" onclick="switchTab('register')" id="tabRegister">📋 Drug Register</button>
-            <button class="tab-pill" onclick="switchTab('manage')" id="tabManage">💊 Manage Drug List</button>
+            <button class="tab-pill" onclick="switchTab('ledger')" id="tabLedger">📦 Master Ledger</button>
+            <button class="tab-pill" onclick="switchTab('expiry')" id="tabExpiry">⏳ Expiry</button>
+            <button class="tab-pill" onclick="switchTab('dead')" id="tabDead">💀 Dead Stock</button>
+            <button class="tab-pill" onclick="switchTab('adjust')" id="tabAdjust">⚖️ Adjust</button>
+            <button class="tab-pill" onclick="switchTab('promise')" id="tabPromise">📦 Promise Orders</button>
+            <button class="tab-pill" onclick="switchTab('manage')" id="tabManage">⚙️ Add Drugs</button>
         </div>
 
         <div class="form-card">
@@ -927,9 +932,116 @@
                 </div>
             </div>
 
-            <!-- ═══ TAB 2: Manage Drug List ═══ -->
-            <div class="tab-panel" id="panelManage">
+            <!-- ═══ TAB 2: Master Ledger ═══ -->
+            <div class="tab-panel" id="panelLedger">
+                <div class="section-label">📦 Master Ledger</div>
+                <div class="table-wrap">
+                    <table class="sh-table">
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Total Stock</th>
+                                <th>Value (MRP)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerBody">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
+            <!-- ═══ TAB 3: Expiry Checker ═══ -->
+            <div class="tab-panel" id="panelExpiry">
+                <div class="section-label">⏳ Expiry Checker</div>
+                <div class="table-wrap">
+                    <table class="sh-table">
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Batch No</th>
+                                <th>Stock</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expiryBody">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ═══ TAB 4: Dead Stock ═══ -->
+            <div class="tab-panel" id="panelDead">
+                <div class="section-label">💀 Dead Stock (No sales in 6 months)</div>
+                <div class="table-wrap">
+                    <table class="sh-table">
+                        <thead>
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Total Stock</th>
+                                <th>Earliest Expiry</th>
+                                <th>Last Sold</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deadBody">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ═══ TAB 5: Adjust Stock ═══ -->
+            <div class="tab-panel" id="panelAdjust">
+                <div class="section-label">⚖️ Manual Stock Adjustment</div>
+                <div class="form-grid" style="margin-bottom: 1.5rem;">
+                    <div class="form-group">
+                        <label>Medicine</label>
+                        <select id="adjMedicine" onchange="onAdjMedicineChange()">
+                            <option value="">Select Medicine...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Batch No</label>
+                        <select id="adjBatch">
+                            <option value="">Select Batch...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Adjust Quantity</label>
+                        <input type="number" id="adjQty" placeholder="-5 or +10">
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button type="button" class="btn-submit" onclick="saveAdjustment()">Save Adjustment</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ TAB 6: Promise Orders ═══ -->
+            <div class="tab-panel" id="panelPromise">
+                <div class="section-label">📦 Promise Orders</div>
+                <div class="table-wrap">
+                    <table class="sh-table">
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Medicine</th>
+                                <th>Qty</th>
+                                <th>Promise Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promiseBody">
+                            <!-- Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ═══ TAB 7: Manage Drug List ═══ -->
+            <div class="tab-panel" id="panelManage">
                 <div class="section-label">➕ Add Schedule H Drug</div>
                 <div class="add-drug-row">
                     <input type="text" id="newDrugName" placeholder="Enter Schedule H drug name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addDrug();}">
@@ -956,11 +1068,15 @@
                 </div>
 
                 <div class="search-bar">
-                    <input type="text" id="drugSearch" placeholder="Search drugs…" oninput="renderDrugList()">
+                    <input type="text" id="drugSearch" placeholder="Type to search and view drugs…" oninput="renderDrugList()">
                 </div>
 
-                <div class="drug-grid" id="drugGrid">
+                <div class="drug-grid" id="drugGrid" style="display:none;">
                     <!-- Drug chips rendered by JS -->
+                </div>
+                
+                <div id="drugSearchPrompt" style="text-align:center; padding: 2rem; color: #64748b; font-weight:600;">
+                    🔍 Search above to manage specific drugs, or add a new one.
                 </div>
 
                 <div id="drugEmptyState" class="empty-state" style="display:none;">
@@ -1052,10 +1168,20 @@
            Tab Switching
         ══════════════════════════════════════════════════════════════════ */
         function switchTab(tab) {
-            document.getElementById('panelRegister').classList.toggle('active', tab === 'register');
-            document.getElementById('panelManage').classList.toggle('active', tab === 'manage');
-            document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
-            document.getElementById('tabManage').classList.toggle('active', tab === 'manage');
+            const tabs = ['register', 'ledger', 'expiry', 'dead', 'adjust', 'promise', 'manage'];
+            tabs.forEach(t => {
+                const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
+                const pill = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (panel) panel.classList.toggle('active', t === tab);
+                if (pill) pill.classList.toggle('active', t === tab);
+            });
+            if (tab === 'ledger' || tab === 'expiry' || tab === 'dead') {
+                renderScheduleHInventory();
+            } else if (tab === 'promise') {
+                renderPromiseOrders();
+            } else if (tab === 'adjust') {
+                populateAdjDropdowns();
+            }
         }
 
         /* ══════════════════════════════════════════════════════════════════
@@ -1467,14 +1593,25 @@
             document.getElementById('drugCountBadge').textContent = `${drugs.length} drug${drugs.length !== 1 ? 's' : ''}`;
             const grid = document.getElementById('drugGrid');
             const empty = document.getElementById('drugEmptyState');
+            const prompt = document.getElementById('drugSearchPrompt');
 
             if (drugs.length === 0) {
-                grid.innerHTML = '';
+                grid.style.display = 'none';
+                if (prompt) prompt.style.display = 'none';
                 empty.style.display = 'block';
                 return;
             }
 
             empty.style.display = 'none';
+
+            if (!searchTerm) {
+                grid.style.display = 'none';
+                if (prompt) prompt.style.display = 'block';
+                return;
+            }
+
+            if (prompt) prompt.style.display = 'none';
+            grid.style.display = 'flex';
 
             if (filtered.length === 0) {
                 grid.innerHTML = '<div style="padding:1rem; color:#94a3b8; font-size:0.9rem;">No matching drugs found.</div>';
@@ -1482,7 +1619,7 @@
             }
 
             grid.innerHTML = filtered.map(name => `
-                <div class="drug-chip">
+                <div class="drug-chip" style="animation: fadeUp 0.2s ease forwards;">
                     <span>${esc(name)}</span>
                     <button class="del-chip" onclick="removeDrug('${escAttr(name)}')" title="Remove">✕</button>
                 </div>
@@ -1686,6 +1823,250 @@
     </script>
 
     <script>
+        /* ══════════════════════════════════════════════════════════════════
+           SCHEDULE H INVENTORY LOGIC (Ledger, Expiry, Dead Stock, Adjust)
+        ══════════════════════════════════════════════════════════════════ */
+        
+        let shStockMap = {};
+
+        function buildSHStockMap() {
+            const shDrugs = JSON.parse(localStorage.getItem('mm_schedule_h_drugs') || '[]');
+            const shDrugSet = new Set(shDrugs.map(d => d.trim().toLowerCase()));
+
+            const purchases = JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+            const sales = JSON.parse(localStorage.getItem('mm_sales') || '[]');
+            const adjustLogs = JSON.parse(localStorage.getItem('mm_inventory_adjust_log') || '[]');
+
+            const map = {};
+
+            function getOrCreate(name) {
+                const k = name.trim().toLowerCase();
+                if (!map[k]) {
+                    map[k] = {
+                        name: name.trim(),
+                        totalQty: 0,
+                        batches: {},
+                        lastSold: null,
+                        metrics: { totalMrp: 0 }
+                    };
+                }
+                return map[k];
+            }
+
+            // Purchases
+            purchases.forEach(p => {
+                const pName = p.productName || p.product_name;
+                if (!pName || !shDrugSet.has(pName.trim().toLowerCase())) return;
+                const entry = getOrCreate(pName);
+                const bNo = (p.batchNo || '').trim().toUpperCase();
+                if (!entry.batches[bNo]) {
+                    entry.batches[bNo] = { batchNo: bNo, qty: 0, exp: p.expireDate || '', mrp: parseFloat(p.mrp) || 0 };
+                }
+                const q = parseFloat(p.quantity) || 0;
+                entry.batches[bNo].qty += q;
+                entry.totalQty += q;
+                entry.metrics.totalMrp += (q * (parseFloat(p.mrp) || 0));
+            });
+
+            // Adjustments
+            adjustLogs.forEach(adj => {
+                if (!adj.medicineName || !shDrugSet.has(adj.medicineName.trim().toLowerCase())) return;
+                const entry = getOrCreate(adj.medicineName);
+                const bNo = (adj.batchNo || '').trim().toUpperCase();
+                if (!entry.batches[bNo]) {
+                    entry.batches[bNo] = { batchNo: bNo, qty: 0, exp: '', mrp: 0 };
+                }
+                const d = parseFloat(adj.deltaQty) || 0;
+                entry.batches[bNo].qty += d;
+                entry.totalQty += d;
+            });
+
+            // Sales
+            sales.forEach(bill => {
+                (bill.medicines || []).forEach(med => {
+                    const mName = med.product;
+                    if (!mName || !shDrugSet.has(mName.trim().toLowerCase())) return;
+                    const entry = getOrCreate(mName);
+                    const bNo = (med.batch || '').trim().toUpperCase();
+                    
+                    const saleDate = new Date(bill.date);
+                    if (!entry.lastSold || saleDate > new Date(entry.lastSold)) {
+                        entry.lastSold = bill.date;
+                    }
+
+                    if (!entry.batches[bNo]) {
+                        entry.batches[bNo] = { batchNo: bNo, qty: 0, exp: med.exp || '', mrp: med.mrp || 0 };
+                    }
+                    const q = parseFloat(med.qty) || 0;
+                    entry.batches[bNo].qty -= q;
+                    entry.totalQty -= q;
+                });
+            });
+
+            shStockMap = map;
+            return map;
+        }
+
+        function renderScheduleHInventory() {
+            const map = buildSHStockMap();
+            
+            // 1. Master Ledger
+            const ledgerBody = document.getElementById('ledgerBody');
+            let lHtml = '';
+            const items = Object.values(map).sort((a,b) => a.name.localeCompare(b.name));
+            items.forEach(item => {
+                let status = '<span class="status-badge" style="background:#dcfce7;color:#15803d">In Stock</span>';
+                if (item.totalQty <= 0) status = '<span class="status-badge" style="background:#fee2e2;color:#b91c1c">Out of Stock</span>';
+                lHtml += `<tr>
+                    <td style="font-weight:600;">${item.name}</td>
+                    <td style="font-weight:700;color:#0f172a;">${item.totalQty}</td>
+                    <td>₹${item.metrics.totalMrp.toFixed(2)}</td>
+                    <td>${status}</td>
+                </tr>`;
+            });
+            ledgerBody.innerHTML = lHtml || '<tr><td colspan="4" style="text-align:center;">No Schedule H inventory found.</td></tr>';
+
+            // 2. Expiry Checker
+            const expiryBody = document.getElementById('expiryBody');
+            let eHtml = '';
+            const today = new Date();
+            let soonCount = 0;
+            items.forEach(item => {
+                Object.values(item.batches).forEach(b => {
+                    if (b.qty <= 0 || !b.exp) return;
+                    let expDate = new Date(b.exp);
+                    // if exp is just YYYY-MM, make it end of month
+                    if (b.exp.length === 7) {
+                        const parts = b.exp.split('-');
+                        expDate = new Date(parts[0], parts[1], 0);
+                    }
+                    const diffDays = (expDate - today) / (1000 * 60 * 60 * 24);
+                    let statusHtml = '<span class="status-badge" style="background:#dcfce7;color:#15803d">OK</span>';
+                    if (diffDays < 0) {
+                        statusHtml = '<span class="status-badge" style="background:#fee2e2;color:#b91c1c">Expired</span>';
+                    } else if (diffDays <= 90) {
+                        statusHtml = '<span class="status-badge" style="background:#fef3c7;color:#b45309">Expiring Soon</span>';
+                    }
+                    
+                    eHtml += `<tr>
+                        <td style="font-weight:600;">${item.name}</td>
+                        <td>${b.batchNo}</td>
+                        <td style="font-weight:700;">${b.qty}</td>
+                        <td>${b.exp}</td>
+                        <td>${statusHtml}</td>
+                    </tr>`;
+                });
+            });
+            expiryBody.innerHTML = eHtml || '<tr><td colspan="5" style="text-align:center;">No batches with expiry dates found.</td></tr>';
+
+            // 3. Dead Stock (No sales in 6 months, >0 qty)
+            const deadBody = document.getElementById('deadBody');
+            let dHtml = '';
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+            
+            items.forEach(item => {
+                if (item.totalQty <= 0) return;
+                const lastSoldDate = item.lastSold ? new Date(item.lastSold) : null;
+                // If never sold, or last sold > 6 months ago
+                if (!lastSoldDate || lastSoldDate < sixMonthsAgo) {
+                    let earliestExp = 'N/A';
+                    let minDate = Infinity;
+                    Object.values(item.batches).forEach(b => {
+                        if (b.qty > 0 && b.exp) {
+                            let ed = new Date(b.exp);
+                            if (ed < minDate) { minDate = ed; earliestExp = b.exp; }
+                        }
+                    });
+                    
+                    dHtml += `<tr>
+                        <td style="font-weight:600;">${item.name}</td>
+                        <td style="font-weight:700;color:#b91c1c;">${item.totalQty}</td>
+                        <td>${earliestExp}</td>
+                        <td>${item.lastSold || 'Never Sold'}</td>
+                    </tr>`;
+                }
+            });
+            deadBody.innerHTML = dHtml || '<tr><td colspan="4" style="text-align:center;">No dead stock found! Everything is moving.</td></tr>';
+        }
+
+        /* Adjust Stock Form Logic */
+        function populateAdjDropdowns() {
+            buildSHStockMap();
+            const adjMed = document.getElementById('adjMedicine');
+            adjMed.innerHTML = '<option value="">Select Medicine...</option>';
+            Object.values(shStockMap).sort((a,b)=>a.name.localeCompare(b.name)).forEach(item => {
+                adjMed.innerHTML += `<option value="${item.name}">${item.name} (Total: ${item.totalQty})</option>`;
+            });
+        }
+        
+        function onAdjMedicineChange() {
+            const medName = document.getElementById('adjMedicine').value;
+            const batchSel = document.getElementById('adjBatch');
+            batchSel.innerHTML = '<option value="">Select Batch...</option>';
+            if (!medName || !shStockMap[medName.toLowerCase()]) return;
+            const item = shStockMap[medName.toLowerCase()];
+            Object.values(item.batches).forEach(b => {
+                batchSel.innerHTML += `<option value="${b.batchNo}">${b.batchNo} (Qty: ${b.qty})</option>`;
+            });
+        }
+
+        function saveAdjustment() {
+            const med = document.getElementById('adjMedicine').value;
+            const batch = document.getElementById('adjBatch').value;
+            const qty = parseFloat(document.getElementById('adjQty').value);
+            
+            if (!med || !batch || isNaN(qty)) {
+                showToast('Please fill all fields for adjustment', 'error');
+                return;
+            }
+            
+            const log = JSON.parse(localStorage.getItem('mm_inventory_adjust_log') || '[]');
+            const entry = {
+                id: 'adj_' + Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                medicineName: med,
+                batchNo: batch,
+                deltaQty: qty,
+                reason: 'Schedule H Manual Adjustment'
+            };
+            log.push(entry);
+            localStorage.setItem('mm_inventory_adjust_log', JSON.stringify(log));
+            showToast('Stock Adjusted Successfully', 'success');
+            
+            document.getElementById('adjQty').value = '';
+            populateAdjDropdowns(); // refresh dropdowns
+            buildSHStockMap(); // rebuild global map
+        }
+
+        /* Promise Orders Logic */
+        function renderPromiseOrders() {
+            const poBody = document.getElementById('promiseBody');
+            const shDrugs = JSON.parse(localStorage.getItem('mm_schedule_h_drugs') || '[]');
+            const shDrugSet = new Set(shDrugs.map(d => d.trim().toLowerCase()));
+            const orders = JSON.parse(localStorage.getItem('mm_promise_orders') || '[]');
+            
+            let pHtml = '';
+            orders.forEach(o => {
+                if (!o.medicineName || !shDrugSet.has(o.medicineName.trim().toLowerCase())) return;
+                
+                let sHtml = '';
+                if (o.status === 'pending') sHtml = '<span class="status-badge" style="background:#fef3c7;color:#b45309">Pending</span>';
+                else if (o.status === 'arrived') sHtml = '<span class="status-badge" style="background:#dcfce7;color:#15803d">Arrived</span>';
+                else if (o.status === 'completed') sHtml = '<span class="status-badge" style="background:#e0f2fe;color:#0369a1">Completed</span>';
+                
+                pHtml += `<tr>
+                    <td style="font-weight:600;">${o.customerName || 'Walk-in'}</td>
+                    <td>${o.medicineName}</td>
+                    <td style="font-weight:700;">${o.qty}</td>
+                    <td>${o.promiseDate || 'N/A'}</td>
+                    <td>${sHtml}</td>
+                </tr>`;
+            });
+            poBody.innerHTML = pHtml || '<tr><td colspan="5" style="text-align:center;">No promise orders for Schedule H drugs.</td></tr>';
+        }
+
+        // SW Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
