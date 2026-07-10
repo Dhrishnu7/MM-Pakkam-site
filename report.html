@@ -1592,6 +1592,11 @@
                 });
             }
 
+            // Note: Schedule H "IN" stock received is mirrored into mm_purchases at
+            // save time (see schedule-h.html mirrorInEntryToPurchase), so it already
+            // flows in via mappedPurchases below — no separate register read needed
+            // here (doing so would double-count). Schedule H sales come in via
+            // mm_sales, and the "Schedule H Drugs" report filter matches on product.
             allData = [...mappedSales, ...mappedPurchases].sort((a,b) => {
                 if(a.date > b.date) return -1;
                 if(a.date < b.date) return 1;
