@@ -71,6 +71,27 @@ const _AUTH_SUPABASE_KEY = 'sb_publishable_sY9QwFEMckky9KDJoc1O_w_zN7qY0mo';
 const MM_SESSION_KEY  = 'mm_auth_session';
 const MM_REMEMBER_KEY = 'mm_auth_remember';
 
+// Every localStorage key that caches a TENANT's business data. On a shared
+// computer these must be wiped when switching accounts, or one shop briefly
+// sees another shop's cached data before the cloud sync overwrites it.
+// Keep this list complete — it is the single source of truth used by both
+// mmClearSession() (logout) and the cross-account guard in mmLogin() (login).
+const MM_DATA_KEYS = [
+    'mm_purchases', 'mm_sales', 'mm_customers', 'mm_doctors',
+    'mm_medicine_list', 'mm_medicines', 'mm_stock', 'mm_bills',
+    'mm_bill_counter', 'mm_inventory_adjust_log',
+    'mm_pending_purchases', 'mm_pending_sales', 'report_bin',
+    'mm_schedule_h_register', 'mm_schedule_h_drugs'
+];
+// Marks which tenant the cached MM_DATA_KEYS currently belong to.
+const MM_DATA_OWNER_KEY = 'mm_data_owner';
+
+// Wipe all cached tenant business data (used on logout and account switch).
+function _mmClearBusinessData() {
+    MM_DATA_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch {} });
+    try { localStorage.removeItem(MM_DATA_OWNER_KEY); } catch {}
+}
+
 // Lazy Supabase client — returns existing _supabase global or creates a new one
 function _authDB() {
     if (typeof _supabase !== 'undefined' && _supabase) return _supabase;
@@ -101,11 +122,17 @@ function _localSaveUsers(users) {
     try { localStorage.setItem('mm_auth_users', JSON.stringify(users)); } catch {}
 }
 
+// The password-hash column is intentionally NEVER selected in the browser — it
+// is locked to the server (the mm-login Edge Function) only. Downloading the
+// hash list into the browser is exactly what allowed it to be scraped, so no
+// client query may request it. All client reads of mm_users use this list.
+const MM_USER_COLS = 'id,username,role,tenant_id,createdAt,approval_status,payment_status,active_session_token,auth_uid';
+
 async function mmGetUsers() {
     const db = _authDB();
     if (db) {
         try {
-            const { data, error } = await db.from('mm_users').select('*');
+            const { data, error } = await db.from('mm_users').select(MM_USER_COLS);
             if (!error && data) {
                 // ⚠️ IMPORTANT: Supabase is the ONLY source of truth when reachable.
                 // DO NOT merge local users — deleted accounts must stay deleted.
@@ -128,72 +155,23 @@ async function mmHasUsers() {
 }
 
 // Upsert a single user record to Supabase (and localStorage as backup)
-async function _saveUser(userObj) {
-    // Build a stable composite id so two stores can have the same username
-    if (!userObj.id) {
-        const tid = userObj.tenant_id || userObj.username;
-        userObj.id = tid + ':' + userObj.username;
-    }
-    const db = _authDB();
-    if (db) {
-        try {
-            // Strategy 1: upsert on composite 'id' (preferred)
-            const { error: e1 } = await db.from('mm_users')
-                .upsert({ ...userObj }, { onConflict: 'id' });
-            if (!e1) {
-                _syncLocal(userObj);
-                return true;
-            }
-            console.warn('[auth] upsert(id) failed:', e1.message, '— trying upsert(username)');
+// NOTE: _saveUser()/_syncLocal() used to live here. They upserted whole mm_users
+// rows straight from the browser, which is exactly the write right that let
+// anyone rewrite anyone's password. Every caller now goes through mmAdminCall()
+// and the mm-admin Edge Function; see sql/03_lockdown.sql.
 
-            // Strategy 2: upsert on 'username' (old DB schema)
-            const { error: e2 } = await db.from('mm_users')
-                .upsert({ ...userObj }, { onConflict: 'username' });
-            if (!e2) {
-                _syncLocal(userObj);
-                return true;
-            }
-            console.warn('[auth] upsert(username) failed:', e2.message, '— trying insert');
-
-            // Strategy 3: plain insert (handles case where row doesn't exist yet)
-            const { error: e3 } = await db.from('mm_users').insert({ ...userObj });
-            if (!e3) {
-                _syncLocal(userObj);
-                return true;
-            }
-            console.warn('[auth] insert failed:', e3.message, '— saving to localStorage only');
-        } catch (e) {
-            console.warn('[auth] Supabase save error:', e.message);
-        }
-    }
-    // localStorage fallback
-    _syncLocal(userObj);
-    return false;
-}
-
-function _syncLocal(userObj) {
-    const local = _localGetUsers();
-    const idx = local.findIndex(u => u.id === userObj.id ||
-        u.username.toLowerCase() === userObj.username.toLowerCase() &&
-        (u.tenant_id || u.username) === (userObj.tenant_id || userObj.username));
-    if (idx >= 0) local[idx] = userObj; else local.push(userObj);
-    _localSaveUsers(local);
-}
-
-async function _deleteUser(username, tenantId) {
-    // Build the stable id to target the exact record
+async function _deleteUser(username, tenantId, allowSelf = false) {
     const tid = tenantId || username;
     const id  = tid + ':' + username;
-    const db = _authDB();
-    if (db) {
-        try {
-            // Try to delete by id first (new format)
-            await db.from('mm_users').delete().eq('id', id);
-            // Also delete any old-format record matching just username (migration cleanup)
-            await db.from('mm_users').delete().eq('username', username).eq('tenant_id', tid);
-        } catch {}
-    }
+    // Deletes go through mm-admin: browsers have no DELETE right on mm_users.
+    // The server resolves the target within the caller's own store and removes
+    // the linked Supabase Auth user too (the old client path orphaned those).
+    const res = await mmAdminCall('delete_user', { username, allowSelf });
+    // Only forget the row locally if the server actually deleted it — otherwise
+    // it vanishes from the list and reappears on the next reload.
+    if (!res.ok) return { success: false, message: res.message };
     _localSaveUsers(_localGetUsers().filter(u => u.id !== id && u.username.toLowerCase() !== username.toLowerCase()));
+    return { success: true };
 }
 
 /* ─────────────────────────────────────────
@@ -233,12 +211,7 @@ function mmClearSession() {
     localStorage.removeItem(MM_REMEMBER_KEY);
 
     // Clear all offline business data to prevent data leakage across accounts
-    const keysToClear = [
-        'mm_purchases', 'mm_sales', 'mm_customers', 'mm_doctors', 
-        'mm_pending_purchases', 'mm_pending_sales', 'report_bin', 
-        'mm_schedule_h_register', 'mm_schedule_h_drugs', 'mm_medicines'
-    ];
-    keysToClear.forEach(k => localStorage.removeItem(k));
+    _mmClearBusinessData();
 }
 
 /* ─────────────────────────────────────────
@@ -264,6 +237,11 @@ async function mmRequireAuth() {
     // Validate the token on page load
     await _validateSession(session);
     
+    // Phase-3 safety net: a device still on a legacy local session (no Supabase Auth
+    // session) would see no data once RLS is on. Detect that and ask for a one-time
+    // re-login instead. Stop here if it redirected.
+    if (await _mmEnsureSecureSession()) return null;
+
     // Auto-migrate legacy data in background
     _autoMigrateLocalDataToSupabase(session);
 
@@ -321,7 +299,7 @@ async function _validateSession(session) {
         if (!db) return; // No Supabase — offline, don't log out
 
         // Fetch directly from Supabase (not localStorage fallback) to get true DB state
-        const { data: users, error } = await db.from('mm_users').select('*');
+        const { data: users, error } = await db.from('mm_users').select(MM_USER_COLS);
         if (error || !users) return; // Supabase error — don't accidentally log out
 
         // If Supabase returned data but user is NOT found → account was DELETED
@@ -334,7 +312,7 @@ async function _validateSession(session) {
         if (!dbUser) {
             // Account deleted from admin portal — force logout immediately
             mmClearSession();
-            alert('⚠️ Your account has been removed. You have been signed out.');
+            await mmAlert('⚠️ Your account has been removed. You have been signed out.');
             window.location.replace('login.html');
             return;
         }
@@ -342,7 +320,7 @@ async function _validateSession(session) {
         // Account exists but was rejected after login
         if (dbUser.approval_status === 'rejected') {
             mmClearSession();
-            alert('❌ Your account has been rejected by the administrator. You have been signed out.');
+            await mmAlert('❌ Your account has been rejected by the administrator. You have been signed out.');
             window.location.replace('login.html');
             return;
         }
@@ -350,11 +328,45 @@ async function _validateSession(session) {
         // Another device forcefully logged in — token mismatch
         if (dbUser.active_session_token && (!session.token || dbUser.active_session_token !== session.token)) {
             mmClearSession();
-            alert('📱 You have been logged out because this account was signed in from another device.');
+            await mmAlert('📱 You have been logged out because this account was signed in from another device.');
             window.location.replace('login.html');
         }
     } catch(e) {
         // Ignore network errors — never log out offline users accidentally
+    }
+}
+
+/**
+ * Phase-3 safety net for tenant isolation (RLS).
+ * Once RLS is enabled, any request WITHOUT a real Supabase Auth session sees no
+ * data. A device still on a pre-upgrade "legacy" local session has no such session,
+ * so it would show an empty app. We detect that and ask the user to sign in once
+ * (which re-runs mmLogin → mm-login and mints a real session).
+ *
+ * Safeguards:
+ *  - ONLINE only — offline users are never disturbed (offline billing must keep working).
+ *  - At most ONCE per tab — if mm-login is briefly unreachable we let them in (degraded)
+ *    instead of bouncing them in a redirect loop.
+ * Returns true if it triggered a redirect to re-login (caller should stop).
+ */
+async function _mmEnsureSecureSession() {
+    try {
+        if (!navigator.onLine) return false;            // never disrupt offline use
+        const db = _authDB();
+        if (!db || !db.auth || !db.auth.getSession) return false;
+        const { data } = await db.auth.getSession();
+        if (data && data.session) {                     // already have a real session — good
+            sessionStorage.removeItem('mm_reauth_prompted');
+            return false;
+        }
+        if (sessionStorage.getItem('mm_reauth_prompted')) return false; // avoid loops
+        sessionStorage.setItem('mm_reauth_prompted', '1');
+        await mmAlert('🔒 Security upgrade — please sign in again to keep your shop\'s data protected. Your data is safe; this is a one-time step.');
+        mmClearSession();
+        window.location.replace('login.html');
+        return true;
+    } catch (e) {
+        return false;                                   // never block the app on this check
     }
 }
 
@@ -380,10 +392,12 @@ function mmCurrentUser() {
 }
 
 /** Login. Returns { success, message, forceRequired } */
-// Establishes a real Supabase Auth session via the mm-login Edge Function so
-// database requests carry a verified identity (required for tenant-isolation RLS).
-// Best-effort & additive: any failure is swallowed and the legacy login still works.
-async function _mmEstablishAuthSession(username, password) {
+// Calls the mm-login Edge Function, which verifies the password on the SERVER
+// (the browser never downloads the password-hash list). Returns:
+//   { ok:true, data, access_token, refresh_token }  on success
+//   { ok:false, status, message }                   on a definitive rejection
+//   null                                            on network failure / offline
+async function _mmServerLogin(username, password) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
     try {
@@ -397,103 +411,152 @@ async function _mmEstablishAuthSession(username, password) {
             body: JSON.stringify({ username, password }),
             signal: controller.signal,
         });
-        if (!res.ok) return false;
-        const data = await res.json();
-        if (data && data.access_token && data.refresh_token) {
-            const client = _authDB();
-            if (client && client.auth && client.auth.setSession) {
-                await client.auth.setSession({
-                    access_token: data.access_token,
-                    refresh_token: data.refresh_token,
-                });
-            }
-            return true;
+        let body = null;
+        try { body = await res.json(); } catch (_) {}
+        if (res.ok && body && body.access_token && body.refresh_token) {
+            return { ok: true, status: res.status, data: body,
+                     access_token: body.access_token, refresh_token: body.refresh_token };
         }
-        return false;
+        return { ok: false, status: res.status, message: (body && body.error) || null };
+    } catch (e) {
+        return null; // aborted / offline / unreachable
     } finally {
         clearTimeout(timer);
     }
 }
 
+// Calls the mm-admin Edge Function, which holds the service role and is the
+// only thing allowed to write password hashes / approve accounts / touch reset
+// PINs. Sends the user's Auth token when there is one, so the server can decide
+// what the caller is permitted to do — the browser never asserts its own tenant.
+// Returns { ok:true, data } | { ok:false, status, message }.
+async function mmAdminCall(action, payload = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try {
+        let bearer = _AUTH_SUPABASE_KEY;
+        try {
+            const client = _authDB();
+            const { data } = await client.auth.getSession();
+            if (data && data.session && data.session.access_token) bearer = data.session.access_token;
+        } catch (_) {}
+
+        const res = await fetch(`${_AUTH_SUPABASE_URL}/functions/v1/mm-admin`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': _AUTH_SUPABASE_KEY,
+                'Authorization': `Bearer ${bearer}`,
+            },
+            body: JSON.stringify({ action, ...payload }),
+            signal: controller.signal,
+        });
+        let body = null;
+        try { body = await res.json(); } catch (_) {}
+        if (res.ok && body && !body.error) return { ok: true, status: res.status, data: body };
+        return { ok: false, status: res.status, message: (body && body.error) || 'Server error.' };
+    } catch (e) {
+        return { ok: false, status: 0, message: 'You appear to be offline. Please try again when connected.' };
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+// Switch the shared Supabase client to the authenticated (RLS) session.
+async function _mmApplyAuthSession(access_token, refresh_token) {
+    try {
+        const client = _authDB();
+        if (client && client.auth && client.auth.setSession) {
+            await client.auth.setSession({ access_token, refresh_token });
+            return true;
+        }
+    } catch (e) { console.warn('[auth] setSession failed:', e); }
+    return false;
+}
+
 async function mmLogin(username, password, remember, force = false) {
     try {
-        const hash = await mmHashPassword(password);
-        
-        // --- STEP 1: Always check Supabase first (source of truth) ---
         const db = _authDB();
-        let user = null;
-        let supabaseReachable = false;
+        const uname = String(username).trim();
 
-        if (db) {
-            try {
-                const { data, error } = await db.from('mm_users').select('*');
-                if (!error && data) {
-                    supabaseReachable = true;
-                    // Update local cache with latest DB state
-                    _localSaveUsers(data);
-                    user = data.find(u =>
-                        u.username.toLowerCase() === username.trim().toLowerCase() &&
-                        u.passwordHash === hash
-                    );
-                    // If Supabase is reachable but user not found → credentials invalid or account deleted
-                    if (!user) {
-                        return { success: false, message: 'Invalid username or password.' };
-                    }
-                }
-            } catch(e) {
-                console.warn('[auth] Supabase unreachable during login, falling back to localStorage');
+        // --- STEP 1: Verify the password on the secure SERVER (mm-login). ---
+        // The browser no longer downloads the password-hash list; the Edge
+        // Function checks the password and returns a real Supabase Auth session.
+        const server = navigator.onLine ? await _mmServerLogin(uname, password) : null;
+        if (server === null) {
+            return { success: false, message: navigator.onLine
+                ? 'Sign-in service is temporarily unavailable. Please try again in a moment.'
+                : '📶 You need an internet connection to sign in.' };
+        }
+        if (!server.ok) {
+            // mm-login already distinguishes invalid / pending / rejected.
+            return { success: false, message: server.message || 'Invalid username or password.' };
+        }
+        const info   = server.data || {};
+        const infoUsername = info.username || uname;
+        const tenant = info.tenant || infoUsername;
+
+        // --- Cross-account guard (shared computer). If this browser still holds
+        // cached business data belonging to a DIFFERENT tenant — e.g. the previous
+        // user closed the tab without logging out, or was kicked by single-device
+        // lockout — wipe it now so the incoming user never sees the other shop's
+        // medicines/customers before the cloud sync runs. Only fires when a marker
+        // exists and differs, so an existing user's own cached data is preserved. ---
+        try {
+            const cachedOwner = localStorage.getItem(MM_DATA_OWNER_KEY);
+            if (cachedOwner && cachedOwner !== tenant) _mmClearBusinessData();
+        } catch (e) {}
+
+        // --- STEP 2: Single-device lockout. Read/claim the device token with the
+        // publishable key (non-secret columns stay readable; the password column
+        // is server-only). Done BEFORE switching to the auth session so the write
+        // uses the role that already has update rights on mm_users. ---
+        let dbRow = null;
+        try {
+            const { data } = await db.from('mm_users').select(MM_USER_COLS).ilike('username', infoUsername);
+            if (data && data.length) {
+                dbRow = data.find(u =>
+                    (u.username || '').toLowerCase() === infoUsername.toLowerCase() &&
+                    ((u.tenant_id || u.username) === tenant)
+                ) || null;
             }
-        }
+        } catch (e) { /* non-fatal — single-device check just degrades */ }
 
-        // --- STEP 2: Fallback to localStorage only if Supabase is unreachable (offline) ---
-        if (!supabaseReachable) {
-            const localUsers = _localGetUsers();
-            user = localUsers.find(u =>
-                u.username.toLowerCase() === username.trim().toLowerCase() &&
-                u.passwordHash === hash
-            );
-            if (!user) return { success: false, message: 'Invalid username or password.' };
-        }
-
-        // Check approval status
-        if (user.approval_status === 'pending') {
-            return { success: false, message: '⏳ Your account is pending approval. Please wait for admin confirmation before signing in.' };
-        }
-        if (user.approval_status === 'rejected') {
-            return { success: false, message: '❌ Your account request was rejected. Please contact the administrator.' };
-        }
-        // Ensure tenant_id is always set (migrate old records on the fly)
-        if (!user.tenant_id) user.tenant_id = user.username;
-
-
-        // --- Single Device Lockout Logic ---
-        if (user.active_session_token && !force) {
-            // Check if the token belongs to the CURRENT device. If yes, allow.
+        if (dbRow && dbRow.active_session_token && !force) {
             const existingSession = mmGetSession();
-            if (!existingSession || existingSession.token !== user.active_session_token) {
-                return { 
-                    success: false, 
-                    message: 'Account already logged in on another device.',
-                    forceRequired: true 
-                };
+            if (!existingSession || existingSession.token !== dbRow.active_session_token) {
+                return { success: false, message: 'Account already logged in on another device.', forceRequired: true };
             }
         }
 
-        // Generate new session token and save to DB
         const newToken = Date.now().toString(36) + Math.random().toString(36).substr(2);
-        user.active_session_token = newToken;
-        await _saveUser(user);
+        try {
+            const targetId = (dbRow && dbRow.id) ? dbRow.id : (tenant + ':' + infoUsername);
+            await db.from('mm_users').update({ active_session_token: newToken }).eq('id', targetId);
+        } catch (e) { console.warn('[auth] could not record device token:', e); }
 
-        user.token = newToken; // attach token to session
+        // --- STEP 3: Switch the client to the authenticated (RLS) session. ---
+        await _mmApplyAuthSession(server.access_token, server.refresh_token);
+
+        // Build + persist the session (a password hash is never stored anywhere).
+        const user = {
+            id:                   dbRow ? dbRow.id : (tenant + ':' + infoUsername),
+            username:             infoUsername,
+            role:                 info.role || (dbRow && dbRow.role) || 'owner',
+            tenant_id:            tenant,
+            approval_status:      info.approval_status || (dbRow && dbRow.approval_status) || 'approved',
+            payment_status:       info.payment_status  || (dbRow && dbRow.payment_status)  || null,
+            auth_uid:             dbRow ? dbRow.auth_uid : undefined,
+            active_session_token: newToken,
+            token:                newToken,
+        };
         mmSaveSession(user, remember);
-
-        // ── Secure tenant session (Supabase Auth). Additive; never blocks login. ──
-        try { await _mmEstablishAuthSession(username, password); }
-        catch (e) { console.warn('[auth] secure session not established (using legacy):', e); }
+        // Stamp who the cached business data now belongs to (see MM_DATA_OWNER_KEY).
+        try { localStorage.setItem(MM_DATA_OWNER_KEY, tenant); } catch (e) {}
 
         // Auto-migrate legacy data in background without blocking login
         _autoMigrateLocalDataToSupabase(user);
-        
+
         return { success: true, user };
     } catch (err) {
         console.error('[auth] mmLogin error:', err);
@@ -505,13 +568,17 @@ async function mmLogin(username, password, remember, force = false) {
 async function mmLogout() {
     const session = mmGetSession();
     if (session) {
-        // Clear active session from DB
-        const users = await mmGetUsers();
-        const user = users.find(u => u.username === session.username && u.tenant_id === session.tenant_id);
-        if (user && user.active_session_token === session.token) {
-            user.active_session_token = null;
-            await _saveUser(user);
-        }
+        // Release the single-device lock. This targets active_session_token on
+        // its own: it's the only mm_users column browsers may still write, so a
+        // whole-row upsert here would be denied.
+        try {
+            const users = await mmGetUsers();
+            const user = users.find(u => u.username === session.username && u.tenant_id === session.tenant_id);
+            if (user && user.active_session_token === session.token) {
+                const db = _authDB();
+                if (db) await db.from('mm_users').update({ active_session_token: null }).eq('id', user.id);
+            }
+        } catch (e) { console.warn('[auth] could not release session lock:', e); }
     }
     // Also end the Supabase Auth session (best-effort).
     try { const c = _authDB(); if (c && c.auth && c.auth.signOut) await c.auth.signOut(); } catch (e) {}
@@ -537,60 +604,35 @@ async function mmGetTenantUsers() {
 
 /** Create a new store owner account. Every account is fully isolated. Returns { success, message } */
 async function mmCreateOwner(username, password, shopInfo = null) {
-    // Owner usernames must be globally unique (needed for unambiguous login)
+    // Every username is globally unique, workers included — login, password
+    // reset and the derived Auth identity all resolve by bare username and
+    // cannot tell two same-named users apart. This check is only for fast
+    // feedback; the server and a unique index are what actually enforce it.
     const users = await mmGetUsers();
     if (users.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
-        return { success: false, message: 'This username is already taken. Please choose a different one.' };
+        return { success: false, message: 'That username is already taken. Usernames must be unique across all shops, so please pick a different one.' };
     }
-    const hash = await mmHashPassword(password);
-    // tenant_id for an owner = their own username (they ARE the tenant root)
-    // approval_status = 'pending' until super admin approves
-    const user = { username: username.trim(), passwordHash: hash, role: 'owner', tenant_id: username.trim(), createdAt: Date.now(), approval_status: 'pending', payment_status: 'unpaid' };
-    await _saveUser(user);
-
-    if (shopInfo) {
-        const db = _authDB();
-        if (db) {
-            await db.from('shop_profiles').upsert({
-                user_id: username.trim(),
-                shop_name: shopInfo.shopName,
-                phone: shopInfo.phone,
-                address_line1: shopInfo.addressLine1 || '',
-                address_line2: shopInfo.addressLine2 || '',
-                dl_no: shopInfo.dlNo || '',
-                gstin: shopInfo.gstin || ''
-            });
-        }
-    }
-
+    // The server creates the account. It always forces role=owner,
+    // tenant_id=username and approval_status=pending, so a crafted request
+    // can't register itself into somebody else's shop or self-approve.
+    const res = await mmAdminCall('signup', { username: username.trim(), password, shopInfo });
+    if (!res.ok) return { success: false, message: res.message };
     return { success: true, pending: true };
 }
 
 /** Add a worker to the current owner's store. Username unique within this store only. */
 async function mmAddWorker(username, password) {
-    const session  = mmGetSession();
-    const tenantId = session ? (session.tenant_id || session.username) : null;
-    // Only check uniqueness within THIS store's users, not globally
-    const tenantUsers = await mmGetTenantUsers();
-    if (tenantUsers.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
-        return { success: false, message: 'This username already exists in your store.' };
-    }
-    const hash = await mmHashPassword(password);
-    await _saveUser({ username: username.trim(), passwordHash: hash, role: 'worker', tenant_id: tenantId, createdAt: Date.now() });
+    // Tenant scoping and the uniqueness check both happen on the server, which
+    // takes the tenant from memberships rather than from anything we send.
+    const res = await mmAdminCall('create_user', { username: username.trim(), password, role: 'worker' });
+    if (!res.ok) return { success: false, message: res.message };
     return { success: true };
 }
 
 /** Add an additional owner-role user within the current store. */
 async function mmAddOwner(username, password) {
-    const session  = mmGetSession();
-    const tenantId = session ? (session.tenant_id || session.username) : null;
-    // Check uniqueness within THIS store only
-    const tenantUsers = await mmGetTenantUsers();
-    if (tenantUsers.find(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
-        return { success: false, message: 'This username already exists in your store.' };
-    }
-    const hash = await mmHashPassword(password);
-    await _saveUser({ username: username.trim(), passwordHash: hash, role: 'owner', tenant_id: tenantId, createdAt: Date.now() });
+    const res = await mmAdminCall('create_user', { username: username.trim(), password, role: 'owner' });
+    if (!res.ok) return { success: false, message: res.message };
     return { success: true };
 }
 
@@ -598,7 +640,7 @@ async function mmAddOwner(username, password) {
 async function mmDeleteUser(username) {
     const session  = mmGetSession();
     const tenantId = session ? (session.tenant_id || session.username) : username;
-    await _deleteUser(username, tenantId);
+    return await _deleteUser(username, tenantId);
 }
 
 /**
@@ -646,7 +688,8 @@ async function mmDeleteAccountPermanently() {
             u.username  === tenantId  // owner record (old format)
         );
         for (const u of tenantUsers) {
-            await _deleteUser(u.username, tenantId);
+            // allowSelf: this flow intentionally removes the owner's own record.
+            await _deleteUser(u.username, tenantId, true);
         }
 
         // ── 3. Clear all localStorage keys for this tenant ──
@@ -668,36 +711,29 @@ async function mmDeleteAccountPermanently() {
 
 /** Reset a user's password. Returns { success, message } */
 async function mmResetPassword(username, newPassword) {
-    const users = await mmGetUsers();
-    const user  = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-    if (!user) return { success: false, message: 'User not found.' };
-    user.passwordHash = await mmHashPassword(newPassword);
-    await _saveUser(user);
+    // Password writes are server-only now: browsers have no UPDATE right on
+    // mm_users.passwordHash. The server checks that the caller is the user
+    // themselves or an owner of the same tenant.
+    const res = await mmAdminCall('change_password', { username, newPassword });
+    if (!res.ok) return { success: false, message: res.message };
     return { success: true };
 }
 
 /** Rename a user. Returns { success, message } */
 async function mmRenameUser(oldUsername, newUsername) {
-    const users  = await mmGetUsers();
     const session = mmGetSession();
-    const tenantId = session ? (session.tenant_id || session.username) : null;
     const trimmed = newUsername.trim();
     if (trimmed.length < 3) return { success: false, message: 'Username must be at least 3 characters.' };
-    // Check uniqueness within the same tenant
-    const tenantUsers = await mmGetTenantUsers();
-    if (tenantUsers.find(u => u.username.toLowerCase() === trimmed.toLowerCase() &&
-                              u.username.toLowerCase() !== oldUsername.toLowerCase())) {
-        return { success: false, message: 'Username already taken in this store.' };
-    }
-    const user = users.find(u => u.username.toLowerCase() === oldUsername.toLowerCase() &&
-                                  (u.tenant_id === tenantId || u.username === tenantId));
-    if (!user) return { success: false, message: 'User not found.' };
 
-    // Delete old record (by old id), save with new name
-    await _deleteUser(oldUsername, tenantId);
-    user.username = trimmed;
-    user.id = (user.tenant_id || tenantId) + ':' + trimmed;  // recalc id
-    await _saveUser(user);
+    // Renaming rewrites the row's username + id, which browsers may no longer do
+    // (that write right is what let anyone rewrite anyone's account). The server
+    // renames in place, so the password hash survives untouched.
+    const res = await mmAdminCall('rename_user', { oldUsername, newUsername: trimmed });
+    if (!res.ok) return { success: false, message: res.message };
+
+    const tenantId = session ? (session.tenant_id || session.username) : null;
+    const oldId = (tenantId || oldUsername) + ':' + oldUsername;
+    _localSaveUsers(_localGetUsers().filter(u => u.id !== oldId));
 
     // Update session if renaming the currently logged-in user
     if (session && session.username.toLowerCase() === oldUsername.toLowerCase()) {
