@@ -605,12 +605,16 @@
         }
         .qa-cancel-btn:hover { background: #f1f5f9; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="js/modal.js"></script>
     <script src="js/auth.js?v=3"></script>
+    <link rel="preconnect" href="https://jwyyjdwlbgjijmwillow.supabase.co" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/keyboard-nav.js"></script>
     <script src="js/thermal-print.js"></script>
+    <!-- xlsx (Excel import) and html2canvas (bill softcopy) are heavy and only
+         needed on demand — they're lazy-loaded via mmLoadScript() when used, so
+         they never block page load. -->
 </head>
 <body>
     <script>
@@ -829,6 +833,41 @@
         }
 
         /* -- Build datalist options: ONLY unique base medicine names (no batch suffixes) -- */
+        // Auto-close any open promise order this bill fulfils, so staff don't have
+        // to remember the Inventory page's "Convert to Sale" button. Matches on
+        // customer (phone if known, else name) + medicine name. Fire-and-forget:
+        // it updates the cloud status; the Inventory promise tab also reconciles
+        // on load, so nothing is lost if this runs slowly or the user navigates away.
+        async function autoFulfillPromiseOrders(bill) {
+            if (typeof dbGetPromiseOrders !== 'function' || typeof dbUpdatePromiseOrderStatus !== 'function') return;
+            const custName = (bill.customerName || '').trim().toLowerCase();
+            if (!custName) return; // walk-in with no name → nothing to match against
+            const soldProducts = (bill.medicines || []).map(m => (m.product || '').trim().toLowerCase()).filter(Boolean);
+            if (!soldProducts.length) return;
+            // Bills don't store a phone — look this customer's up for a stronger match.
+            let custPhone = '';
+            try {
+                const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+                const c = customers.find(cc => (cc.name || '').trim().toLowerCase() === custName);
+                if (c) custPhone = (c.phone || '').replace(/\D/g, '');
+            } catch (e) {}
+            try {
+                const open = await dbGetPromiseOrders(['pending', 'ordered', 'arrived']);
+                for (const o of (open || [])) {
+                    const oName  = (o.customer_name  || '').trim().toLowerCase();
+                    const oPhone = (o.customer_phone || '').replace(/\D/g, '');
+                    const custMatch = (oPhone && custPhone && oPhone === custPhone) || (oName && oName === custName);
+                    if (!custMatch) continue;
+                    const med = (o.medicine_name || '').trim().toLowerCase();
+                    if (med.length < 3) continue; // too short to match safely
+                    const medMatch = soldProducts.some(p => p === med || p.includes(med) || med.includes(p));
+                    if (!medMatch) continue;
+                    try { await dbUpdatePromiseOrderStatus(o.id, 'fulfilled'); }
+                    catch (e) { console.warn('promise auto-fulfill failed:', e); }
+                }
+            } catch (e) { console.warn('autoFulfillPromiseOrders error:', e); }
+        }
+
         function getMedicineOptions() {
             const medList   = JSON.parse(localStorage.getItem('mm_medicine_list') || '[]');
             const purchases = JSON.parse(localStorage.getItem('mm_purchases')     || '[]');
@@ -931,7 +970,7 @@
 
             // Clear batch dropdown and dependent fields
             batchSelect.innerHTML = '<option value="">— Select Batch —</option>';
-            ['exp_','pack_','mrp_','rate_','gst_','stock_','total_'].forEach(pfx => {
+            ['exp_','pack_','hsn_','mrp_','rate_','gst_','stock_','total_'].forEach(pfx => {
                 const el = document.getElementById(pfx + id);
                 if (el) el.value = '';
             });
@@ -1058,6 +1097,10 @@
             const pExp = pExpRaw.length >= 7 ? pExpRaw.substring(0, 7) : pExpRaw;
             const pPack = match.pack || 1;
             const pGST  = match.gst  || 0;
+            const pHSN  = match.hsn  || match.hsn_code || '';
+
+            const hsnEl      = document.getElementById('hsn_' + id);
+            if (hsnEl) hsnEl.value = pHSN;
 
             const expEl      = document.getElementById('exp_' + id);
             const packEl     = document.getElementById('pack_' + id);
@@ -1217,6 +1260,7 @@
                 <td><select class="t-input" id="batch_${id}" style="min-width:210px; max-width:210px; text-overflow: ellipsis;" onchange="selectBatch(${id})"><option value="">— Select Batch —</option></select></td>
                 <td><input class="t-input" id="exp_${id}"   type="month" style="min-width:120px;"></td>
                 <input type="hidden" id="pack_${id}">
+                <input type="hidden" id="hsn_${id}">
                 <td><input class="t-input" id="stock_${id}" type="number" readonly placeholder="0" style="min-width:60px; color:#059669; font-weight:bold; cursor:pointer;" title="Tap to see how this number was calculated" onclick="showStockBreakdown(${id})"></td>
                 <td><input class="t-input" id="qty_${id}"   type="number" placeholder="0" min="0" style="min-width:60px;"
                     oninput="checkStockOnQtyChange(${id}); calcRowTotal(${id})"></td>
@@ -1368,8 +1412,9 @@
                 const gst      = parseFloat(document.getElementById('gst_'      + rid)?.value) || 0;
                 const discount = parseFloat(document.getElementById('discount_' + rid)?.value) || 0;
                 const total    = parseFloat(document.getElementById('total_'    + rid)?.value) || 0;
+                const hsn      = (document.getElementById('hsn_'      + rid)?.value || '').trim();
                 if (product && qty > 0) {
-                    medicines.push({ product, batch, exp, pack, qty, mrp, rate, gst, discount, total });
+                    medicines.push({ product, batch, exp, pack, qty, mrp, rate, gst, discount, total, hsn });
                 }
             });
             return medicines;
@@ -1497,6 +1542,9 @@
                 }
             } catch(shErr) { console.warn('[SH] Auto-log error:', shErr); }
 
+            // Auto-close any promise order this bill fulfils (no manual "Convert to Sale" needed).
+            autoFulfillPromiseOrders(bill);
+
             // Update Customer Balance if Credit (localStorage + Supabase)
             if (paymentMode === 'credit' && customerName) {
                 const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
@@ -1597,6 +1645,92 @@
             if (newId) setTimeout(() => document.getElementById('product_' + newId)?.focus(), 50);
         };
 
+        /* ── Extra Sales shortcuts (on top of the shared keyboard-nav.js ones) ── */
+        document.addEventListener('keydown', function (e) {
+            // F1 → open the shortcuts cheat-sheet
+            if (e.key === 'F1') { e.preventDefault(); toggleShortcutsHelp(true); return; }
+            // Ctrl+Enter → save the bill
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                const btn = document.querySelector('button[type="submit"]') || document.getElementById('saveBtn');
+                if (btn && !btn.disabled) btn.click();
+                return;
+            }
+            if (!e.altKey) return;                 // everything below is an Alt shortcut
+            const k = (e.key || '').toLowerCase();
+            // Alt+C → jump straight to the Customer field
+            if (k === 'c') {
+                const el = document.getElementById('customerName');
+                if (el) { e.preventDefault(); el.focus(); if (el.select) el.select(); }
+                return;
+            }
+            // Alt+R → remove the medicine row you're currently editing
+            if (k === 'r') {
+                const a = document.activeElement;
+                const m = a && a.id && a.id.match(/_(\d+)$/);
+                if (m) { e.preventDefault(); removeRow(parseInt(m[1], 10)); }
+                return;
+            }
+            // Alt+Q → jump to the Quantity box of the current row
+            if (k === 'q') {
+                e.preventDefault();
+                const a = document.activeElement;
+                const m = a && a.id && a.id.match(/_(\d+)$/);
+                const q = m ? document.getElementById('qty_' + m[1]) : document.querySelector('[id^="qty_"]');
+                if (q) { q.focus(); if (q.select) q.select(); }
+                return;
+            }
+            // Alt+P → toggle Cash / Credit payment mode
+            if (k === 'p') {
+                e.preventDefault();
+                const pm = document.getElementById('paymentMode');
+                if (pm) { pm.value = (pm.value === 'credit') ? 'cash' : 'credit'; pm.dispatchEvent(new Event('change')); }
+                return;
+            }
+            // Alt+M → open the medicine import
+            if (k === 'm') {
+                e.preventDefault();
+                if (typeof openImportModal === 'function') openImportModal();
+                return;
+            }
+            // Alt+N → start a fresh bill (clears the form)
+            if (k === 'n') {
+                e.preventDefault();
+                _salesNewBill();
+                return;
+            }
+        });
+
+        async function _salesNewBill() {
+            const hasData = (document.getElementById('customerName').value.trim() !== '') ||
+                Array.from(document.querySelectorAll('[id^="product_"]')).some(i => i.value.trim() !== '');
+            if (hasData && typeof mmConfirm === 'function') {
+                const ok = await mmConfirm('Start a fresh bill? The current unsaved entries will be cleared.', { title: 'New Bill', okText: 'Clear & Start' });
+                if (!ok) return;
+            }
+            _salesResetForm();
+        }
+
+        function _salesResetForm() {
+            const cn = document.getElementById('customerName'); if (cn) cn.value = '';
+            const dn = document.getElementById('doctorName');   if (dn) dn.value = '';
+            const pm = document.getElementById('paymentMode');  if (pm) pm.value = 'cash';
+            const mr = document.getElementById('medicineRows'); if (mr) mr.innerHTML = '';
+            rowCount = 0;
+            addRow();
+            const sd = document.getElementById('saleDate'); if (sd) sd.valueAsDate = new Date();
+            if (typeof generateBillNo === 'function') generateBillNo();
+            if (typeof refreshNamesLists === 'function') refreshNamesLists();
+            if (cn) cn.focus();
+        }
+
+        function toggleShortcutsHelp(show) {
+            const m = document.getElementById('shortcutsModal');
+            if (!m) return;
+            if (show === false) m.classList.remove('open');
+            else m.classList.add('open');
+        }
+
         /* ── Printer Status UI ── */
         function updatePrinterStatus() {
             const dot        = document.getElementById('printerStatusDot');
@@ -1664,8 +1798,8 @@
         const getMedList = () => JSON.parse(localStorage.getItem(ML_KEY) || '[]');
         const setMedList = list => localStorage.setItem(ML_KEY, JSON.stringify(list));
 
-        function clearImportedMedicines() {
-            if (confirm('Clear all rows and start a fresh bill?')) {
+        async function clearImportedMedicines() {
+            if (await mmConfirm('Clear all rows and start a fresh bill?', { okText: 'Clear All' })) {
                 document.getElementById('medicineRows').innerHTML = '';
                 rowCount = 0;
                 addRow(); // reset to one blank row
@@ -1701,7 +1835,13 @@
             if(files.length) processFileList(files);
         }
 
-        function processFileList(files) {
+        const XLSX_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        async function processFileList(files) {
+            // Load the Excel parser on demand (kept out of the page's initial load).
+            if (typeof XLSX === 'undefined') {
+                try { await mmLoadScript(XLSX_CDN); }
+                catch (e) { alert('Could not load the import tool. Please check your internet and try again.'); return; }
+            }
             _iFileCount=files.length; _iRows=[]; _iHdrs=[];
             let done=0;
             const results=new Array(files.length).fill(null);
@@ -1872,10 +2012,8 @@
             document.getElementById('successModal').classList.remove('open');
         }
 
-        function printInvoice() {
-            const bill = window.currentPrintBill;
-            if (!bill) return;
-
+        // Builds the invoice inner HTML (shared by Print and the WhatsApp softcopy image).
+        function buildInvoiceHtml(bill) {
             // Delivery address lookup from mm_customers
             let deliveryAddress = (bill.deliveryAddress || '').trim();
             if (!deliveryAddress && bill.customerName) {
@@ -1924,7 +2062,7 @@
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">${r.i}</td>
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0;">
                         <div style="font-weight: 600; color: #0f172a; font-size: 13px;">${r.m.product}</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Exp: <span style="color:#0f172a">${r.m.exp || '-'}</span> &nbsp;|&nbsp; Batch: <span style="color:#0f172a">${r.m.batch || '-'}</span></div>
+                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Exp: <span style="color:#0f172a">${r.m.exp || '-'}</span> &nbsp;|&nbsp; Batch: <span style="color:#0f172a">${r.m.batch || '-'}</span>${r.m.hsn ? ` &nbsp;|&nbsp; HSN: <span style="color:#0f172a">${r.m.hsn}</span>` : ''}</div>
                     </td>
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: 600; color: #0f172a;">${r.qty}</td>
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #475569;">${r.mrpUnit.toFixed(2)}</td>
@@ -1934,25 +2072,47 @@
                 </tr>
             `).join('');
 
-            const printWindow = window.open('', '_blank');
-            if(!printWindow) {
-                alert('Please allow popups to print invoices.');
-                return;
-            }
+            // ── HSN-wise tax summary (GST-mandated on a tax invoice) ──
+            const _hsnGroups = {};
+            rows.forEach(r => {
+                const key = (r.m.hsn || '—') + '|' + r.gstPct;
+                if (!_hsnGroups[key]) _hsnGroups[key] = { hsn: r.m.hsn || '—', gstPct: r.gstPct, taxable: 0, cgst: 0, sgst: 0 };
+                _hsnGroups[key].taxable += r.netBase;
+                _hsnGroups[key].cgst    += r.cgst;
+                _hsnGroups[key].sgst    += r.sgst;
+            });
+            const _hsnList = Object.values(_hsnGroups);
+            const hsnSummaryHtml = _hsnList.length ? `
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">HSN</th>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">Taxable Value</th>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">CGST</th>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">SGST</th>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">Total Tax</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${_hsnList.map(g => `
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; color:#0f172a; font-weight:600;">${g.hsn}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; color:#475569;">₹${g.taxable.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; color:#475569;">${(g.gstPct/2)}% &nbsp; ₹${g.cgst.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; color:#475569;">${(g.gstPct/2)}% &nbsp; ₹${g.sgst.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; color:#0f172a; font-weight:600;">₹${(g.cgst+g.sgst).toFixed(2)}</td>
+                        </tr>`).join('')}
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: 700; color:#0f172a; background:#f8fafc;">Total</td>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: 700; color:#0f172a; background:#f8fafc;">₹${totalValue.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: 700; color:#0f172a; background:#f8fafc;">₹${totalCGST.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: 700; color:#0f172a; background:#f8fafc;">₹${totalSGST.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: 700; color:#0f172a; background:#f8fafc;">₹${(totalCGST+totalSGST).toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>` : '';
 
-            const html = `
-                <html>
-                <head>
-                    <title>Invoice - ${bill.billNo}</title>
-                    <style>
-                        body { margin: 0; padding: 0; background: #fff; }
-                        @media print {
-                            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                            @page { margin: 0.5cm; }
-                        }
-                    </style>
-                </head>
-                <body>
+            return `
                     <div style="font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #1e293b; background: #fff; padding: 30px; box-sizing: border-box; font-size: 13px; line-height: 1.5;">
                         
                         <!-- Header: Logo/Title Left, Info Right -->
@@ -2023,6 +2183,9 @@
                             </tbody>
                         </table>
 
+                        <!-- HSN-wise Tax Summary -->
+                        ${hsnSummaryHtml ? `<h4 style="margin: 0 0 8px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">HSN / Tax Summary</h4>${hsnSummaryHtml}` : ''}
+
                         <!-- Footer Summary -->
                         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 40px;">
                             <tr>
@@ -2079,18 +2242,185 @@
                         </div>
 
                     </div>
-                </body>
-                </html>
             `;
-            printWindow.document.write(html);
+        }
+
+        function printInvoice() {
+            const bill = window.currentPrintBill;
+            if (!bill) return;
+            const inner = buildInvoiceHtml(bill);
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) { alert('Please allow popups to print invoices.'); return; }
+            printWindow.document.write(`<html><head><title>Invoice - ${bill.billNo}</title><style>body{margin:0;padding:0;background:#fff;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}@page{margin:0.5cm;}}</style></head><body>${inner}</body></html>`);
             printWindow.document.close();
-
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-            }, 500);
-
+            setTimeout(() => { printWindow.focus(); printWindow.print(); }, 500);
             closeSuccessModal();
+        }
+
+        /* ══════════════════════════════════════════════════════════════════
+           BILL SOFTCOPY — share the invoice as a PNG image (WhatsApp / download)
+           On mobile: native share sheet with the image file → WhatsApp/anywhere.
+           On desktop (or no file-share support): downloads the PNG and opens
+           WhatsApp (Web) with a text note so staff can attach the saved image.
+           If html2canvas didn't load (offline & uncached), falls back to a
+           WhatsApp text bill so the feature never dead-ends.
+        ══════════════════════════════════════════════════════════════════ */
+        function _normPhone(raw) {
+            // Normalise to international digits for wa.me (assume India +91 for 10-digit numbers).
+            let digits = String(raw || '').replace(/\D/g, '');
+            if (digits.length === 10) digits = '91' + digits;
+            return digits; // '' if unknown
+        }
+
+        function _billCustomerPhone(bill) {
+            let phone = (bill.customerPhone || '').trim();
+            if (!phone && bill.customerName) {
+                const customers = JSON.parse(localStorage.getItem('mm_customers') || '[]');
+                const c = customers.find(c => (c.name || '').trim().toLowerCase() === (bill.customerName || '').trim().toLowerCase());
+                if (c) phone = (c.phone || '').trim();
+            }
+            return _normPhone(phone); // '' if unknown → we prompt the walk-in
+        }
+
+        function _billWhatsappText(bill) {
+            const sp = window.mmShopProfile || {};
+            const shopName = sp.shop_name || 'Billware';
+            const lines = [];
+            lines.push('*' + shopName + '*');
+            lines.push('Bill: ' + (bill.billNo || '-') + '  |  ' + new Date(bill.savedAt || Date.now()).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }));
+            if (bill.customerName) lines.push('Customer: ' + bill.customerName);
+            lines.push('--------------------------');
+            (bill.medicines || []).forEach(m => {
+                const nm = (m.product || '').substring(0, 22);
+                const qty = m.qty || 0;
+                const tot = parseFloat(m.total || 0).toFixed(2);
+                lines.push(`${nm}  x${qty}  ₹${tot}`);
+            });
+            lines.push('--------------------------');
+            const gt = parseFloat(String(bill.grandTotal || bill.total || 0).replace(/[^0-9.]/g, '')) || 0;
+            lines.push('*TOTAL: ₹' + gt.toFixed(2) + '*');
+            lines.push((sp.footer_msg || 'Thank you! Get well soon.').replace(/["]/g, ''));
+            return lines.join('\n');
+        }
+
+        function _openWhatsapp(bill, note, phone) {
+            const p = (phone != null) ? phone : _billCustomerPhone(bill);
+            const text = encodeURIComponent(note || _billWhatsappText(bill));
+            const url = p ? `https://wa.me/${p}?text=${text}` : `https://wa.me/?text=${text}`;
+            window.open(url, '_blank');
+        }
+
+        function _downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+        }
+
+        function _toast(title, sub) {
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastSub').textContent   = sub;
+            const t = document.getElementById('toast');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function shareBillSoftcopy() {
+            const bill = window.currentPrintBill;
+            if (!bill) return;
+            const btn = document.getElementById('shareBillBtn');
+            const orig = btn ? btn.innerHTML : '';
+            const shopName = (window.mmShopProfile || {}).shop_name || 'Billware';
+
+            // Resolve a WhatsApp number. Saved customers auto-fill; a walk-in has
+            // none on record, so ask once (blank = just download the image).
+            let phone = _billCustomerPhone(bill);
+            if (!phone) {
+                const entered = await mmPrompt(
+                    "Customer's WhatsApp number?\n(Leave blank to just download the image.)",
+                    '',
+                    { title: '📱 Send Bill on WhatsApp', placeholder: 'e.g. 9876543210', okText: 'Continue' }
+                );
+                if (entered === null) return;            // cancelled → abort
+                phone = _normPhone(entered);             // '' if blank → download-only
+            }
+
+            // Load the image renderer on demand (kept out of the page's initial load).
+            if (typeof html2canvas === 'undefined') {
+                try { await mmLoadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'); }
+                catch (_) { /* offline & uncached → fall through to text bill below */ }
+            }
+
+            // Still no image library (offline first use) → graceful WhatsApp text fallback.
+            if (typeof html2canvas === 'undefined') {
+                if (phone) {
+                    _openWhatsapp(bill, null, phone);
+                    _toast('📱 WhatsApp opened', 'Sent as a text bill (image unavailable offline).');
+                } else {
+                    _toast('⚠️ No number given', 'Enter a number, or reconnect online to make the image.');
+                }
+                return;
+            }
+
+            if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Preparing…'; }
+
+            // Render the invoice into an off-screen container, then snapshot it.
+            // Pin a fixed 800px width on BOTH the box and html2canvas (width +
+            // windowWidth) so the right-hand columns are never clipped — that
+            // happened when the layout width was inferred from the live viewport
+            // instead of the invoice's own box.
+            const holder = document.createElement('div');
+            holder.style.cssText = 'position:fixed;left:0;top:0;z-index:-9999;opacity:0;pointer-events:none;background:#fff;width:1200px;';
+            holder.innerHTML = buildInvoiceHtml(bill);
+            document.body.appendChild(holder);
+            const node = holder.firstElementChild || holder;
+            node.style.width = '900px';       // extra room so the 7-col items table never overflows
+            node.style.maxWidth = 'none';
+            node.style.margin = '0';
+            node.style.overflow = 'visible';
+            // Measure the ACTUAL rendered size — a wide table can overflow the 800px
+            // box, so capturing a hard-coded 800 crops the right side. Snapshot the
+            // full measured width/height instead so nothing is ever clipped.
+            const fullW = Math.ceil(Math.max(node.scrollWidth, node.getBoundingClientRect().width, 800));
+            const fullH = Math.ceil(Math.max(node.scrollHeight, node.getBoundingClientRect().height));
+
+            try {
+                const canvas = await html2canvas(node, { scale: 2, backgroundColor: '#ffffff', useCORS: true, width: fullW, height: fullH, windowWidth: fullW });
+                const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 0.95));
+                const filename = `Invoice-${(bill.billNo || 'bill').replace(/[^\w-]/g, '')}.png`;
+                const file = new File([blob], filename, { type: 'image/png' });
+
+                // Mobile: native share sheet with the image file → WhatsApp directly.
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Invoice ' + (bill.billNo || ''),
+                        text: `Your bill from ${shopName}`,
+                    });
+                    _toast('✅ Shared', 'Bill softcopy sent.');
+                } else if (phone) {
+                    // Desktop with a number: download the image + open that WhatsApp chat.
+                    _downloadBlob(blob, filename);
+                    _openWhatsapp(bill, `Your bill *${bill.billNo || ''}* from ${shopName} — invoice image attached.`, phone);
+                    _toast('📱 WhatsApp opened', 'Invoice image downloaded — attach it in the chat.');
+                } else {
+                    // No number entered: just save the image for the customer/staff.
+                    _downloadBlob(blob, filename);
+                    _toast('📥 Downloaded', 'Invoice image saved — no number entered.');
+                }
+            } catch (e) {
+                console.error('softcopy share failed:', e);
+                if (phone) {
+                    _openWhatsapp(bill, null, phone);
+                    _toast('📱 WhatsApp opened', 'Sent as a text bill (image render failed).');
+                } else {
+                    _toast('⚠️ Could not share', 'Image render failed and no number was entered.');
+                }
+            } finally {
+                holder.remove();
+                if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+            }
         }
     </script>
 
@@ -2259,11 +2589,55 @@
                 <div style="font-size: 3.5rem; margin-bottom: 0.5rem; animation: fadeUp 0.5s ease;">🎉</div>
                 <h3 style="font-size: 1.35rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">Order Placed Successfully!</h3>
                 <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1.8rem; line-height: 1.5;" id="successModalSub"></p>
-                <div style="display: flex; gap: 0.8rem; justify-content: center;">
-                    <button class="btn-mcancel" onclick="closeSuccessModal()" style="flex: 1;">Cancel</button>
-                    <button class="btn-do-import" onclick="printInvoice()" style="flex: 1; background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 14px rgba(14,165,233,0.3);">
-                        🖨️ Print Invoice
+                <div style="display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn-mcancel" onclick="closeSuccessModal()" style="flex: 1 1 100%;">Cancel</button>
+                    <button class="btn-do-import" id="shareBillBtn" onclick="shareBillSoftcopy()" style="flex: 1; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 4px 14px rgba(34,197,94,0.3);">
+                        📱 Share Bill
                     </button>
+                    <button class="btn-do-import" onclick="printInvoice()" style="flex: 1; background: linear-gradient(135deg, #0ea5e9, #0284c7); box-shadow: 0 4px 14px rgba(14,165,233,0.3);">
+                        🖨️ Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- -- Keyboard Shortcuts helper -- -->
+    <style>
+        #shortcutsFab { position:fixed; left:1.2rem; bottom:1.2rem; z-index:900; width:46px; height:46px; border-radius:50%; border:none; cursor:pointer; background:linear-gradient(135deg,#0ea5e9,#0284c7); color:#fff; font-size:1.2rem; box-shadow:0 6px 18px rgba(2,132,199,0.4); display:flex; align-items:center; justify-content:center; transition:transform 0.15s; }
+        #shortcutsFab:hover { transform:translateY(-2px) scale(1.05); }
+        #shortcutsModal kbd { display:inline-block; padding:2px 9px; border-radius:6px; border:1.5px solid #cbd5e1; border-bottom-width:3px; background:#f8fafc; font-family:'Inter',monospace; font-size:0.8rem; font-weight:800; color:#0f172a; white-space:nowrap; }
+        #shortcutsModal .sc-item { display:flex; align-items:center; gap:12px; padding:7px 2px; border-bottom:1px solid #f1f5f9; }
+        #shortcutsModal .sc-item:last-child { border-bottom:none; }
+        #shortcutsModal .sc-key { flex:0 0 100px; display:flex; gap:5px; flex-wrap:wrap; }
+        #shortcutsModal .sc-desc { flex:1; color:#475569; font-size:0.86rem; line-height:1.35; }
+        #shortcutsModal kbd { padding:2px 7px; font-size:0.76rem; }
+        @media (max-width:700px){ #shortcutsFab{ left:auto; right:1rem; bottom:5.5rem; } }
+    </style>
+    <button type="button" id="shortcutsFab" onclick="toggleShortcutsHelp(true)" title="Keyboard shortcuts (F1)">⌨️</button>
+    <div class="modal-overlay" id="shortcutsModal">
+        <div class="modal-card" style="max-width:430px;">
+            <div class="modal-hd">
+                <h3>⌨️ Keyboard Shortcuts</h3>
+                <button class="modal-x" type="button" onclick="toggleShortcutsHelp(false)">×</button>
+            </div>
+            <div class="modal-bd">
+                <p style="color:#64748b;font-size:0.82rem;margin-bottom:0.9rem;">Bill without touching the mouse — tab through with Enter and save with Alt + S.</p>
+                <div class="sc-list">
+                    <div class="sc-item"><span class="sc-key"><kbd>Enter</kbd></span><span class="sc-desc">Next field &mdash; adds a new row on the last field</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Shift</kbd><kbd>Enter</kbd></span><span class="sc-desc">Previous field &mdash; go back to fix an earlier entry</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>F2</kbd></span><span class="sc-desc">Add a new medicine row</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Alt</kbd><kbd>R</kbd></span><span class="sc-desc">Remove the current medicine row</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Alt</kbd><kbd>Q</kbd></span><span class="sc-desc">Jump to the Quantity box</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Alt</kbd><kbd>C</kbd></span><span class="sc-desc">Jump to the Customer field</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Alt</kbd><kbd>P</kbd></span><span class="sc-desc">Toggle Cash / Credit</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Alt</kbd><kbd>M</kbd></span><span class="sc-desc">Open the medicine import</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Alt</kbd><kbd>N</kbd></span><span class="sc-desc">Start a fresh bill</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>F9</kbd></span><span class="sc-desc">Focus the Save button</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Alt</kbd><kbd>S</kbd></span><span class="sc-desc">Save the bill</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Ctrl</kbd><kbd>Enter</kbd></span><span class="sc-desc">Save the bill</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>Esc</kbd></span><span class="sc-desc">Close a popup, or go Back</span></div>
+                    <div class="sc-item"><span class="sc-key"><kbd>F1</kbd></span><span class="sc-desc">Show this shortcuts list</span></div>
                 </div>
             </div>
         </div>
