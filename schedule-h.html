@@ -685,6 +685,40 @@
         }
         .clear-btn-sm:hover { background:#ef4444; color:white; border-color:#ef4444; }
 
+        /* ── Full Invoice import wizard (ported from Purchase page) ── */
+        .inv-chip-grid { display: flex; flex-direction: column; gap: 0.45rem; margin: 0.8rem 0; }
+        .inv-chip {
+            display: flex; align-items: center; gap: 0.6rem;
+            padding: 0.5rem 0.75rem; border-radius: 10px;
+            background: #f8fafc; border: 1.5px solid #e2e8f0;
+            transition: opacity 0.2s, background 0.2s;
+        }
+        .inv-chip.inv-chip-skip { opacity: 0.45; background: #f1f5f9; }
+        .inv-chip-label {
+            font-size: 0.78rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .06em; color: #374151; min-width: 130px;
+        }
+        .inv-chip-detected { font-size: 0.82rem; font-weight: 600; color: #0ea5e9; flex: 1; }
+        .inv-chip.inv-chip-skip .inv-chip-detected { color: #94a3b8; }
+        .inv-chip-skip-btn {
+            font-size: 0.72rem; font-weight: 700; padding: 3px 12px;
+            border-radius: 20px; border: 1.5px solid #e2e8f0;
+            background: white; color: #64748b; cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s; white-space: nowrap;
+        }
+        .inv-chip-skip-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+        .inv-chip.inv-chip-skip .inv-chip-skip-btn { background: #d1fae5; border-color: #6ee7b7; color: #059669; }
+        .inv-chip.inv-chip-skip .inv-chip-skip-btn:hover { background: #a7f3d0; }
+        .inv-preview-table { width:100%; border-collapse:collapse; font-size:0.78rem; margin-top:0.5rem; }
+        .inv-preview-table th { background:#f1f5f9; padding:5px 8px; text-align:left; font-weight:800; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap; }
+        .inv-preview-table td { padding:5px 8px; border-bottom:1px solid #f1f5f9; color:#0f172a; white-space:nowrap; }
+        .inv-preview-table tr:last-child td { border-bottom:none; }
+        .inv-prev-wrap { overflow:auto; max-height:160px; border:1.5px solid #e2e8f0; border-radius:10px; margin-top:0.5rem; }
+        .btn-do-import.inv { background:linear-gradient(135deg,#0ea5e9,#0284c7); color:white; box-shadow:0 4px 14px rgba(14,165,233,0.3); }
+        .btn-do-import.inv:hover { box-shadow:0 6px 20px rgba(14,165,233,0.4); }
+        .import-btn-sm.inv-btn { background:linear-gradient(135deg,#0ea5e9,#0284c7); color:white; border-color:#0284c7; }
+        .import-btn-sm.inv-btn:hover { background:linear-gradient(135deg,#0284c7,#0369a1); color:white; }
+
         .drug-chip {
             display: inline-flex; align-items: center; gap: 8px;
             padding: 0.5rem 0.7rem 0.5rem 1rem;
@@ -722,6 +756,56 @@
             color: #991b1b; background: #fee2e2;
             padding: 2px 10px; border-radius: 20px;
             margin-left: 0.5rem;
+        }
+
+        /* ── Prescription Gallery ── */
+        .rx-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 1rem;
+        }
+        .rx-card {
+            background: rgba(255,255,255,0.9);
+            border: 1.5px solid #fecaca;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+            box-shadow: 0 3px 14px rgba(220,38,38,0.08);
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+        .rx-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(220,38,38,0.16); }
+        .rx-thumb {
+            width: 100%; height: 150px; object-fit: cover;
+            background: #fef2f2; cursor: zoom-in; display: block;
+        }
+        .rx-body { padding: 0.7rem 0.85rem 0.85rem; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+        .rx-patient { font-size: 0.92rem; font-weight: 800; color: #0f172a; }
+        .rx-meta { font-size: 0.76rem; color: #64748b; font-weight: 600; }
+        .rx-meds { font-size: 0.78rem; color: #991b1b; font-weight: 700; margin-top: 2px; word-break: break-word; }
+        .rx-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 0.55rem; }
+        .rx-date-pill { font-size: 0.68rem; font-weight: 700; color: #94a3b8; }
+        .rx-del {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: #fee2e2; color: #ef4444; border: none; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; transition: all 0.15s ease; flex-shrink: 0;
+        }
+        .rx-del:hover { background: #ef4444; color: #fff; transform: scale(1.12); }
+
+        /* Full-image viewer */
+        .rx-viewer {
+            position: fixed; inset: 0; z-index: 10000;
+            background: rgba(15,23,42,0.85);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            display: none; align-items: center; justify-content: center; padding: 2rem;
+        }
+        .rx-viewer.open { display: flex; }
+        .rx-viewer img { max-width: 100%; max-height: 90vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .rx-viewer-close {
+            position: absolute; top: 1.2rem; right: 1.4rem;
+            width: 42px; height: 42px; border-radius: 50%; border: none; cursor: pointer;
+            background: rgba(255,255,255,0.9); color: #0f172a; font-size: 1.4rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
         }
 
         /* ── Import Modal ── */
@@ -840,7 +924,7 @@
         /* ── Advanced Filter Bar ── */
         .filter-bar {
             display: flex; flex-wrap: wrap;
-            align-items: center; gap: 8px;
+            align-items: flex-end; gap: 8px;
             margin-bottom: 1.2rem;
         }
         .filter-bar input[type="text"] {
@@ -859,21 +943,32 @@
             border-color: #dc2626; background-color: white;
             box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
         }
+        .date-range-group {
+            display: flex; align-items: flex-end; gap: 0.7rem;
+        }
+        .date-field {
+            display: flex; flex-direction: column; gap: 0.35rem;
+        }
+        .date-field label {
+            font-size: 0.7rem; font-weight: 800;
+            letter-spacing: 0.07em; text-transform: uppercase; color: #be123c;
+        }
         .filter-bar input[type="date"] {
             font-family: 'Inter', sans-serif;
             font-size: 0.82rem; color: #0f172a;
-            background: #fffbfb;
-            border: 1.5px solid #e2e8f0;
+            background: #fff1f2;
+            border: 1.5px solid #fecdd3;
             border-radius: 10px;
-            padding: 0.58rem 0.8rem;
+            padding: 0.58rem 0.9rem;
             outline: none; transition: all 0.22s ease;
         }
         .filter-bar input[type="date"]:focus {
-            border-color: #dc2626;
-            box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
+            border-color: #f43f5e; background: white;
+            box-shadow: 0 0 0 3px rgba(244,63,94,0.12);
         }
         .filter-date-sep {
             font-size: 0.78rem; font-weight: 700; color: #94a3b8;
+            padding-bottom: 0.55rem;
         }
         .btn-export {
             display: inline-flex; align-items: center; gap: 6px;
@@ -968,8 +1063,10 @@
             }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="js/modal.js"></script>
+    <!-- xlsx (Excel import) is lazy-loaded on demand via mmLoadScript() so it never blocks page load. -->
     <script src="js/auth.js?v=3"></script>
+    <link rel="preconnect" href="https://jwyyjdwlbgjijmwillow.supabase.co" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/keyboard-nav.js"></script>
@@ -1039,7 +1136,7 @@
             <button class="tab-pill" onclick="switchTab('expiry')" id="tabExpiry">⏳ Expiry</button>
             <button class="tab-pill" onclick="switchTab('dead')" id="tabDead">💀 Dead Stock</button>
             <button class="tab-pill" onclick="switchTab('adjust')" id="tabAdjust">⚖️ Adjust</button>
-            <button class="tab-pill" onclick="switchTab('manage')" id="tabManage">⚙️ Add Drugs</button>
+            <button class="tab-pill" onclick="switchTab('prescriptions')" id="tabPrescriptions">📸 Prescriptions</button>
         </div>
 
         <div class="form-card">
@@ -1102,46 +1199,22 @@
                     </div>
 
 
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap; justify-content:flex-end; margin-bottom:0.9rem;">
+                        <button type="button" class="clear-btn-sm" onclick="clearShImported()">🗑️ Clear Imported</button>
+                        <button type="button" class="import-btn-sm" onclick="openImportModal()">📋 Import Drug Names</button>
+                        <button type="button" class="import-btn-sm inv-btn" onclick="openInvoiceImportModal()">📥 Import Full Invoice</button>
+                    </div>
+
                     <div class="section-label">💊 Drug Details</div>
-                    <div class="form-grid" style="margin-bottom: 1rem;">
-                        <div class="form-group">
-                            <label>Drug Name</label>
-                            <input type="text" id="drugName" placeholder="Type or select Schedule H drug…" autocomplete="off">
-                            <datalist id="drugList"></datalist>
-                        </div>
-                        <div class="form-group">
-                            <label>Batch No</label>
-                            <input type="text" id="batchNo" placeholder="e.g. BT20240001">
-                        </div>
-                        <div class="form-group">
-                            <label>Expire Date</label>
-                            <input type="month" id="expireDate" placeholder="YYYY-MM">
-                        </div>
-                        <div class="form-group">
-                            <label>Pack</label>
-                            <input type="text" id="pack" placeholder="e.g. 10s, 15ml">
-                        </div>
-                    </div>
-                    <div class="form-grid" style="margin-bottom: 1.5rem;">
-                        <div class="form-group">
-                            <label>Quantity</label>
-                            <input type="number" id="qty" placeholder="0" min="1" step="1" oninput="calcTotal()">
-                        </div>
-                        <div class="form-group">
-                            <label>MRP (₹)</label>
-                            <input type="number" id="mrp" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()">
-                        </div>
-                        <div class="form-group">
-                            <label>Rate (₹)</label>
-                            <input type="number" id="rate" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()">
-                        </div>
-                        <div class="form-group">
-                            <label>GST (%)</label>
-                            <input type="number" id="gst" placeholder="0" min="0" step="0.01" oninput="calcTotal()">
-                        </div>
-                    </div>
+                    <datalist id="drugList"></datalist>
+                    <div id="shDrugRows"></div>
+                    <button type="button" id="shAddItemBtn" onclick="addShDrugRow(true)"
+                        style="width:100%; margin-bottom:1.2rem; background:#fff; border:1.5px dashed #fca5a5; color:#b91c1c; border-radius:12px; padding:0.75rem 1.2rem; font-weight:700; font-size:0.9rem; cursor:pointer;">
+                        ➕ Add Item
+                    </button>
+
                     <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:14px; padding:1rem 1.4rem; margin-bottom:0.5rem; display:flex; align-items:center; justify-content:space-between;">
-                        <span style="font-size:0.85rem; font-weight:800; color:#991b1b; text-transform:uppercase; letter-spacing:0.06em;">Total Amount</span>
+                        <span style="font-size:0.85rem; font-weight:800; color:#991b1b; text-transform:uppercase; letter-spacing:0.06em;">Grand Total</span>
                         <span id="totalDisplay" style="font-size:1.3rem; font-weight:800; color:#dc2626;">₹ 0.00</span>
                     </div>
 
@@ -1151,7 +1224,7 @@
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                             </svg>
-                            Save Entry
+                            Save All Entries
                         </button>
                     </div>
                 </form>
@@ -1183,9 +1256,17 @@
                     <!-- Advanced Filter Bar -->
                     <div class="filter-bar">
                         <input type="text" id="logSearch" placeholder="Search by patient, doctor, drug, batch…" oninput="renderRegisterLog()">
-                        <input type="date" id="filterFrom" title="From date" oninput="renderRegisterLog()">
-                        <span class="filter-date-sep">→</span>
-                        <input type="date" id="filterTo" title="To date" oninput="renderRegisterLog()">
+                        <div class="date-range-group">
+                            <div class="date-field">
+                                <label for="filterFrom">From Date</label>
+                                <input type="date" id="filterFrom" title="From date" oninput="renderRegisterLog()">
+                            </div>
+                            <span class="filter-date-sep">→</span>
+                            <div class="date-field">
+                                <label for="filterTo">To Date</label>
+                                <input type="date" id="filterTo" title="To date" oninput="renderRegisterLog()">
+                            </div>
+                        </div>
                         <!-- IN / OUT type filter pills -->
                         <div class="type-filter-group" id="typeFilterGroup">
                             <button class="type-pill active" id="typePillAll"  onclick="setTypeFilter('all')" title="Show All">&#x1F4CB; All</button>
@@ -1195,8 +1276,8 @@
                         <button class="btn-export" onclick="window.print()" title="Print filtered Register">
                             &#x1F5A8;&#xFE0F; Print Report
                         </button>
-                        <button class="btn-export" onclick="exportRegisterCSV()" title="Export to Excel/CSV">
-                            &#x1F4DD; Export CSV
+                        <button class="btn-export" onclick="exportRegisterCSV()" title="Export a formatted Excel workbook">
+                            &#x1F4C4; Export Excel
                         </button>
                         <button class="btn-export" id="shBinToggleBtn" onclick="toggleShBin()" title="View deleted entries — recoverable for 30 days">
                             &#x1F5D1;&#xFE0F; Bin<span id="shBinBadge" style="display:none; background:#dc2626; color:#fff; border-radius:10px; padding:1px 7px; font-size:0.72rem; margin-left:5px; font-weight:800;">0</span>
@@ -1373,48 +1454,75 @@
             </div>
 
             <!-- ═══ TAB 7: Manage Drug List ═══ -->
-            <div class="tab-panel" id="panelManage">
-                <div class="section-label">➕ Add Schedule H Drug</div>
-                <div class="add-drug-row">
-                    <input type="text" id="newDrugName" placeholder="Enter Schedule H drug name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addDrug();}">
-                    <button type="button" class="btn-add-drug" onclick="addDrug()">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
-                        </svg>
-                        Add Drug
-                    </button>
+            <!-- ═══ TAB: Prescriptions (softcopy store) ═══ -->
+            <div class="tab-panel" id="panelPrescriptions">
+                <div class="panel-head">
+                    <div class="ph-icon i-promise">📸</div>
+                    <div class="ph-text">
+                        <div class="ph-title">Prescription Softcopies</div>
+                        <div class="ph-sub">Snap or upload the doctor's prescription and keep a searchable, cloud-backed digital copy for every Schedule&nbsp;H sale.</div>
+                    </div>
                 </div>
 
-                <div class="drug-list-actions">
-                    <button type="button" class="clear-btn-sm" onclick="clearAllDrugs()">
-                        🗑️ Clear All
-                    </button>
-                    <button type="button" class="import-btn-sm" onclick="openImportModal()">
-                        📋 Import from Excel/CSV
-                    </button>
-                </div>
+                <form id="rxForm" onsubmit="handleRxSubmit(event)" novalidate>
+                    <div class="section-label">📝 Prescription Details</div>
+                    <div class="form-grid" style="margin-bottom: 1.2rem;">
+                        <div class="form-group">
+                            <label>Patient Name</label>
+                            <input type="text" id="rxPatient" list="patientList" placeholder="Patient name…" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="rxDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Doctor Name</label>
+                            <input type="text" id="rxDoctor" list="doctorList" placeholder="Prescribing doctor…" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Medicine(s) Prescribed</label>
+                            <input type="text" id="rxMeds" list="drugList" placeholder="e.g. Alprazolam 0.5mg…" autocomplete="off">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Note (optional)</label>
+                            <input type="text" id="rxNote" placeholder="Any remark — dosage, refill, etc.">
+                        </div>
+                    </div>
 
-                <div class="section-label">
-                    📋 Schedule H Drug List
-                    <span class="drug-count-badge" id="drugCountBadge">0 drugs</span>
-                </div>
+                    <div class="section-label">🖼️ Prescription Image</div>
+                    <div class="drop-zone" id="rxDropZone" style="margin-bottom:1.2rem;"
+                         ondragover="event.preventDefault();this.classList.add('drag-over')"
+                         ondragleave="this.classList.remove('drag-over')"
+                         ondrop="handleRxDrop(event)">
+                        <input type="file" id="rxFileInput" accept="image/*" capture="environment" onchange="handleRxFile(event)">
+                        <div class="dz-ico">📷</div>
+                        <div class="dz-txt">Tap to take a photo or upload</div>
+                        <div class="dz-sub">Camera or gallery &mdash; image is auto-compressed before saving</div>
+                    </div>
 
+                    <div id="rxPreviewWrap" style="display:none; text-align:center; margin-bottom:1.2rem;">
+                        <img id="rxPreviewImg" alt="Prescription preview"
+                             style="max-width:100%; max-height:320px; border-radius:14px; border:1.5px solid #fecaca; box-shadow:0 4px 16px rgba(220,38,38,0.12);">
+                        <div>
+                            <button type="button" class="btn-mcancel" style="margin-top:0.7rem;" onclick="clearRxImage()">🗑️ Remove image</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">💾 Save Prescription</button>
+                </form>
+
+                <div class="section-label" style="margin-top:2rem;">
+                    🗂️ Saved Prescriptions
+                    <span class="drug-count-badge" id="rxCountBadge">0</span>
+                </div>
                 <div class="search-bar">
-                    <input type="text" id="drugSearch" placeholder="Type to search and view drugs…" oninput="renderDrugList()">
+                    <input type="text" id="rxSearch" placeholder="Search by patient, doctor, or medicine…" oninput="renderPrescriptions()">
                 </div>
-
-                <div class="drug-grid" id="drugGrid" style="display:none;">
-                    <!-- Drug chips rendered by JS -->
-                </div>
-                
-                <div id="drugSearchPrompt" style="text-align:center; padding: 2rem; color: #64748b; font-weight:600;">
-                    🔍 Search above to manage specific drugs, or add a new one.
-                </div>
-
-                <div id="drugEmptyState" class="empty-state" style="display:none;">
-                    <div class="es-icon">💊</div>
-                    <div class="es-title">No Schedule H Drugs Added</div>
-                    <div class="es-sub">Add drugs manually or import from Excel/CSV</div>
+                <div class="rx-grid" id="rxGrid"></div>
+                <div id="rxEmptyState" class="empty-state" style="display:none;">
+                    <div class="es-icon">📸</div>
+                    <div class="es-title">No Prescriptions Saved Yet</div>
+                    <div class="es-sub">Add a prescription softcopy above to start your digital record.</div>
                 </div>
             </div>
 
@@ -1432,6 +1540,12 @@
             <div style="font-weight:800;" id="toastTitle">Saved!</div>
             <div style="font-size:0.78rem; color:#f87171; margin-top:2px;" id="toastSub">Record added successfully.</div>
         </div>
+    </div>
+
+    <!-- ── Prescription Image Viewer ── -->
+    <div class="rx-viewer" id="rxViewer" onclick="closeRxViewer()">
+        <button class="rx-viewer-close" type="button" onclick="closeRxViewer()">×</button>
+        <img id="rxViewerImg" src="" alt="Prescription" onclick="event.stopPropagation()">
     </div>
 
     <!-- ── Import Drug List Modal ── -->
@@ -1470,6 +1584,66 @@
         </div>
     </div>
 
+    <!-- ── Full Invoice Import Modal (Excel/CSV → register rows) ── -->
+    <div class="modal-overlay" id="invImportModal">
+        <div class="modal-card" style="max-width:580px;">
+            <div class="modal-hd">
+                <h3>📥 Import Full Invoice</h3>
+                <button class="modal-x" type="button" onclick="closeInvoiceImportModal()">×</button>
+            </div>
+
+            <!-- Step 1: Upload File -->
+            <div class="modal-bd" id="invStep1">
+                <div style="font-size:0.82rem;color:#64748b;margin-bottom:0.8rem;">
+                    Upload your distributor's Excel or CSV invoice. Billware reads all columns and fills the register rows automatically.
+                </div>
+                <div class="drop-zone" id="invDropZone"
+                     ondragover="event.preventDefault();this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')"
+                     ondrop="handleInvDrop(event)">
+                    <input type="file" id="invFileInput" accept=".csv,.xlsx,.xls" onchange="handleInvFile(event)">
+                    <div class="dz-ico">📊</div>
+                    <div class="dz-txt">Drop invoice file here or click to browse</div>
+                    <div class="dz-sub">Excel (.xlsx / .xls) or CSV — columns auto-mapped</div>
+                </div>
+                <div style="margin-top:0.75rem;display:flex;align-items:flex-start;gap:0.55rem;padding:0.65rem 0.9rem;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;">
+                    <span style="font-size:1.1rem;flex-shrink:0;">💡</span>
+                    <div style="font-size:0.78rem;color:#166534;line-height:1.5;">
+                        <strong>Tip:</strong> The first row must be the column headers (Product, Batch, Expiry, Qty, MRP, Rate, GST, Pack). You can review and fix the mapping in the next step.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Map Columns -->
+            <div class="modal-bd" id="invStep2" style="display:none">
+                <div class="step-lbl">Review auto-detected columns</div>
+                <div class="stats-txt" id="invRowCount"></div>
+                <div id="invFieldChips" class="inv-chip-grid"></div>
+                <div style="font-size:0.75rem;color:#94a3b8;margin-top:0.8rem;">✱ Drug Name is required. Click <strong>Skip</strong> on any field you don't want to import.</div>
+            </div>
+
+            <!-- Step 3: Preview -->
+            <div class="modal-bd" id="invStep3" style="display:none">
+                <div class="step-lbl">Preview (first 8 rows)</div>
+                <div class="inv-prev-wrap">
+                    <table class="inv-preview-table" id="invPreviewTable"></table>
+                </div>
+                <div class="import-count" id="invPreviewCount" style="margin-top:0.6rem;"></div>
+                <div style="font-size:0.78rem;color:#64748b;margin-top:0.4rem;">✅ Looks good? Click <strong>Load into Register</strong> to fill all items.</div>
+            </div>
+
+            <div class="modal-ft">
+                <button class="btn-mcancel" type="button" onclick="closeInvoiceImportModal()">Cancel</button>
+                <button class="btn-do-import inv" id="invPreviewBtn" type="button" onclick="buildInvPreview()" style="display:none">
+                    Preview →
+                </button>
+                <button class="btn-do-import inv" id="invImportBtn" type="button" onclick="applyInvoiceImport()" style="display:none" disabled>
+                    ✓ Load into Register
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         /* ══════════════════════════════════════════════════════════════════
            Constants & Helpers
@@ -1500,7 +1674,7 @@
            Tab Switching
         ══════════════════════════════════════════════════════════════════ */
         function switchTab(tab) {
-            const tabs = ['register', 'ledger', 'expiry', 'dead', 'adjust', 'manage'];
+            const tabs = ['register', 'ledger', 'expiry', 'dead', 'adjust', 'prescriptions'];
             tabs.forEach(t => {
                 const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
                 const pill = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -1511,6 +1685,8 @@
                 renderScheduleHInventory();
             } else if (tab === 'adjust') {
                 populateAdjDropdowns();
+            } else if (tab === 'prescriptions') {
+                renderPrescriptions();
             }
         }
 
@@ -1584,8 +1760,7 @@
             document.head.appendChild(s);
         }
 
-        function setupShDrugDropdown() {
-            const input = document.getElementById('drugName');
+        function setupShDrugDropdown(input, rowId) {
             if (!input || input._shddWired) return;
             input._shddWired = true;
             _injectShDrugStyles();
@@ -1642,7 +1817,7 @@
                 input.value = name;
                 remove();
                 input.dispatchEvent(new Event('change', { bubbles: true }));
-                const next = document.getElementById('batchNo');
+                const next = document.getElementById('batch_' + rowId);
                 if (next) setTimeout(() => next.focus(), 50);
             }
 
@@ -1666,9 +1841,9 @@
                 scroll.className = 'shdd-scroll';
 
                 if (!matches.length) {
-                    scroll.innerHTML = getDrugList().length
-                        ? '<div class="shdd-empty">No matching Schedule&nbsp;H drug.<br>Add it in the <b>Manage</b> tab.</div>'
-                        : '<div class="shdd-empty">No Schedule&nbsp;H drugs yet.<br>Add them in the <b>Manage</b> tab.</div>';
+                    scroll.innerHTML = q
+                        ? `<div class="shdd-empty">No match — <b>&ldquo;${esc(q)}&rdquo;</b> will be added to the Schedule&nbsp;H list when you save.</div>`
+                        : '<div class="shdd-empty">No Schedule&nbsp;H drugs yet.<br>Just type a name — it&rsquo;s added on save.</div>';
                 } else {
                     shown = matches.slice(0, CAP);
                     scroll.innerHTML = shown.map((n, i) =>
@@ -1754,19 +1929,336 @@
         // Default today
         document.getElementById('entryDate').valueAsDate = new Date();
 
-        function calcTotal() {
-            const qty  = parseFloat(document.getElementById('qty').value) || 0;
-            const rate = parseFloat(document.getElementById('rate').value) || 0;
-            const gst  = parseFloat(document.getElementById('gst').value) || 0;
-            const base = qty * rate;
-            const total = base + (base * gst / 100);
-            document.getElementById('totalDisplay').textContent = '₹ ' + total.toFixed(2);
+        /* ── Multi-item drug rows (like the Purchase page) ── */
+        let shRowCounter = 0;
+
+        function addShDrugRow(focusIt) {
+            shRowCounter++;
+            const id = shRowCounter;
+            const wrap = document.getElementById('shDrugRows');
+            const div = document.createElement('div');
+            div.className = 'sh-drug-row';
+            div.id = 'shrow_' + id;
+            div.style.cssText = 'border:1.5px solid #fecaca; border-radius:14px; padding:1rem 1.2rem; margin-bottom:1rem; background:#fffafa;';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+                    <span style="font-weight:800; color:#991b1b; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em;">💊 Item <span class="sh-row-num">${id}</span></span>
+                    <button type="button" onclick="removeShDrugRow(${id})" title="Remove item"
+                        style="background:#fee2e2; color:#b91c1c; border:none; border-radius:8px; padding:5px 11px; font-weight:700; font-size:0.74rem; cursor:pointer;">✕ Remove</button>
+                </div>
+                <div class="form-grid" style="margin-bottom:1rem;">
+                    <div class="form-group"><label>Drug Name</label>
+                        <input type="text" id="drug_${id}" placeholder="Type or select Schedule H drug…" autocomplete="off"></div>
+                    <div class="form-group"><label>Batch No</label>
+                        <input type="text" id="batch_${id}" placeholder="e.g. BT20240001"></div>
+                    <div class="form-group"><label>Expire Date</label>
+                        <input type="month" id="exp_${id}" placeholder="YYYY-MM"></div>
+                    <div class="form-group"><label>Pack</label>
+                        <input type="text" id="pack_${id}" placeholder="e.g. 10s, 15ml"></div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group"><label>Quantity</label>
+                        <input type="number" id="qty_${id}" placeholder="0" min="1" step="1" oninput="calcShRow(${id})"></div>
+                    <div class="form-group"><label>MRP (₹)</label>
+                        <input type="number" id="mrp_${id}" placeholder="0.00" min="0" step="0.01"></div>
+                    <div class="form-group"><label>Rate (₹)</label>
+                        <input type="number" id="rate_${id}" placeholder="0.00" min="0" step="0.01" oninput="calcShRow(${id})"></div>
+                    <div class="form-group"><label>GST (%)</label>
+                        <input type="number" id="gst_${id}" placeholder="0" min="0" step="0.01" oninput="calcShRow(${id})"></div>
+                </div>
+                <div style="text-align:right; margin-top:0.6rem; font-size:0.82rem; color:#991b1b; font-weight:700;">Item Total: <span id="rowtotal_${id}">₹ 0.00</span></div>
+            `;
+            wrap.appendChild(div);
+            updateShRowNums();
+            setupShDrugDropdown(document.getElementById('drug_' + id), id);
+            if (focusIt) setTimeout(() => document.getElementById('drug_' + id)?.focus(), 50);
+            return id;
+        }
+
+        function removeShDrugRow(id) {
+            const rows = document.querySelectorAll('#shDrugRows .sh-drug-row');
+            if (rows.length <= 1) { showToast('Cannot Remove', 'At least one item is required.'); return; }
+            document.getElementById('shrow_' + id)?.remove();
+            updateShRowNums();
+            calcGrandTotal();
+        }
+
+        function updateShRowNums() {
+            document.querySelectorAll('#shDrugRows .sh-drug-row .sh-row-num')
+                .forEach((s, i) => s.textContent = i + 1);
+        }
+
+        function calcShRow(id) {
+            const qty  = parseFloat(document.getElementById('qty_' + id)?.value)  || 0;
+            const rate = parseFloat(document.getElementById('rate_' + id)?.value) || 0;
+            const gst  = parseFloat(document.getElementById('gst_' + id)?.value)  || 0;
+            const total = qty * rate + (qty * rate * gst / 100);
+            const el = document.getElementById('rowtotal_' + id);
+            if (el) el.textContent = '₹ ' + total.toFixed(2);
+            calcGrandTotal();
+        }
+
+        function calcGrandTotal() {
+            let g = 0;
+            document.querySelectorAll('#shDrugRows .sh-drug-row').forEach(row => {
+                const id   = row.id.replace('shrow_', '');
+                const qty  = parseFloat(document.getElementById('qty_' + id)?.value)  || 0;
+                const rate = parseFloat(document.getElementById('rate_' + id)?.value) || 0;
+                const gst  = parseFloat(document.getElementById('gst_' + id)?.value)  || 0;
+                g += qty * rate + (qty * rate * gst / 100);
+            });
+            const disp = document.getElementById('totalDisplay');
+            if (disp) disp.textContent = '₹ ' + g.toFixed(2);
         }
 
         function resetRegisterForm() {
             document.getElementById('registerForm').reset();
             document.getElementById('entryDate').valueAsDate = new Date();
+            document.getElementById('shDrugRows').innerHTML = '';
+            shRowCounter = 0;
+            addShDrugRow();
             document.getElementById('totalDisplay').textContent = '₹ 0.00';
+        }
+
+        /* ── Clear Imported: wipe the register rows and start with one blank row ── */
+        async function clearShImported() {
+            if (await mmConfirm('Clear all items and start fresh?', { okText: 'Clear All' })) {
+                document.getElementById('shDrugRows').innerHTML = '';
+                shRowCounter = 0;
+                addShDrugRow(true);
+                calcGrandTotal();
+            }
+        }
+
+        /* ══════════════════════════════════════════════════════════════════
+           Import Full Invoice (Excel/CSV) — same accurate wizard as the
+           Purchase page: upload → review auto-mapped columns → preview →
+           load into the register rows. (Photo/PDF OCR is Purchase-only.)
+        ══════════════════════════════════════════════════════════════════ */
+        const INV_FIELDS = [
+            { key:'productName', label:'Drug Name ✱', required:true },
+            { key:'batchNo',     label:'Batch No' },
+            { key:'expireDate',  label:'Expiry (MM/YY or YYYY-MM)' },
+            { key:'quantity',    label:'Quantity' },
+            { key:'mrp',         label:'MRP (₹)' },
+            { key:'rate',        label:'Purchase Rate (₹)' },
+            { key:'gst',         label:'GST (%)' },
+            { key:'pack',        label:'Pack Size' },
+        ];
+
+        let _invRows = [], _invHdrs = [];
+
+        function openInvoiceImportModal() {
+            _invRows = []; _invHdrs = [];
+            document.getElementById('invImportModal').classList.add('open');
+            document.getElementById('invStep1').style.display = 'block';
+            document.getElementById('invStep2').style.display = 'none';
+            document.getElementById('invStep3').style.display = 'none';
+            document.getElementById('invPreviewBtn').style.display = 'none';
+            document.getElementById('invImportBtn').style.display = 'none';
+            document.getElementById('invImportBtn').disabled = true;
+            const fi = document.getElementById('invFileInput'); if (fi) fi.value = '';
+        }
+        function closeInvoiceImportModal() { document.getElementById('invImportModal').classList.remove('open'); }
+
+        function handleInvFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (/\.(csv|xlsx|xls)$/i.test(file.name)) { readInvFile(file); }
+            else { showToast('Wrong File', 'Please upload an Excel (.xlsx/.xls) or CSV file.'); }
+        }
+        function handleInvDrop(e) {
+            e.preventDefault();
+            document.getElementById('invDropZone').classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (!file) return;
+            if (/\.(csv|xlsx|xls)$/i.test(file.name)) { readInvFile(file); }
+            else { showToast('Wrong File', 'Please upload an Excel (.xlsx/.xls) or CSV file.'); }
+        }
+
+        async function readInvFile(file) {
+            if (typeof XLSX === 'undefined') {
+                try { await mmLoadScript(XLSX_CDN); }
+                catch (e) { showToast('Load Error', 'Could not load the import tool. Check your internet.'); return; }
+            }
+            const rdr = new FileReader();
+            rdr.onload = ev => {
+                try {
+                    const isCSV = file.name.toLowerCase().endsWith('.csv');
+                    const wb = XLSX.read(ev.target.result, { type: isCSV ? 'string' : 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                    if (!raw || raw.length < 2) { showToast('Empty File', 'No data rows found.'); return; }
+                    _invHdrs = raw[0].map(String);
+                    _invRows = raw.slice(1).filter(r => r.some(c => String(c).trim()));
+                    showInvMapper();
+                } catch (err) { showToast('Read Error', 'Could not read file.'); }
+            };
+            file.name.toLowerCase().endsWith('.csv') ? rdr.readAsText(file) : rdr.readAsArrayBuffer(file);
+        }
+
+        // Reject a "pack" column whose values look like weight/volume (75 GM, 100 ML)
+        function isWeightVolumeCol(colIdx) {
+            const wvPat = /^\s*[\d.]+\s*(ml|mg|gm|g|l|mcg|iu|kg|oz|tab|cap|nos)\s*$/i;
+            const sample = _invRows.slice(0, 12);
+            const nonEmpty = sample.filter(r => String(r[colIdx] ?? '').trim()).length;
+            if (!nonEmpty) return false;
+            const hits = sample.filter(r => wvPat.test(String(r[colIdx] ?? '').trim())).length;
+            return (hits / nonEmpty) >= 0.4;
+        }
+
+        function showInvMapper() {
+            document.getElementById('invStep1').style.display = 'none';
+            document.getElementById('invStep2').style.display = 'block';
+            document.getElementById('invStep3').style.display = 'none';
+            document.getElementById('invPreviewBtn').style.display = '';
+            document.getElementById('invImportBtn').style.display = 'none';
+            document.getElementById('invImportBtn').disabled = true;
+            document.getElementById('invRowCount').textContent = `${_invRows.length} data row(s) detected`;
+
+            const keywords = {
+                productName:/product|medicine|drug|name|item|brand|generic/i,
+                batchNo:/batch|lot/i,
+                expireDate:/exp|expiry|expire/i,
+                quantity:/qty|quant|nos|units/i,
+                mrp:/mrp|max.*price|selling/i,
+                rate:/rate|purchase|cost|ptr|pts/i,
+                gst:/gst|tax|vat/i,
+                pack:/^pack(\s*size)?$|^packing$/i,
+            };
+            const container = document.getElementById('invFieldChips');
+            container.innerHTML = '';
+            INV_FIELDS.forEach(f => {
+                const kw = keywords[f.key];
+                let idx = kw ? _invHdrs.findIndex(h => kw.test(h.trim())) : -1;
+                if (f.key === 'pack' && idx >= 0 && isWeightVolumeCol(idx)) { idx = -1; }
+                const detectedName = idx >= 0 ? (_invHdrs[idx] || 'Col ' + (idx + 1)) : null;
+                const chip = document.createElement('div');
+                chip.className = 'inv-chip' + (detectedName ? '' : ' inv-chip-skip');
+                chip.dataset.key = f.key;
+                chip.dataset.idx = idx;
+                chip.dataset.skipped = detectedName ? 'false' : 'true';
+                const hint = (f.key === 'pack' && !detectedName)
+                    ? ' <span style="font-size:0.7rem;color:#f59e0b;">(will default to 1)</span>' : '';
+                chip.innerHTML = `
+                    <span class="inv-chip-label">${f.label.replace(' ✱', '')}</span>
+                    <span class="inv-chip-detected">${detectedName ? '→ ' + detectedName : 'Not found' + hint}</span>
+                    <button type="button" class="inv-chip-skip-btn" onclick="toggleChipSkip(this.closest('.inv-chip'))">
+                        ${chip.dataset.skipped === 'true' ? 'Include' : 'Skip'}
+                    </button>`;
+                container.appendChild(chip);
+            });
+        }
+
+        function toggleChipSkip(chip) {
+            const skipped = chip.dataset.skipped === 'true';
+            chip.dataset.skipped = skipped ? 'false' : 'true';
+            chip.classList.toggle('inv-chip-skip', !skipped);
+            chip.querySelector('.inv-chip-skip-btn').textContent = skipped ? 'Skip' : 'Include';
+        }
+
+        function buildInvPreview() {
+            const map = {};
+            document.querySelectorAll('#invFieldChips .inv-chip').forEach(chip => {
+                if (chip.dataset.skipped === 'false') {
+                    const idx = parseInt(chip.dataset.idx);
+                    if (!isNaN(idx) && idx >= 0) map[chip.dataset.key] = idx;
+                }
+            });
+            if (map.productName === undefined) {
+                showToast('Required', 'Drug Name column was not detected or was skipped. Please check your file headers.');
+                return;
+            }
+            document.getElementById('invStep2').style.display = 'none';
+            document.getElementById('invStep3').style.display = 'block';
+            document.getElementById('invPreviewBtn').style.display = 'none';
+            document.getElementById('invImportBtn').style.display = '';
+            document.getElementById('invImportBtn').disabled = false;
+
+            const previewRows = _invRows.slice(0, 8);
+            const thead = INV_FIELDS.filter(f => map[f.key] !== undefined).map(f => `<th>${f.label.replace(' ✱', '')}</th>`).join('');
+            const tbody = previewRows.map(row => {
+                const cells = INV_FIELDS.filter(f => map[f.key] !== undefined).map(f => {
+                    let v = String(row[map[f.key]] ?? '').trim();
+                    return `<td>${v || '—'}</td>`;
+                }).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+            document.getElementById('invPreviewTable').innerHTML = `<thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody>`;
+            document.getElementById('invPreviewCount').textContent = `${_invRows.length} row(s) will be loaded into the register.`;
+            window._invMap = map;
+        }
+
+        function _parseExpiry(raw) {
+            const s = String(raw || '').trim();
+            if (!s) return '';
+            if (/^\d{4}-\d{2}/.test(s)) return s.slice(0, 7);
+            const m1 = s.match(/^(\d{1,2})[\/\-](\d{2,4})$/);
+            if (m1) {
+                const mm = m1[1].padStart(2, '0');
+                const yy = m1[2].length === 2 ? '20' + m1[2] : m1[2];
+                return `${yy}-${mm}`;
+            }
+            if (/^\d{5}$/.test(s) && window.XLSX && XLSX.SSF) {
+                const d = XLSX.SSF.parse_date_code(parseInt(s));
+                if (d) return `${d.y}-${String(d.m).padStart(2, '0')}`;
+            }
+            return '';
+        }
+
+        function applyInvoiceImport() {
+            const map = window._invMap || {};
+            if (map.productName === undefined) { showToast('Error', 'Column mapping lost. Please re-map.'); return; }
+
+            // Value parsers — identical to the Purchase page for consistent results.
+            const numOnly = v => {
+                const raw = String(v ?? '').trim();
+                const mul = raw.match(/^(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)$/);
+                if (mul) return String(Math.round(Number(mul[1]) * Number(mul[2])));
+                return raw.replace(/[^\d.]/g, '');
+            };
+            const wvPat    = /^[\d.]+\s*(ml|mg|gm|g|l|mcg|iu|kg|oz)\s*$/i;
+            const mulWvPat = /^(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)\s*(ml|mg|gm|g|l|mcg|iu|kg|oz)\s*$/i;
+            const mulPat   = /^(\d+(?:\.\d+)?)\s*[xX×*]\s*(\d+(?:\.\d+)?)$/;
+            const packVal = v => {
+                const raw = String(v ?? '').trim();
+                if (!raw) return '';
+                if (wvPat.test(raw))    return '1';
+                if (mulWvPat.test(raw)) return '1';
+                const mul = raw.match(mulPat);
+                if (mul) return String(Math.round(Number(mul[1]) * Number(mul[2])));
+                return raw.replace(/[^\d.]/g, '');
+            };
+            const gstVal = v => {
+                const raw = String(v ?? '').trim();
+                const num = parseFloat(raw.replace(/[^\d.]/g, ''));
+                if (isNaN(num) || raw === '') return '';
+                if (num > 0 && num < 1) return String(parseFloat((num * 100).toFixed(4)).toString());
+                return String(num);
+            };
+
+            document.getElementById('shDrugRows').innerHTML = '';
+            shRowCounter = 0;
+            let count = 0;
+            _invRows.forEach(row => {
+                const pName = String(row[map.productName] ?? '').trim();
+                if (!pName) return;
+                const id = addShDrugRow();
+                document.getElementById('drug_' + id).value = pName;
+                if (map.batchNo    !== undefined) document.getElementById('batch_' + id).value = String(row[map.batchNo] ?? '').trim();
+                if (map.expireDate !== undefined) document.getElementById('exp_' + id).value   = _parseExpiry(row[map.expireDate]);
+                if (map.pack       !== undefined) document.getElementById('pack_' + id).value  = packVal(row[map.pack]);
+                if (map.quantity   !== undefined) document.getElementById('qty_' + id).value   = numOnly(row[map.quantity]);
+                if (map.mrp        !== undefined) document.getElementById('mrp_' + id).value   = numOnly(row[map.mrp]);
+                if (map.rate       !== undefined) document.getElementById('rate_' + id).value  = numOnly(row[map.rate]);
+                if (map.gst        !== undefined) document.getElementById('gst_' + id).value   = gstVal(row[map.gst]);
+                calcShRow(id);
+                count++;
+            });
+            if (count === 0) addShDrugRow();
+            calcGrandTotal();
+            closeInvoiceImportModal();
+            showToast(`✅ ${count} item${count === 1 ? '' : 's'} loaded!`, 'Review, adjust, then click Save All Entries.');
         }
 
         /* ══════════════════════════════════════════════════════════════════
@@ -1837,65 +2329,70 @@
         function handleRegisterSubmit(e) {
             e.preventDefault();
 
-            const drugName = document.getElementById('drugName').value.trim();
-            const patientName = document.getElementById('patientName').value.trim();
-            const entryType = document.getElementById('entryType').value || 'manual';
+            // Shared header for every item on this supplier bill
+            const date     = document.getElementById('entryDate').value;
+            const billNo   = document.getElementById('billNo').value.trim();
+            const firmName = document.getElementById('firmName').value.trim();
 
-            if (!drugName) {
-                showToast('Missing Drug', 'Please select or enter a drug name.');
+            const rows = [...document.querySelectorAll('#shDrugRows .sh-drug-row')];
+            const entries = [];
+            for (const row of rows) {
+                const id = row.id.replace('shrow_', '');
+                const drugName = (document.getElementById('drug_' + id)?.value || '').trim();
+                if (!drugName) continue; // skip blank rows
+
+                const qty  = parseFloat(document.getElementById('qty_' + id)?.value)  || 0;
+                const rate = parseFloat(document.getElementById('rate_' + id)?.value) || 0;
+                const gst  = parseFloat(document.getElementById('gst_' + id)?.value)  || 0;
+                const base = qty * rate;
+
+                entries.push({
+                    id:               genId(),
+                    entryType:        'in',
+                    date:             date,
+                    billNo:           billNo,
+                    firmName:         firmName,
+                    patientName:      '',
+                    patientAddress:   '',
+                    doctorName:       '',
+                    doctorRegNo:      '',
+                    doctorAddress:    '',
+                    drugName:         drugName,
+                    batchNo:          (document.getElementById('batch_' + id)?.value || '').trim(),
+                    expireDate:       document.getElementById('exp_' + id)?.value || '',
+                    pack:             (document.getElementById('pack_' + id)?.value || '').trim(),
+                    qty:              qty,
+                    mrp:              parseFloat(document.getElementById('mrp_' + id)?.value) || 0,
+                    rate:             rate,
+                    gst:              gst,
+                    total:            base + (base * gst / 100),
+                    savedAt:          new Date().toISOString()
+                });
+            }
+
+            if (!entries.length) {
+                showToast('Missing Drug', 'Please add at least one drug with a name.');
                 return;
             }
-            if (entryType === 'out' && !patientName) {
-                showToast('Missing Patient', 'Please enter the patient name for a Dispensed entry.');
-                return;
-            }
-
-            const qty  = parseFloat(document.getElementById('qty').value) || 0;
-            const rate = parseFloat(document.getElementById('rate').value) || 0;
-            const gst  = parseFloat(document.getElementById('gst').value) || 0;
-            const base = qty * rate;
-            const total = base + (base * gst / 100);
-
-            const entry = {
-                id:               genId(),
-                entryType:        entryType,
-                date:             document.getElementById('entryDate').value,
-                billNo:           document.getElementById('billNo').value.trim(),
-                firmName:         document.getElementById('firmName').value.trim(),
-                patientName:      patientName,
-                patientAddress:   document.getElementById('patientAddress').value.trim(),
-                doctorName:       document.getElementById('doctorName').value.trim(),
-                doctorRegNo:      document.getElementById('doctorRegNo').value.trim(),
-                doctorAddress:    document.getElementById('doctorAddress').value.trim(),
-                drugName:         drugName,
-                batchNo:          document.getElementById('batchNo').value.trim(),
-                expireDate:       document.getElementById('expireDate').value,
-                pack:             document.getElementById('pack').value.trim(),
-                qty:              qty,
-                mrp:              parseFloat(document.getElementById('mrp').value) || 0,
-                rate:             rate,
-                gst:              gst,
-                total:            total,
-                savedAt:          new Date().toISOString()
-            };
 
             const register = getRegister();
-            register.push(entry);
+            let newDrugCount = 0;
+            entries.forEach(entry => {
+                register.push(entry);
+                // Auto-add a never-seen drug name to the Schedule H list (like Purchase's free typing).
+                if (_ensureShDrug(entry.drugName)) newDrugCount++;
+                if (typeof dbAddScheduleHEntry === 'function') {
+                    dbAddScheduleHEntry(entry).catch(err => console.warn('cloud register save failed:', err));
+                }
+                // Received stock → mirror into purchases so it's sellable on the Sales page.
+                mirrorInEntryToPurchase(entry);
+            });
             setRegister(register);
+            if (newDrugCount > 0) { refreshDrugDatalist(); renderDrugList(); }
 
-            // Compliance warning if dispensed without doctor
-            if (entryType === 'out' && !entry.doctorName) {
-                showToast('⚠️ Entry Saved', `${drugName} saved but is missing a Doctor — compliance risk!`);
-            } else {
-                showToast('Entry Saved!', `${drugName} — ${patientName || entry.firmName || 'Received'}`);
-            }
+            showToast('Entries Saved!', `${entries.length} item${entries.length === 1 ? '' : 's'} added to the register${newDrugCount ? ` (${newDrugCount} new drug${newDrugCount === 1 ? '' : 's'} added to the list)` : ''}.`);
             resetRegisterForm();
             renderRegisterLog();
-            if (typeof dbAddScheduleHEntry === 'function') {
-                dbAddScheduleHEntry(entry).catch(e => console.warn('cloud register save failed:', e));
-            }
-            // Received stock → mirror into purchases so it's sellable on the Sales page.
-            mirrorInEntryToPurchase(entry);
         }
 
         /* ── Type Filter State ── */
@@ -1936,6 +2433,28 @@
             set('mEntries', register.length);
             set('mMonth',   monthCount);
             set('mExpiry',  expiringCount);
+        }
+
+        // Default the date range: FROM = first-ever register transaction, TO = today.
+        // Only fills empty fields so a user's manual pick is never overwritten.
+        function setDefaultRegisterDates() {
+            const fromEl = document.getElementById('filterFrom');
+            const toEl   = document.getElementById('filterTo');
+            if (!fromEl || !toEl) return;
+
+            const today = new Date().toISOString().slice(0, 10);
+            if (!toEl.value) toEl.value = today;
+
+            // FROM = earliest register transaction. If the register is still empty
+            // (e.g. cloud sync hasn't landed yet), leave it blank so nothing is hidden;
+            // this runs again after the cloud merge and fills it in then.
+            if (!fromEl.value) {
+                const dates = getRegister()
+                    .map(e => (e.date || '').slice(0, 10))
+                    .filter(Boolean)
+                    .sort();
+                if (dates.length) fromEl.value = dates[0];
+            }
         }
 
         function renderRegisterLog() {
@@ -1994,6 +2513,7 @@
 
             tbody.innerHTML = filtered.map(entry => {
                 const dateStr = entry.date ? new Date(entry.date + 'T00:00:00').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                const timeStr = entry.savedAt ? new Date(entry.savedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
                 const type = entry.entryType || 'out';
                 const typeBadge = type === 'in'
                     ? `<span class="type-badge type-in">📥 In</span>`
@@ -2010,7 +2530,7 @@
                 return `
                 <tr style="animation: rowSlideIn 0.3s ease forwards;${isMissingRx ? 'background:rgba(254,249,195,0.4);' : ''}">
                     <td>${typeBadge}</td>
-                    <td style="white-space:nowrap; font-weight:600; font-size:0.82rem;">${dateStr}</td>
+                    <td style="white-space:nowrap; font-weight:600; font-size:0.82rem;">${dateStr}${timeStr ? `<div style="font-size:0.72rem; color:#94a3b8; font-weight:500;">🕒 ${timeStr}</div>` : ''}</td>
                     <td style="font-size:0.84rem; font-weight:600;">${esc(entry.billNo || '—')}</td>
                     <td>
                         <div style="font-weight:600;">${esc(entry.patientName || entry.firmName || '—')}</div>
@@ -2035,7 +2555,7 @@
             }).join('');
         }
 
-        /* ── Export Register to CSV ── */
+        /* ── Export Register to a styled Excel (.xls) workbook ── */
         function exportRegisterCSV() {
             const register = getRegister();
             const filterFrom = document.getElementById('filterFrom').value;
@@ -2058,45 +2578,192 @@
                 return;
             }
 
-            const headers = ['Type','Date','Bill No','Patient Name','Patient Address','Doctor Name','Doctor Reg No','Doctor Address','Drug Name','Batch No','Expire Date','Pack','Qty','MRP','Rate','GST%','Total','Firm/Supplier'];
-            const rows = data.map(e => [
-                e.entryType === 'in' ? 'Received (In)' : 'Dispensed (Out)',
-                e.date || '',
-                e.billNo || '',
-                e.patientName || '',
-                e.patientAddress || '',
-                e.doctorName || '',
-                e.doctorRegNo || '',
-                e.doctorAddress || '',
-                e.drugName || '',
-                e.batchNo || '',
-                e.expireDate || '',
-                e.pack || '',
-                e.qty || 0,
-                e.mrp || 0,
-                e.rate || 0,
-                e.gst || 0,
-                e.total || 0,
-                e.firmName || ''
-            ]);
+            // Oldest → newest (a register reads chronologically)
+            data = data.slice().sort((a, b) =>
+                ((a.date || '') + (a.savedAt || '')).localeCompare((b.date || '') + (b.savedAt || '')));
 
-            // Use XLSX library if available, else fallback to plain CSV
-            try {
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-                XLSX.utils.book_append_sheet(wb, ws, 'Schedule H Register');
-                const dateTag = filterFrom && filterTo ? `${filterFrom}_to_${filterTo}` : new Date().toISOString().split('T')[0];
-                XLSX.writeFile(wb, `ScheduleH_Register_${dateTag}.xlsx`);
-                showToast('Exported!', `${data.length} entries exported to Excel.`);
-            } catch(err) {
-                // Fallback: plain CSV
-                const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-                const a = document.createElement('a');
-                a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-                a.download = `ScheduleH_Register_${new Date().toISOString().split('T')[0]}.csv`;
-                a.click();
-                showToast('Exported!', `${data.length} entries exported to CSV.`);
+            const storeName = (localStorage.getItem('mm_storeName') || localStorage.getItem('storeName') || 'My Store');
+            const MF = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+            function fmtDate(d) {
+                if (!d) return '';
+                const p = String(d).slice(0, 10).split('-');
+                if (p.length !== 3) return String(d);
+                let y, mo, day;
+                if (p[0].length === 4) { y = p[0]; mo = p[1]; day = p[2]; }
+                else { day = p[0]; mo = p[1]; y = (p[2].length === 2 ? '20' : '') + p[2]; }
+                return day + ' ' + (MF[parseInt(mo,10)-1] || mo) + ' ' + y;
             }
+            function fmtTime(iso) {
+                if (!iso) return '';
+                try { return new Date(iso).toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true }); }
+                catch (e) { return ''; }
+            }
+            function r2(n) { return (parseFloat(n) || 0).toFixed(2); }
+            function xe(v) {
+                return String(v == null ? '' : v)
+                    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            }
+            function sc(v, sid) { return '<Cell' + (sid ? ' ss:StyleID="'+sid+'"' : '') + '><Data ss:Type="String">' + xe(v) + '</Data></Cell>'; }
+            function nc(v, sid) { return '<Cell' + (sid ? ' ss:StyleID="'+sid+'"' : '') + '><Data ss:Type="Number">' + r2(v) + '</Data></Cell>'; }
+            function ic(v, sid) { return '<Cell' + (sid ? ' ss:StyleID="'+sid+'"' : '') + '><Data ss:Type="Number">' + (parseInt(v,10) || 0) + '</Data></Cell>'; }
+            function row(cells) { return '<Row>' + cells.join('') + '</Row>\n'; }
+            function erow() { return '<Row ss:Height="7"/>\n'; }
+
+            function rowH(cells, h) { return '<Row ss:Height="' + h + '">' + cells.join('') + '</Row>\n'; }
+
+            // Columns (Qty=idx12, Total=idx16)
+            const COLS = [
+                { t:'Date', w:100 }, { t:'Time', w:72 }, { t:'Bill No', w:82 },
+                { t:'Patient Name', w:135 }, { t:'Patient Address', w:130 }, { t:'Doctor Name', w:125 },
+                { t:'Doctor Reg No', w:100 }, { t:'Doctor Address', w:130 }, { t:'Drug Name', w:185 },
+                { t:'Batch No', w:95 }, { t:'Expire Date', w:92 }, { t:'Pack', w:58 },
+                { t:'Qty', w:55, num:true }, { t:'MRP (Rs)', w:78, num:true }, { t:'Rate (Rs)', w:78, num:true },
+                { t:'GST %', w:58, num:true }, { t:'Total (Rs)', w:98, num:true }, { t:'Firm / Supplier', w:135 }
+            ];
+            const N = COLS.length;
+            const QTY_I = 12, TOT_I = 16;
+
+            let X = '<?xml version="1.0" encoding="UTF-8"?>\n'
+                  + '<?mso-application progid="Excel.Sheet"?>\n'
+                  + '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"'
+                  + ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+
+            X += '<Styles>\n'
+              + '<Style ss:ID="s0"/>\n'
+              + '<Style ss:ID="title"><Font ss:Bold="1" ss:Size="14" ss:Color="#1E3A5F"/><Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/><Alignment ss:Vertical="Center"/></Style>\n'
+              + '<Style ss:ID="info"><Font ss:Italic="1" ss:Size="9" ss:Color="#64748B"/><NumberFormat ss:Format="@"/></Style>\n'
+              + '<Style ss:ID="sec"><Font ss:Bold="1" ss:Size="11" ss:Color="#FFFFFF"/><Interior ss:Color="#1E40AF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>\n'
+              + '<Style ss:ID="hL"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#BFDBFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center" ss:WrapText="1"/></Style>\n'
+              + '<Style ss:ID="hR"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#BFDBFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center" ss:WrapText="1"/></Style>\n'
+              + '<Style ss:ID="dL"><Font ss:Size="9"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><NumberFormat ss:Format="@"/></Style>\n'
+              + '<Style ss:ID="dLb"><Font ss:Size="9" ss:Bold="1" ss:Color="#1E3A5F"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><NumberFormat ss:Format="@"/></Style>\n'
+              + '<Style ss:ID="dN"><Font ss:Size="9"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="#,##0.00"/></Style>\n'
+              + '<Style ss:ID="dI"><Font ss:Size="9"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0"/></Style>\n'
+              + '<Style ss:ID="btL"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/><NumberFormat ss:Format="@"/></Style>\n'
+              + '<Style ss:ID="btN"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="#,##0.00"/></Style>\n'
+              + '<Style ss:ID="btI"><Font ss:Bold="1" ss:Size="9" ss:Color="#1E3A5F"/><Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0"/></Style>\n'
+              + '<Style ss:ID="gtL"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#1E40AF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left" ss:Vertical="Center"/></Style>\n'
+              + '<Style ss:ID="gtI"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#1E40AF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="0"/></Style>\n'
+              + '<Style ss:ID="gtN"><Font ss:Bold="1" ss:Size="9" ss:Color="#FFFFFF"/><Interior ss:Color="#1E40AF" ss:Pattern="Solid"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/><NumberFormat ss:Format="#,##0.00"/></Style>\n'
+              + '</Styles>\n';
+
+            X += '<Worksheet ss:Name="Schedule H Register">\n<Table>\n';
+            COLS.forEach(c => { X += '<Column ss:Width="' + c.w + '"/>\n'; });
+
+            function blankRow(sid) { const a = []; for (let i=0;i<N;i++) a.push(sc('', sid||'s0')); return a; }
+
+            // ── Report header ──
+            let tr = blankRow('title'); tr[0] = sc('SCHEDULE H DRUG REGISTER  —  ' + storeName, 'title'); X += rowH(tr, 26);
+            let pr = blankRow('info'); pr[0] = sc('Period:   ' + (fmtDate(filterFrom) || 'All Time') + '   to   ' + (fmtDate(filterTo) || 'Today'), 'info'); X += row(pr);
+            let gr = blankRow('info'); gr[0] = sc('Generated On:   ' + fmtDate(new Date().toISOString()) + '   ·   ' + data.length + ' entries', 'info'); X += row(gr);
+            X += erow();
+
+            function dataCells(e) {
+                return [
+                    sc(fmtDate(e.date), 'dL'),
+                    sc(fmtTime(e.savedAt), 'dL'),
+                    sc(e.billNo || '', 'dL'),
+                    sc(e.patientName || e.firmName || '', 'dL'),
+                    sc(e.patientAddress || '', 'dL'),
+                    sc(e.doctorName || '', 'dL'),
+                    sc(e.doctorRegNo || '', 'dL'),
+                    sc(e.doctorAddress || '', 'dL'),
+                    sc(e.drugName || '', 'dLb'),
+                    sc(e.batchNo || '', 'dL'),
+                    sc(e.expireDate || '', 'dL'),
+                    sc(e.pack || '', 'dL'),
+                    ic(e.qty, 'dI'),
+                    nc(e.mrp, 'dN'),
+                    nc(e.rate, 'dN'),
+                    ic(e.gst, 'dI'),
+                    nc(e.total, 'dN'),
+                    sc(e.firmName || '', 'dL')
+                ];
+            }
+
+            // Renders one section (bar + headers + bills grouped w/ BILL TOTAL + section total).
+            // Returns { qty, amt }.
+            function renderSection(list, barText, totalLabel) {
+                let sh = blankRow('sec'); sh[0] = sc(barText, 'sec'); X += rowH(sh, 22);
+                X += rowH(COLS.map(c => sc(c.t, c.num ? 'hR' : 'hL')), 28);
+
+                // Group by bill (chronological first-appearance order)
+                const groups = {}, order = [];
+                list.forEach(e => {
+                    const k = e.billNo || '(no bill)';
+                    if (!groups[k]) { groups[k] = []; order.push(k); }
+                    groups[k].push(e);
+                });
+
+                let secQty = 0, secAmt = 0;
+                order.forEach(k => {
+                    let gQty = 0, gAmt = 0;
+                    groups[k].forEach(e => {
+                        gQty += parseInt(e.qty, 10) || 0;
+                        gAmt += parseFloat(e.total) || 0;
+                        X += row(dataCells(e));
+                    });
+                    // BILL TOTAL subtotal row
+                    const bt = blankRow('btL');
+                    bt[2] = sc('BILL TOTAL', 'btL');
+                    bt[3] = sc(k, 'btL');
+                    bt[QTY_I] = ic(gQty, 'btI');
+                    bt[TOT_I] = nc(gAmt, 'btN');
+                    X += row(bt);
+                    secQty += gQty; secAmt += gAmt;
+                    X += erow();
+                });
+
+                // Section grand total
+                const gt = blankRow('gtL');
+                gt[0] = sc(totalLabel + '  (' + list.length + ' entries)', 'gtL');
+                gt[QTY_I] = ic(secQty, 'gtI');
+                gt[TOT_I] = nc(secAmt, 'gtN');
+                X += row(gt);
+                X += erow(); X += erow();
+                return { qty: secQty, amt: secAmt };
+            }
+
+            const outList = data.filter(e => (e.entryType || 'out') !== 'in');
+            const inList  = data.filter(e => (e.entryType || 'out') === 'in');
+
+            let secNo = 0, gTotQty = 0, gTotAmt = 0;
+            if (outList.length) {
+                secNo++;
+                const s = renderSection(outList,
+                    'SECTION ' + secNo + '  ·  DISPENSED (OUT)  —  Stock sold to patients',
+                    'DISPENSED (OUT) — SECTION TOTAL');
+                gTotQty += s.qty; gTotAmt += s.amt;
+            }
+            if (inList.length) {
+                secNo++;
+                const s = renderSection(inList,
+                    'SECTION ' + secNo + '  ·  RECEIVED (IN)  —  Stock purchased / received',
+                    'RECEIVED (IN) — SECTION TOTAL');
+                gTotQty += s.qty; gTotAmt += s.amt;
+            }
+
+            // Overall total across both sections
+            const ov = blankRow('gtL');
+            ov[0] = sc('OVERALL TOTAL  (' + data.length + ' entries)', 'gtL');
+            ov[QTY_I] = ic(gTotQty, 'gtI');
+            ov[TOT_I] = nc(gTotAmt, 'gtN');
+            X += row(ov);
+
+            X += '</Table>\n</Worksheet>\n</Workbook>';
+
+            const blob = new Blob([X], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url  = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const dateTag = filterFrom && filterTo ? (filterFrom + '_to_' + filterTo) : new Date().toISOString().split('T')[0];
+            a.href = url;
+            a.download = 'ScheduleH_Register_' + dateTag + '.xls';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Exported!', `${data.length} entries exported to Excel.`);
         }
 
         function esc(str) {
@@ -2117,8 +2784,8 @@
                 .replace(/'/g, "\\'");
         }
 
-        function deleteEntry(id) {
-            if (!confirm('Delete this register entry?\nYou can restore it from the Bin within 30 days.')) return;
+        async function deleteEntry(id) {
+            if (!await mmConfirm('Delete this register entry?\nYou can restore it from the Bin within 30 days.', { danger: true, okText: 'Delete' })) return;
             const all   = getRegister();
             const entry = all.find(e => e.id === id);
             if (!entry) return;
@@ -2270,15 +2937,15 @@
             updateShBinBadge();
             showToast('Restored', `${entry.drugName || 'Entry'} is back in the register.`);
         }
-        function deleteShPermanently(binId) {
-            if (!confirm('Permanently delete this entry? This cannot be undone.')) return;
+        async function deleteShPermanently(binId) {
+            if (!await mmConfirm('Permanently delete this entry? This cannot be undone.', { danger: true, okText: 'Delete Forever' })) return;
             saveShBin(getShBin().filter(b => b.binId !== binId));
             renderShBin();
             updateShBinBadge();
         }
-        function emptyShBin() {
+        async function emptyShBin() {
             if (getShBin().length === 0) return;
-            if (!confirm('Permanently delete ALL entries in the Bin? This cannot be undone.')) return;
+            if (!await mmConfirm('Permanently delete ALL entries in the Bin? This cannot be undone.', { danger: true, okText: 'Empty Bin' })) return;
             saveShBin([]);
             renderShBin();
             updateShBinBadge();
@@ -2287,30 +2954,21 @@
         /* ══════════════════════════════════════════════════════════════════
            TAB 2: Manage Drug List
         ══════════════════════════════════════════════════════════════════ */
-        function addDrug() {
-            const input = document.getElementById('newDrugName');
-            const name = (input.value || '').trim();
-            if (!name) {
-                showToast('Empty Name', 'Please enter a drug name.');
-                return;
-            }
-
+        /* Add a drug name to the Schedule H list if it's not already there.
+           Returns true if it was newly added. Used to auto-register drugs typed
+           straight into the register form (no separate "Add Drug" step needed). */
+        function _ensureShDrug(name) {
+            const clean = (name || '').trim();
+            if (!clean) return false;
             const drugs = getDrugList();
-            if (drugs.some(d => d.toLowerCase() === name.toLowerCase())) {
-                showToast('Duplicate', 'This drug is already in the list.');
-                return;
-            }
-
-            drugs.push(name);
+            if (drugs.some(d => d.toLowerCase() === clean.toLowerCase())) return false;
+            drugs.push(clean);
             drugs.sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
             setDrugList(drugs);
-            input.value = '';
-            renderDrugList();
-            refreshDrugDatalist();
-            showToast('Drug Added!', `"${name}" added to Schedule H list.`);
             if (typeof dbAddScheduleHDrugs === 'function') {
-                dbAddScheduleHDrugs([name]).catch(e => console.warn('cloud drug add failed:', e));
+                dbAddScheduleHDrugs([clean]).catch(e => console.warn('cloud drug add failed:', e));
             }
+            return true;
         }
 
         function removeDrug(name) {
@@ -2324,8 +2982,8 @@
             }
         }
 
-        function clearAllDrugs() {
-            if (!confirm('Remove ALL Schedule H drugs from the list?')) return;
+        async function clearAllDrugs() {
+            if (!await mmConfirm('Remove ALL Schedule H drugs from the list?', { danger: true, okText: 'Remove All' })) return;
             localStorage.removeItem(SH_DRUGS_KEY);
             renderDrugList();
             refreshDrugDatalist();
@@ -2336,8 +2994,10 @@
         }
 
         function renderDrugList() {
+            const searchEl = document.getElementById('drugSearch');
+            if (!searchEl) return; // Add Drugs tab removed — nothing to render
             const drugs = getDrugList();
-            const searchTerm = (document.getElementById('drugSearch').value || '').trim().toLowerCase();
+            const searchTerm = (searchEl.value || '').trim().toLowerCase();
             const filtered = drugs.filter(d => !searchTerm || d.toLowerCase().includes(searchTerm));
 
             document.getElementById('drugCountBadge').textContent = `${drugs.length} drug${drugs.length !== 1 ? 's' : ''}`;
@@ -2407,7 +3067,13 @@
             if (files.length) processFileList(files);
         }
 
-        function processFileList(files) {
+        const XLSX_CDN = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        async function processFileList(files) {
+            // Load the Excel parser on demand (kept out of the page's initial load).
+            if (typeof XLSX === 'undefined') {
+                try { await mmLoadScript(XLSX_CDN); }
+                catch (e) { alert('Could not load the import tool. Please check your internet and try again.'); return; }
+            }
             _iFileCount = files.length; _iRows = []; _iHdrs = [];
             let done = 0;
             const results = new Array(files.length).fill(null);
@@ -2499,10 +3165,15 @@
             refreshPatientList();
             refreshDoctorList();
             refreshDrugDatalist();
-            setupShDrugDropdown();
+            addShDrugRow();
+            setDefaultRegisterDates();
             renderRegisterLog();
             renderDrugList();
             updateShBinBadge();
+
+            const rxDateEl = document.getElementById('rxDate');
+            if (rxDateEl) rxDateEl.value = new Date().toISOString().slice(0, 10);
+            renderPrescriptions();
 
             // Refresh customers/doctors/sales from Supabase so the patient/doctor
             // name lists reflect activity from other devices, not just this one.
@@ -2520,6 +3191,9 @@
                 // IN entry has a matching purchase so received stock is sellable.
                 backfillScheduleHInToPurchases();
             });
+
+            // Pull prescription softcopies down from the cloud and union-merge.
+            syncPrescriptionsFromCloud();
         });
 
         async function syncScheduleHFromCloud() {
@@ -2563,6 +3237,7 @@
                     const union = [...byId.values()];
                     if (union.length !== localReg.length) {
                         setRegister(union);
+                        setDefaultRegisterDates();
                         renderRegisterLog();
                     }
                     // Push local-only entries up so pre-existing registers get backed up.
@@ -2575,6 +3250,224 @@
                     }
                 }
             } catch (e) { console.warn('Schedule H register cloud sync failed:', e); }
+        }
+
+        /* ══════════════════════════════════════════════════════════════════
+           PRESCRIPTIONS — softcopy store
+           Images are downscaled client-side to a base64 JPEG and saved to
+           localStorage + Supabase (union-merged on load, same as the register).
+        ══════════════════════════════════════════════════════════════════ */
+        const RX_KEY = 'mm_schedule_h_prescriptions';
+        const getRxList = () => { try { return JSON.parse(localStorage.getItem(RX_KEY) || '[]'); } catch { return []; } };
+        const setRxList = list => localStorage.setItem(RX_KEY, JSON.stringify(list));
+
+        let _rxImageData = '';   // base64 of the image currently staged in the form
+
+        function _rxEsc(s) {
+            return String(s || '').replace(/[&<>"']/g, c => (
+                { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]
+            ));
+        }
+
+        // Downscale + compress an image File to a base64 JPEG (max 1200px, q0.7)
+        // so rows stay small enough to store in a text column and sync quickly.
+        function _rxCompress(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const MAX = 1200;
+                        let { width: w, height: h } = img;
+                        if (w > MAX || h > MAX) {
+                            if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+                            else        { w = Math.round(w * MAX / h); h = MAX; }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.7));
+                    };
+                    img.onerror = reject;
+                    img.src = reader.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function _rxLoadFile(file) {
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { showToast('Not an image', 'Please choose a photo or image file.'); return; }
+            try {
+                _rxImageData = await _rxCompress(file);
+                document.getElementById('rxPreviewImg').src = _rxImageData;
+                document.getElementById('rxPreviewWrap').style.display = 'block';
+                document.getElementById('rxDropZone').style.display = 'none';
+            } catch (e) {
+                console.error('image compress failed:', e);
+                showToast('Image error', 'Could not read that image — try another.');
+            }
+        }
+
+        function handleRxFile(e) { _rxLoadFile(e.target.files && e.target.files[0]); }
+        function handleRxDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            _rxLoadFile(e.dataTransfer.files && e.dataTransfer.files[0]);
+        }
+        function clearRxImage() {
+            _rxImageData = '';
+            document.getElementById('rxFileInput').value = '';
+            document.getElementById('rxPreviewWrap').style.display = 'none';
+            document.getElementById('rxDropZone').style.display = 'block';
+        }
+
+        // Background: upload the photo to cloud Storage and keep only the light
+        // URL in localStorage + the DB (instead of the heavy base64). Falls back
+        // to the inline base64 copy if Storage isn't set up, so saving never fails.
+        async function _rxPersistCloud(rx) {
+            let finalImage = rx.imageData;
+            if (typeof dbUploadPrescriptionImage === 'function' &&
+                typeof finalImage === 'string' && finalImage.startsWith('data:')) {
+                try {
+                    const url = await dbUploadPrescriptionImage(rx.id, finalImage);
+                    if (url) {
+                        finalImage = url;
+                        // Swap the heavy base64 in localStorage for the light URL.
+                        const list = getRxList();
+                        const idx = list.findIndex(r => r.id === rx.id);
+                        if (idx >= 0) { list[idx].imageData = url; setRxList(list); renderPrescriptions(); }
+                    }
+                } catch (e) { console.warn('rx image upload failed, keeping inline copy:', e); }
+            }
+            if (typeof dbAddPrescription === 'function') {
+                dbAddPrescription({ ...rx, imageData: finalImage })
+                    .catch(err => console.warn('prescription cloud save failed:', err));
+            }
+        }
+
+        async function handleRxSubmit(e) {
+            e.preventDefault();
+            const patient = document.getElementById('rxPatient').value.trim();
+            if (!_rxImageData) { showToast('No image', 'Add a prescription photo first.'); return; }
+            if (!patient)      { showToast('Patient needed', 'Enter the patient name.'); return; }
+
+            const rx = {
+                id:          genId(),
+                patientName: patient,
+                doctorName:  document.getElementById('rxDoctor').value.trim(),
+                rxDate:      document.getElementById('rxDate').value || new Date().toISOString().slice(0,10),
+                medicines:   document.getElementById('rxMeds').value.trim(),
+                note:        document.getElementById('rxNote').value.trim(),
+                imageData:   _rxImageData,
+                savedAt:     new Date().toISOString(),
+            };
+
+            const list = getRxList();
+            list.unshift(rx);
+            setRxList(list);
+
+            document.getElementById('rxForm').reset();
+            document.getElementById('rxDate').value = new Date().toISOString().slice(0,10);
+            clearRxImage();
+            renderPrescriptions();
+            showToast('Prescription saved', 'Softcopy stored & backing up to cloud.');
+
+            // Move the photo to cloud Storage (keeps the DB light) & back it up.
+            // Runs in the background so the UI stays instant.
+            _rxPersistCloud(rx);
+        }
+
+        function renderPrescriptions() {
+            const grid  = document.getElementById('rxGrid');
+            const empty = document.getElementById('rxEmptyState');
+            const badge = document.getElementById('rxCountBadge');
+            if (!grid) return;
+
+            const all = getRxList();
+            const q = (document.getElementById('rxSearch').value || '').trim().toLowerCase();
+            const list = q ? all.filter(r =>
+                (r.patientName || '').toLowerCase().includes(q) ||
+                (r.doctorName  || '').toLowerCase().includes(q) ||
+                (r.medicines   || '').toLowerCase().includes(q)
+            ) : all;
+
+            if (badge) badge.textContent = all.length;
+
+            if (!list.length) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+                empty.querySelector('.es-title').textContent = q ? 'No matches' : 'No Prescriptions Saved Yet';
+                empty.querySelector('.es-sub').textContent   = q ? 'Try a different search term.' : 'Add a prescription softcopy above to start your digital record.';
+                return;
+            }
+            empty.style.display = 'none';
+
+            grid.innerHTML = list.map(r => {
+                const dateTxt = r.rxDate ? new Date(r.rxDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+                return `
+                <div class="rx-card">
+                    <img class="rx-thumb" src="${r.imageData}" alt="Prescription" onclick="openRxViewer('${r.id}')">
+                    <div class="rx-body">
+                        <div class="rx-patient">${_rxEsc(r.patientName) || 'Unknown patient'}</div>
+                        ${r.doctorName ? `<div class="rx-meta">👨‍⚕️ ${_rxEsc(r.doctorName)}</div>` : ''}
+                        ${r.medicines ? `<div class="rx-meds">💊 ${_rxEsc(r.medicines)}</div>` : ''}
+                        ${r.note ? `<div class="rx-meta">📝 ${_rxEsc(r.note)}</div>` : ''}
+                        <div class="rx-foot">
+                            <span class="rx-date-pill">📅 ${dateTxt}</span>
+                            <button class="rx-del" type="button" title="Delete" onclick="deleteRx('${r.id}')">🗑️</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openRxViewer(id) {
+            const rx = getRxList().find(r => r.id === id);
+            if (!rx) return;
+            document.getElementById('rxViewerImg').src = rx.imageData;
+            document.getElementById('rxViewer').classList.add('open');
+        }
+        function closeRxViewer() {
+            document.getElementById('rxViewer').classList.remove('open');
+            document.getElementById('rxViewerImg').src = '';
+        }
+
+        async function deleteRx(id) {
+            const ok = await mmConfirm('Delete this prescription softcopy? This cannot be undone.', { title: 'Delete Prescription', danger: true });
+            if (!ok) return;
+            setRxList(getRxList().filter(r => r.id !== id));
+            renderPrescriptions();
+            showToast('Deleted', 'Prescription removed.');
+            if (typeof dbDeletePrescription === 'function') {
+                dbDeletePrescription(id).catch(err => console.warn('prescription cloud delete failed:', err));
+            }
+        }
+
+        // Union-merge cloud prescriptions with local (cloud is the backup that
+        // survives a storage clear), and push any local-only rows up. Same
+        // pattern as syncScheduleHFromCloud()'s register merge.
+        async function syncPrescriptionsFromCloud() {
+            try {
+                if (typeof dbGetPrescriptions !== 'function') return;
+                const cloud = await dbGetPrescriptions();
+                const local = getRxList();
+                const byId = new Map();
+                [...local, ...cloud].forEach(r => { if (r && r.id && !byId.has(r.id)) byId.set(r.id, r); });
+                const union = [...byId.values()].sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+                if (union.length !== local.length) {
+                    setRxList(union);
+                    renderPrescriptions();
+                }
+                const cloudIds = new Set(cloud.map(r => r.id));
+                const localOnly = local.filter(r => r && r.id && !cloudIds.has(r.id));
+                if (localOnly.length) {
+                    // Route through _rxPersistCloud so any old inline-base64 photos
+                    // also get migrated up to Storage as they back up.
+                    for (const r of localOnly) _rxPersistCloud(r);
+                }
+            } catch (e) { console.warn('Prescription cloud sync failed:', e); }
         }
     </script>
 

@@ -47,6 +47,29 @@ function mmLsRemove(key) {
 }
 
 /* ─────────────────────────────────────────────────────
+   LAZY SCRIPT LOADER
+   Loads a heavy CDN library (xlsx, html2canvas, …) only when
+   it's actually needed, instead of blocking every page load.
+   Caches by URL so repeat calls resolve instantly. Once fetched,
+   the service worker caches it for offline/next-time use.
+───────────────────────────────────────────────────── */
+window._mmScriptCache = window._mmScriptCache || {};
+function mmLoadScript(src) {
+    if (window._mmScriptCache[src]) return window._mmScriptCache[src];
+    const p = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => resolve();
+        s.onerror = () => { delete window._mmScriptCache[src]; reject(new Error('Failed to load ' + src)); };
+        document.head.appendChild(s);
+    });
+    window._mmScriptCache[src] = p;
+    return p;
+}
+window.mmLoadScript = mmLoadScript;
+
+/* ─────────────────────────────────────────────────────
    CUSTOMERS
 ───────────────────────────────────────────────────── */
 async function dbGetCustomers() {
@@ -351,6 +374,109 @@ async function dbDeleteScheduleHEntry(id) {
 window.dbDeleteScheduleHEntry = dbDeleteScheduleHEntry;
 
 /* ─────────────────────────────────────────────────────
+   PRESCRIPTIONS  (softcopy of paper prescriptions)
+   Each row stores a downscaled image (base64 in `image_data`)
+   plus tagging metadata so Schedule H sales can be tied to the
+   doctor's prescription that authorized them. rx_id (the
+   app-generated string) is the primary key so re-syncs dedupe
+   cleanly, exactly like schedule_h_register. Scoped by user_id.
+───────────────────────────────────────────────────── */
+function _rxToRow(p, user) {
+    return {
+        rx_id:        p.id,
+        user_id:      user,
+        patient_name: p.patientName || '',
+        doctor_name:  p.doctorName  || '',
+        rx_date:      p.rxDate || null,
+        medicines:    p.medicines || '',
+        note:         p.note || '',
+        image_data:   p.imageData || '',
+        saved_at:     p.savedAt || new Date().toISOString(),
+    };
+}
+function _rxRowToObj(r) {
+    return {
+        id:          r.rx_id,
+        patientName: r.patient_name || '',
+        doctorName:  r.doctor_name  || '',
+        rxDate:      r.rx_date || '',
+        medicines:   r.medicines || '',
+        note:        r.note || '',
+        imageData:   r.image_data || '',
+        savedAt:     r.saved_at || '',
+    };
+}
+
+/* ── Prescription image Storage helpers ──
+   Instead of stuffing the base64 photo into the `image_data` text
+   column (heavy — bloats the DB and slows every sync), we upload the
+   photo to a Storage bucket and keep only its URL in image_data.
+   Path is deterministic (`<tenant>/<rx_id>.jpg`) so re-saves overwrite
+   cleanly and deletes are easy. Everything is best-effort: if the
+   bucket isn't set up yet or the upload fails, callers fall back to the
+   old inline-base64 behaviour, so nothing ever breaks. */
+const RX_BUCKET = 'prescriptions';
+
+// Upload a base64 JPEG data URL → returns a public URL, or null on any failure.
+async function dbUploadPrescriptionImage(rxId, dataUrl) {
+    try {
+        const user = _currentUser();
+        if (!user || !_supabase || !rxId) return null;
+        if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return null;
+        const blob = await (await fetch(dataUrl)).blob();
+        const path = `${user}/${rxId}.jpg`;
+        const { error } = await _supabase.storage.from(RX_BUCKET)
+            .upload(path, blob, { upsert: true, contentType: 'image/jpeg', cacheControl: '31536000' });
+        if (error) { console.warn('[db] rx image upload failed:', error.message); return null; }
+        const { data } = _supabase.storage.from(RX_BUCKET).getPublicUrl(path);
+        return (data && data.publicUrl) || null;
+    } catch (e) { console.warn('[db] rx image upload error:', e); return null; }
+}
+window.dbUploadPrescriptionImage = dbUploadPrescriptionImage;
+
+// Best-effort removal of a prescription's photo from Storage (no-op if absent).
+async function dbDeletePrescriptionImage(rxId) {
+    try {
+        const user = _currentUser();
+        if (!user || !_supabase || !rxId) return;
+        await _supabase.storage.from(RX_BUCKET).remove([`${user}/${rxId}.jpg`]);
+    } catch (e) { /* best-effort — old rows have no Storage file */ }
+}
+window.dbDeletePrescriptionImage = dbDeletePrescriptionImage;
+
+async function dbGetPrescriptions() {
+    const user = _currentUser();
+    if (!user) { console.warn('[db] dbGetPrescriptions: no user, aborting.'); return []; }
+    const { data, error } = await _supabase.from('prescriptions')
+        .select('*').eq('user_id', user).order('saved_at', { ascending: false });
+    if (error) { console.error('prescriptions fetch:', error); return []; }
+    return (data || []).map(_rxRowToObj);
+}
+window.dbGetPrescriptions = dbGetPrescriptions;
+
+async function dbAddPrescription(p) {
+    const user = _currentUser();
+    if (!user) { console.warn('[db] dbAddPrescription: no user, aborting.'); return { success: false }; }
+    const { error } = await _supabase.from('prescriptions')
+        .upsert(_rxToRow(p, user), { onConflict: 'rx_id' });
+    if (error) { console.error('prescription add:', error); return { success: false, message: error.message }; }
+    return { success: true };
+}
+window.dbAddPrescription = dbAddPrescription;
+
+async function dbDeletePrescription(id) {
+    const user = _currentUser();
+    if (!user) { console.warn('[db] dbDeletePrescription: no user, aborting.'); return false; }
+    const { error } = await _supabase.from('prescriptions')
+        .delete().eq('user_id', user).eq('rx_id', id);
+    if (error) { console.error('prescription delete:', error); return false; }
+    // Also clean up the photo in Storage (best-effort; no-op for old inline rows).
+    dbDeletePrescriptionImage(id);
+    return true;
+}
+window.dbDeletePrescription = dbDeletePrescription;
+
+/* ─────────────────────────────────────────────────────
    DOCTORS
 ───────────────────────────────────────────────────── */
 async function dbGetDoctors() {
@@ -494,6 +620,7 @@ async function dbAddPurchase(row) {
         mrp:          Number(row.mrp)      || 0,
         rate:         Number(row.rate)     || 0,
         gst:          Number(row.gst)      || 0,
+        hsn:          row.hsn || row.hsn_code || '',
         user_id:      user,
     });
     if (error) { console.error('purchase add:', error); return { success: false, message: error.message }; }
@@ -668,6 +795,7 @@ async function dbSaveBill(bill) {
         gst:      Number(m.gst)      || 0,
         discount: Number(m.discount) || 0,
         total:    Number(m.total)    || 0,
+        hsn:      m.hsn || '',
     }));
 
     if (items.length > 0) {
@@ -1061,6 +1189,20 @@ async function dbSyncPendingOfflineData() {
     const pendingPurchasesKey = `mm_${user}_pending_purchases`;
     let salesSynced = 0, purchasesSynced = 0;
 
+    // Recover any legacy items queued under the OLD unscoped keys (older builds of
+    // purchase.html wrote offline purchases to global 'mm_pending_purchases'). Fold
+    // them into the scoped keys so they get synced instead of being orphaned/lost.
+    try {
+        [['mm_pending_sales', pendingSalesKey], ['mm_pending_purchases', pendingPurchasesKey]].forEach(([legacyKey, scopedKey]) => {
+            const legacy = JSON.parse(localStorage.getItem(legacyKey) || '[]');
+            if (legacy.length) {
+                const cur = JSON.parse(localStorage.getItem(scopedKey) || '[]');
+                localStorage.setItem(scopedKey, JSON.stringify(cur.concat(legacy)));
+                localStorage.removeItem(legacyKey);
+            }
+        });
+    } catch (e) { console.warn('[Offline Sync] legacy key migration failed:', e); }
+
     // Sync pending sales
     try {
         const pendingSales = JSON.parse(localStorage.getItem(pendingSalesKey) || '[]');
@@ -1175,81 +1317,9 @@ async function dbSyncDown() {
 // ==========================================
 // PASSWORD RESET REQUESTS
 // ==========================================
-
-async function dbCreatePasswordResetRequest(username, reason) {
-    
-    try {
-        const { data, error } = await _supabase
-            .from('password_reset_requests')
-            .insert([{ username: username.trim(), reason: reason.trim() }])
-            .select();
-        if (error) throw error;
-        return data;
-    } catch (e) {
-        console.error('Create Reset Req Error:', e);
-        return null;
-    }
-}
-
-async function dbGetPendingResetRequests() {
-    
-    try {
-        const { data, error } = await _supabase
-            .from('password_reset_requests')
-            .select('*')
-            .eq('status', 'pending');
-        if (error) throw error;
-        return data || [];
-    } catch (e) {
-        console.error('Get Reset Req Error:', e);
-        return [];
-    }
-}
-
-async function dbUpdateResetRequest(id, status, pin) {
-    
-    try {
-        const { error } = await _supabase
-            .from('password_reset_requests')
-            .update({ status, pin })
-            .eq('id', id);
-        if (error) throw error;
-        return true;
-    } catch (e) {
-        console.error('Update Reset Req Error:', e);
-        return false;
-    }
-}
-
-async function dbCheckResetPin(username, pin) {
-    
-    try {
-        const { data, error } = await _supabase
-            .from('password_reset_requests')
-            .select('*')
-            .eq('username', username.trim())
-            .eq('pin', pin.trim())
-            .eq('status', 'approved');
-        if (error) throw error;
-        return data && data.length > 0;
-    } catch (e) {
-        console.error('Check Reset PIN Error:', e);
-        return false;
-    }
-}
-
-async function dbMarkResetCompleted(username, pin) {
-    
-    try {
-        const { error } = await _supabase
-            .from('password_reset_requests')
-            .update({ status: 'completed' })
-            .eq('username', username.trim())
-            .eq('pin', pin.trim());
-        if (error) throw error;
-        return true;
-    } catch (e) {
-        console.error('Mark Reset Completed Error:', e);
-        return false;
-    }
-}
+// Handled entirely by the mm-admin Edge Function now — see mmAdminCall() in
+// js/auth.js ('reset_request' / 'reset_complete', and the sa_* actions for the
+// superadmin side). The old dbCreatePasswordResetRequest / dbGetPendingResetRequests /
+// dbUpdateResetRequest / dbCheckResetPin / dbMarkResetCompleted helpers were
+// removed: password_reset_requests holds plaintext PINs, so browsers no longer
+// have any grant on that table and these calls would only 401.

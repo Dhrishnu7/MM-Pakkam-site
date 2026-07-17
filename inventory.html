@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 
     <!-- Supabase & Auth -->
+    <script src="js/modal.js"></script>
+    <link rel="preconnect" href="https://jwyyjdwlbgjijmwillow.supabase.co" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/auth.js"></script>
@@ -1010,7 +1012,42 @@
         }
         try { _promiseOrders = await dbGetPromiseOrders(); }
         catch (e) { _promiseOrders = []; console.warn('promise orders load failed:', e); }
+        await _reconcilePromiseOrders();
         renderPromiseOrders();
+    }
+
+    // Close any open promise order that's already been satisfied by a normal sale
+    // (billed on the Sales page without using "Convert to Sale") — including sales
+    // made before the auto-fulfil feature existed. Matches customer name + medicine,
+    // and ignores sales made before the order was created so an old sale can't
+    // wrongly close a fresh order.
+    async function _reconcilePromiseOrders() {
+        if (typeof dbUpdatePromiseOrderStatus !== 'function') return;
+        let sales = [];
+        try { sales = JSON.parse(localStorage.getItem('mm_sales') || '[]'); } catch (e) {}
+        if (!sales.length) return;
+        const open = _promiseOrders.filter(o => (o.status || 'pending') !== 'fulfilled');
+        for (const o of open) {
+            const oName = (o.customer_name || '').trim().toLowerCase();
+            const med   = (o.medicine_name || '').trim().toLowerCase();
+            if (!oName || med.length < 3) continue;
+            const created = o.created_at ? new Date(o.created_at).getTime() : 0;
+            const satisfied = sales.some(s => {
+                const sName = (s.customerName || '').trim().toLowerCase();
+                if (!sName || sName !== oName) return false;
+                const sDate = new Date(s.date || s.savedAt || 0).getTime();
+                if (created && sDate && sDate < created - 86400000) return false; // sale predates the order
+                return (s.medicines || []).some(m => {
+                    const p = (m.product || '').trim().toLowerCase();
+                    return p && (p === med || p.includes(med) || med.includes(p));
+                });
+            });
+            if (satisfied) {
+                o.status = 'fulfilled';
+                try { await dbUpdatePromiseOrderStatus(o.id, 'fulfilled'); }
+                catch (e) { console.warn('promise reconcile update failed:', e); }
+            }
+        }
     }
 
     function promiseSetFilter(f, btn) {
@@ -1066,7 +1103,7 @@
     async function promiseConvertToSale(id) {
         const o = _promiseOrders.find(x => x.id === id);
         if (!o) return;
-        if (!confirm(`Convert this promise order for ${o.customer_name} into a sale?\n\nThis marks it Fulfilled and opens Sales with the customer & medicine pre-filled.`)) return;
+        if (!await mmConfirm(`Convert this promise order for ${o.customer_name} into a sale?\n\nThis marks it Fulfilled and opens Sales with the customer & medicine pre-filled.`, { okText: 'Convert' })) return;
         if (typeof dbUpdatePromiseOrderStatus === 'function') {
             try { await dbUpdatePromiseOrderStatus(id, 'fulfilled'); } catch (e) { console.warn(e); }
         }
@@ -1077,36 +1114,16 @@
     // ═══════════════════════════════════════════════════════
     // DATA LOADING
     // ═══════════════════════════════════════════════════════
+    function _renderInventory() {
+        buildStockData();
+        renderStockTable('');
+        updateMetrics();
+        populateAdjustMedicineList();
+        renderAdjustLog();
+    }
+
     async function loadData() {
-        try {
-            let session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
-            if (!session) {
-                for (let i = 0; i < 15 && !session; i++) {
-                    await new Promise(r => setTimeout(r, 200));
-                    session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
-                }
-            }
-
-            if (session && typeof dbGetReportData === 'function') {
-                const data = await dbGetReportData();
-                if (data && (Array.isArray(data.bills) || Array.isArray(data.purchases))) {
-                    _dbPurchases = data.purchases || [];
-                    _dbBills     = data.bills     || [];
-                }
-            }
-            if (session && typeof dbSyncPendingStockAdjustments === 'function') {
-                // Push any adjustment stuck locally (e.g. made before the
-                // 'stock_adjustments' table existed, or made offline) to the
-                // cloud now, so every device sees it — not just this one.
-                try { await dbSyncPendingStockAdjustments(); } catch(e) { console.warn('Pending adjustment retry failed:', e); }
-            }
-            if (session && typeof dbGetStockAdjustments === 'function') {
-                const adj = await dbGetStockAdjustments();
-                if (Array.isArray(adj) && adj.length) _stockAdjustments = adj;
-            }
-        } catch(e) { console.warn('Supabase load failed, using localStorage:', e); }
-
-        // localStorage fallback
+        // ── Step 1: Instant paint from the local cache — no waiting on the network ──
         if (_dbPurchases.length === 0) {
             _dbPurchases = (typeof mmLsGet === 'function')
                 ? (mmLsGet('purchases') || [])
@@ -1122,13 +1139,41 @@
                 ? (mmLsGet('stockAdjustments') || [])
                 : JSON.parse(localStorage.getItem('mm_stockAdjustments') || '[]');
         }
-
-        buildStockData();
-        renderStockTable('');
-        updateMetrics();
-        populateAdjustMedicineList();
-        renderAdjustLog();
+        _renderInventory();
         _dataLoaded = true;
+
+        // ── Step 2: Background refresh from Supabase, then re-paint if data arrived ──
+        try {
+            let session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
+            if (!session) {
+                for (let i = 0; i < 15 && !session; i++) {
+                    await new Promise(r => setTimeout(r, 200));
+                    session = (typeof mmGetSession === 'function') ? mmGetSession() : null;
+                }
+            }
+
+            if (session && typeof dbGetReportData === 'function') {
+                const data = await dbGetReportData();
+                if (data) {
+                    // Only overwrite the cache view when the cloud actually returned
+                    // rows — an empty/failed fetch must not blank out local data.
+                    if (Array.isArray(data.purchases) && data.purchases.length) _dbPurchases = data.purchases;
+                    if (Array.isArray(data.bills) && data.bills.length)         _dbBills     = data.bills;
+                }
+            }
+            if (session && typeof dbSyncPendingStockAdjustments === 'function') {
+                // Push any adjustment stuck locally (e.g. made before the
+                // 'stock_adjustments' table existed, or made offline) to the
+                // cloud now, so every device sees it — not just this one.
+                try { await dbSyncPendingStockAdjustments(); } catch(e) { console.warn('Pending adjustment retry failed:', e); }
+            }
+            if (session && typeof dbGetStockAdjustments === 'function') {
+                const adj = await dbGetStockAdjustments();
+                if (Array.isArray(adj) && adj.length) _stockAdjustments = adj;
+            }
+        } catch(e) { console.warn('Supabase load failed, using localStorage:', e); }
+
+        _renderInventory();
 
         document.getElementById('heroStatus').innerHTML = '&#x2705; Stock data loaded';
         setTimeout(() => {

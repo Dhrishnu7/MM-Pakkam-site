@@ -527,9 +527,11 @@
             border:none; box-shadow:0 2px 8px rgba(14,165,233,0.25);
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="js/modal.js"></script>
+    <!-- xlsx (Excel import) is lazy-loaded on demand via mmLoadScript() so it never blocks page load. -->
+    <!-- tesseract.js (OCR, several MB) is lazy-loaded on first scan — see loadTesseract() -->
     <script src="js/auth.js?v=3"></script>
+    <link rel="preconnect" href="https://jwyyjdwlbgjijmwillow.supabase.co" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/keyboard-nav.js"></script>
@@ -705,7 +707,11 @@
                         <input type="number" class="li-rate" placeholder="0.00" min="0" step="0.01" oninput="calcItemTotal('${id}')">
                     </div>
                 </div>
-                <div class="form-grid" style="margin-top:0.8rem;">
+                <div class="form-grid-3" style="margin-top:0.8rem;">
+                    <div class="form-group">
+                        <label>HSN Code</label>
+                        <input type="text" class="li-hsn" placeholder="e.g. 3004" inputmode="numeric">
+                    </div>
                     <div class="form-group">
                         <label>GST (%)</label>
                         <input type="number" class="li-gst" placeholder="e.g. 12" min="0" max="100" step="0.01" oninput="calcItemTotal('${id}')">
@@ -887,18 +893,19 @@
                     mrp,
                     rate,
                     gst:        item.querySelector('.li-gst').value,
+                    hsn:        item.querySelector('.li-hsn')?.value || '',
                     savedAt:    new Date().toISOString()
                 });
             });
 
             if (hasEmptyName) {
-                if (!confirm('Some items have empty product names. Save anyway?')) {
+                if (!await mmConfirm('Some items have empty product names. Save anyway?', { okText: 'Save Anyway' })) {
                     _isSaving = false;
                     return;
                 }
             }
             if (hasMissingDetails) {
-                if (!confirm('You have entered a Product Name but left some details (Batch, Expiry, Qty, MRP, or Rate) empty or zero. Are you sure you want to save this incomplete record?')) {
+                if (!await mmConfirm('You have entered a Product Name but left some details (Batch, Expiry, Qty, MRP, or Rate) empty or zero. Are you sure you want to save this incomplete record?', { okText: 'Save Anyway' })) {
                     _isSaving = false;
                     return;
                 }
@@ -917,9 +924,14 @@
                 } else {
                     failCount++;
                     console.error('Failed to save:', record, result.message);
-                    const pending = JSON.parse(localStorage.getItem('mm_pending_purchases') || '[]');
+                    // Queue under the SCOPED key that dbSyncPendingOfflineData() reads,
+                    // otherwise the offline purchase never uploads and is lost on next sync.
+                    const session = typeof mmGetSession === 'function' ? mmGetSession() : null;
+                    const pendingKey = session ? `mm_${session.tenant_id || session.username}_pending_purchases` : 'mm_pending_purchases';
+                    const pending = JSON.parse(localStorage.getItem(pendingKey) || '[]');
                     pending.push(record);
-                    localStorage.setItem('mm_pending_purchases', JSON.stringify(pending));
+                    localStorage.setItem(pendingKey, JSON.stringify(pending));
+                    if (typeof window.updateOfflineBanner === 'function') window.updateOfflineBanner();
                 }
 
                 // Also keep localStorage as offline fallback
@@ -1054,6 +1066,7 @@
                     mrp:        item.querySelector('.li-mrp').value,
                     rate:       item.querySelector('.li-rate').value,
                     gst:        item.querySelector('.li-gst').value,
+                    hsn:        item.querySelector('.li-hsn')?.value || '',
                 });
             });
             localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -1088,6 +1101,7 @@
                     el.querySelector('.li-mrp').value         = d.mrp         || '';
                     el.querySelector('.li-rate').value        = d.rate        || '';
                     el.querySelector('.li-gst').value         = d.gst         || '';
+                    el.querySelector('.li-hsn').value         = d.hsn         || '';
                     calcItemTotal(id);
                     const inputEl = el.querySelector('.li-productName');
                     if (inputEl && typeof DrugMaster !== 'undefined') DrugMaster.init(inputEl, el);
@@ -1099,8 +1113,8 @@
         }
 
         // ── Clear Imported: wipe all line items and reset to one blank row ──
-        function clearImportedMedicines() {
-            if (confirm('Clear all imported items and start fresh?')) {
+        async function clearImportedMedicines() {
+            if (await mmConfirm('Clear all imported items and start fresh?', { okText: 'Clear All' })) {
                 const container = document.getElementById('lineItemsContainer');
                 container.innerHTML = '';
                 lineItemCounter = 0;
@@ -1190,7 +1204,13 @@
             if(files.length) processFileList(files);
         }
 
-        function processFileList(files) {
+        const XLSX_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+        async function processFileList(files) {
+            // Load the Excel parser on demand (kept out of the page's initial load).
+            if (typeof XLSX === 'undefined') {
+                try { await mmLoadScript(XLSX_CDN); }
+                catch (e) { alert('Could not load the import tool. Please check your internet and try again.'); return; }
+            }
             _iFileCount=files.length; _iRows=[]; _iHdrs=[];
             let done=0;
             const results=new Array(files.length).fill(null);
@@ -1279,6 +1299,7 @@
             { key:'rate',        label:'Purchase Rate (₹)' },
             { key:'gst',         label:'GST (%)' },
             { key:'pack',        label:'Pack Size' },
+            { key:'hsn',         label:'HSN Code' },
         ];
 
         let _invRows=[], _invHdrs=[];
@@ -1309,7 +1330,12 @@
             else if (/\.(pdf|jpg|jpeg|png|webp|bmp|tiff?)$/i.test(file.name)) { readInvOCR(file); }
         }
 
-        function readInvFile(file) {
+        async function readInvFile(file) {
+            // Load the Excel parser on demand (kept out of the page's initial load).
+            if (typeof XLSX === 'undefined') {
+                try { await mmLoadScript(XLSX_CDN); }
+                catch (e) { showToast('Load Error', 'Could not load the import tool. Check your internet.'); return; }
+            }
             const rdr=new FileReader();
             rdr.onload=ev=>{
                 try {
@@ -1327,6 +1353,22 @@
         }
 
         /* ── OCR path: PDF / Photo ── */
+        // Lazy-load the OCR engine only when a scan is actually requested —
+        // tesseract.js is several MB and would otherwise slow every page open.
+        let _tesseractLoading = null;
+        function loadTesseract() {
+            if (window.Tesseract) return Promise.resolve();
+            if (_tesseractLoading) return _tesseractLoading;
+            _tesseractLoading = new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                s.onload = resolve;
+                s.onerror = () => { _tesseractLoading = null; reject(new Error('Could not load the OCR engine. Check your connection and try again.')); };
+                document.head.appendChild(s);
+            });
+            return _tesseractLoading;
+        }
+
         async function readInvOCR(file) {
             // Show scanning UI
             const dz = document.getElementById('invDropZone');
@@ -1355,6 +1397,9 @@
             }
 
             try {
+                const progEl = document.getElementById('ocrProgress');
+                if (!window.Tesseract && progEl) progEl.textContent = 'Loading OCR engine…';
+                await loadTesseract();
                 const result = await Tesseract.recognize(imageSource, 'eng', {
                     logger: m => {
                         if (m.status === 'recognizing text') {
@@ -1916,6 +1961,7 @@
                 gst:/gst|tax|vat/i,
                 // Pack = strip count (10 TAB, 15 CAP) — NOT weight/volume columns
                 pack:/^pack(\s*size)?$|^packing$/i,
+                hsn:/hsn/i,
             };
             const container = document.getElementById('invFieldChips');
             container.innerHTML = '';
@@ -2069,6 +2115,7 @@
                 if(map.mrp!==undefined)        el.querySelector('.li-mrp').value        = numOnly(row[map.mrp]);
                 if(map.rate!==undefined)       el.querySelector('.li-rate').value       = numOnly(row[map.rate]);
                 if(map.gst!==undefined)        el.querySelector('.li-gst').value        = gstVal(row[map.gst]);
+                if(map.hsn!==undefined)        el.querySelector('.li-hsn').value        = String(row[map.hsn]??'').trim().replace(/[^\d]/g,'');
 
 
                 calcItemTotal(`item_${lineItemCounter}`);
