@@ -522,153 +522,6 @@
         }
         .btn-row-delete:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-        /* ── Expiry Checker ── */
-        .expiry-section {
-            width: 100%; max-width: 860px;
-            animation: fadeUp 0.5s ease 0.2s forwards; opacity: 0;
-            margin-bottom: 1.5rem;
-        }
-        .expiry-toggle-btn {
-            width: 100%;
-            display: flex; align-items: center; justify-content: space-between;
-            background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(239,68,68,0.1));
-            border: 1.5px solid rgba(251,191,36,0.4);
-            border-radius: 16px;
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.25s ease;
-        }
-        .expiry-toggle-btn:hover {
-            background: linear-gradient(135deg, rgba(251,191,36,0.25), rgba(239,68,68,0.18));
-            border-color: rgba(251,191,36,0.7);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(251,191,36,0.18);
-        }
-        .expiry-toggle-left { display: flex; align-items: center; gap: 12px; }
-        .expiry-toggle-icon {
-            width: 42px; height: 42px; border-radius: 12px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem;
-            box-shadow: 0 4px 12px rgba(251,191,36,0.35);
-            flex-shrink: 0;
-        }
-        .expiry-toggle-text { text-align: left; }
-        .expiry-toggle-title { font-size: 0.95rem; font-weight: 800; color: #0f172a; }
-        .expiry-toggle-sub   { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
-        .expiry-chevron {
-            font-size: 1.1rem; color: #f59e0b; font-weight: 700;
-            transition: transform 0.3s ease;
-        }
-        .expiry-chevron.open { transform: rotate(180deg); }
-
-        .expiry-panel {
-            background: rgba(255,255,255,0.88);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.9);
-            border-radius: 0 0 18px 18px;
-            border-top: none;
-            padding: 1.6rem 1.8rem 1.8rem;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.07);
-            display: none;
-        }
-        .expiry-panel.open { display: block; }
-        .expiry-toggle-btn.panel-open {
-            border-radius: 16px 16px 0 0;
-            border-bottom-color: transparent;
-        }
-
-        .expiry-controls {
-            display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap;
-            margin-bottom: 1.4rem;
-        }
-        .expiry-ctrl-group { display: flex; flex-direction: column; gap: 0.4rem; }
-        .expiry-ctrl-group label {
-            font-size: 0.72rem; font-weight: 800;
-            letter-spacing: 0.07em; text-transform: uppercase; color: #92400e;
-        }
-        .expiry-month-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-        /* Expiry pill filter button active state */
-        .expiry-pill {
-            cursor: pointer; border: none; font: inherit;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        .expiry-pill:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .expiry-pill.pill-active { outline: 3px solid #1e293b; outline-offset: 2px; transform: scale(1.04); font-weight: 800; }
-        .month-pill {
-            padding: 0.5rem 1rem; border-radius: 20px;
-            border: 1.5px solid #fde68a; background: #fef3c7;
-            font-family: 'Inter', sans-serif; font-size: 0.82rem; font-weight: 700;
-            color: #92400e; cursor: pointer; transition: all 0.2s ease;
-        }
-        .month-pill:hover { background: #fcd34d; border-color: #f59e0b; }
-        .month-pill.active {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white; border-color: #d97706;
-            box-shadow: 0 3px 10px rgba(245,158,11,0.35);
-        }
-        .expiry-custom-input {
-            font-family: 'Inter', sans-serif; font-size: 0.88rem; color: #0f172a;
-            background: #fef3c7; border: 1.5px solid #fde68a;
-            border-radius: 10px; padding: 0.5rem 0.9rem;
-            outline: none; width: 90px; transition: all 0.2s;
-        }
-        .expiry-custom-input:focus { border-color: #f59e0b; background: white; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
-        .btn-check-expiry {
-            display: inline-flex; align-items: center; gap: 7px;
-            padding: 0.6rem 1.4rem; border-radius: 10px;
-            font-size: 0.88rem; font-weight: 700; font-family: 'Inter', sans-serif;
-            cursor: pointer; border: none;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white; box-shadow: 0 4px 14px rgba(245,158,11,0.3);
-            transition: all 0.25s ease; white-space: nowrap;
-        }
-        .btn-check-expiry:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245,158,11,0.4); }
-
-        /* Expiry summary pills */
-        .expiry-summary {
-            display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.2rem;
-        }
-        .expiry-pill {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 0.5rem 1.1rem; border-radius: 20px;
-            font-size: 0.82rem; font-weight: 700;
-        }
-        .pill-expired   { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
-        .pill-thismonth { background: #fff7ed; color: #9a3412; border: 1.5px solid #fdba74; }
-        .pill-soon      { background: #fefce8; color: #713f12; border: 1.5px solid #fde047; }
-        .pill-ok        { background: #f0fdf4; color: #14532d; border: 1.5px solid #86efac; }
-
-        /* Expiry table */
-        .expiry-table { width: 100%; border-collapse: collapse; }
-        .expiry-table th {
-            font-size: 0.72rem; font-weight: 800;
-            letter-spacing: 0.07em; text-transform: uppercase;
-            color: #92400e; padding: 0.75rem 0.9rem; text-align: left;
-            border-bottom: 1.5px solid #fde68a; background: #fffbeb;
-        }
-        .expiry-table td {
-            font-size: 0.87rem; color: #334155;
-            padding: 0.85rem 0.9rem;
-            border-bottom: 1px solid #fef3c7;
-        }
-        .expiry-table tbody tr { transition: background 0.15s; }
-        .expiry-table tbody tr:hover { background: #fffbeb; }
-        .expiry-table tbody tr:last-child td { border-bottom: none; }
-        .expiry-status {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 0.2rem 0.75rem; border-radius: 20px;
-            font-size: 0.75rem; font-weight: 700;
-        }
-        .status-expired   { background: #fee2e2; color: #991b1b; }
-        .status-thismonth { background: #fff7ed; color: #9a3412; }
-        .status-soon      { background: #fefce8; color: #854d0e; }
-        .expiry-empty {
-            text-align: center; padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.92rem;
-        }
-        .expiry-empty span { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
-
         /* ── Search Bills Section ── */
         .search-bills-section {
             background: rgba(255,255,255,0.85);
@@ -747,114 +600,6 @@
         }
         .modal-close:hover { background: #e2e8f0; color: #0f172a; }
         .modal-body { padding: 1.5rem; }
-
-        /* ── Stock Report Section ── */
-        .stock-section {
-            width: 100%; max-width: 860px;
-            animation: fadeUp 0.5s ease 0.25s forwards; opacity: 0;
-            margin-bottom: 1.5rem;
-        }
-        .stock-toggle-btn {
-            width: 100%;
-            display: flex; align-items: center; justify-content: space-between;
-            background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(14,165,233,0.08));
-            border: 1.5px solid rgba(16,185,129,0.35);
-            border-radius: 16px;
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.25s ease;
-        }
-        .stock-toggle-btn:hover {
-            background: linear-gradient(135deg, rgba(16,185,129,0.22), rgba(14,165,233,0.14));
-            border-color: rgba(16,185,129,0.65);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(16,185,129,0.15);
-        }
-        .stock-toggle-left { display: flex; align-items: center; gap: 12px; }
-        .stock-toggle-icon {
-            width: 42px; height: 42px; border-radius: 12px;
-            background: linear-gradient(135deg, #10b981, #059669);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem;
-            box-shadow: 0 4px 12px rgba(16,185,129,0.35);
-            flex-shrink: 0;
-        }
-        .stock-toggle-text { text-align: left; }
-        .stock-toggle-title { font-size: 0.95rem; font-weight: 800; color: #0f172a; }
-        .stock-toggle-sub   { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
-        .stock-chevron {
-            font-size: 1.1rem; color: #10b981; font-weight: 700;
-            transition: transform 0.3s ease;
-        }
-        .stock-chevron.open { transform: rotate(180deg); }
-        .stock-panel {
-            background: rgba(255,255,255,0.88);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.9);
-            border-radius: 0 0 18px 18px;
-            border-top: none;
-            padding: 1.6rem 1.8rem 1.8rem;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.07);
-            display: none;
-        }
-        .stock-panel.open { display: block; }
-        .stock-toggle-btn.panel-open {
-            border-radius: 16px 16px 0 0;
-            border-bottom-color: transparent;
-        }
-        .stock-search-bar {
-            display: flex; gap: 0.7rem; margin-bottom: 1.2rem;
-        }
-        .stock-search-input {
-            flex: 1; font-family: 'Inter', sans-serif; font-size: 0.92rem;
-            padding: 0.7rem 1rem; border-radius: 10px;
-            border: 1.5px solid #a7f3d0; background: #f0fdf4;
-            outline: none; transition: all 0.2s;
-        }
-        .stock-search-input:focus { border-color: #10b981; background: white; box-shadow: 0 0 0 3px rgba(16,185,129,0.12); }
-        .stock-summary-pills {
-            display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.2rem;
-        }
-        .stock-pill {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 0.4rem 0.9rem; border-radius: 20px;
-            font-size: 0.8rem; font-weight: 700;
-        }
-        .pill-in-stock   { background: #d1fae5; color: #065f46; border: 1.5px solid #6ee7b7; }
-        .pill-low-stock  { background: #fef3c7; color: #92400e; border: 1.5px solid #fde68a; }
-        .pill-out-stock  { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
-        .stock-table { width: 100%; border-collapse: collapse; }
-        .stock-table th {
-            font-size: 0.72rem; font-weight: 800;
-            letter-spacing: 0.07em; text-transform: uppercase;
-            color: #065f46; padding: 0.75rem 0.9rem; text-align: left;
-            border-bottom: 1.5px solid #a7f3d0; background: #ecfdf5;
-        }
-        .stock-table td {
-            font-size: 0.87rem; color: #334155;
-            padding: 0.85rem 0.9rem;
-            border-bottom: 1px solid #f0fdf4;
-        }
-        .stock-table tbody tr { transition: background 0.15s; }
-        .stock-table tbody tr:hover { background: #f0fdf4; }
-        .stock-table tbody tr:last-child td { border-bottom: none; }
-        .stock-status-badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 0.2rem 0.7rem; border-radius: 20px;
-            font-size: 0.75rem; font-weight: 700;
-        }
-        .badge-in  { background: #d1fae5; color: #065f46; }
-        .badge-low { background: #fef3c7; color: #92400e; }
-        .badge-out { background: #fee2e2; color: #991b1b; }
-        .badge-no-purchase { background: #fff7ed; color: #c2410c; border: 1.5px solid #fb923c; font-weight: 700; animation: pulse-orange 1.8s ease-in-out infinite; }
-        @keyframes pulse-orange { 0%,100% { box-shadow: 0 0 0 0 rgba(251,146,60,0.4); } 50% { box-shadow: 0 0 0 5px rgba(251,146,60,0); } }
-        .stock-qty-number {
-            font-size: 1rem; font-weight: 800;
-        }
-        .qty-good { color: #059669; }
-        .qty-low  { color: #d97706; }
-        .qty-out  { color: #dc2626; }
 
         /* ── Recycle Bin ── */
         .bin-section {
@@ -937,9 +682,11 @@
         .chart-card { background: white; padding: 1.5rem; border-radius: 16px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
     </style>
+    <script src="js/modal.js"></script>
     <script src="js/auth.js?v=3"></script>
     <script src="js/notifications.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://jwyyjdwlbgjijmwillow.supabase.co" crossorigin>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/keyboard-nav.js"></script>
@@ -1213,122 +960,6 @@
             </div>
         </div>
 
-        <!-- ══ Stock Report ══ -->
-        <div class="stock-section">
-            <button class="stock-toggle-btn" id="stockToggleBtn" onclick="toggleStockPanel()">
-                <div class="stock-toggle-left">
-                    <div class="stock-toggle-icon">📦</div>
-                    <div class="stock-toggle-text">
-                        <div class="stock-toggle-title">Medicine Stock Report</div>
-                        <div class="stock-toggle-sub">View current stock levels for all medicines by batch</div>
-                    </div>
-                </div>
-                <div class="stock-chevron" id="stockChevron">▼</div>
-            </button>
-
-            <div class="stock-panel" id="stockPanel">
-                <!-- Search + Filters -->
-                <div class="stock-search-bar">
-                    <input type="text" id="stockSearchInput" class="stock-search-input"
-                        placeholder="Search by medicine name or batch no..."
-                        oninput="renderStockTable(this.value)">
-                </div>
-                <!-- Summary Pills -->
-                <div class="stock-summary-pills" id="stockSummaryPills"></div>
-                <!-- Table -->
-                <div style="overflow-x:auto;">
-                    <table class="stock-table" id="stockTable">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Medicine Name</th>
-                                <th>Batch No</th>
-                                <th>Exp. Date</th>
-                                <th>Total In (Purchased)</th>
-                                <th>Total Out (Sold)</th>
-                                <th>Current Stock</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stockTableBody"></tbody>
-                    </table>
-                    <div id="stockEmptyState" style="display:none; text-align:center; padding: 2.5rem 1rem; color: #94a3b8; font-size: 0.92rem;">
-                        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📦</span>
-                        No medicines found matching your search.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ══ Medicine Expiry Checker ══ -->
-        <div class="expiry-section">
-            <button class="expiry-toggle-btn" id="expiryToggleBtn" onclick="toggleExpiryPanel()">
-                <div class="expiry-toggle-left">
-                    <div class="expiry-toggle-icon">💊</div>
-                    <div class="expiry-toggle-text">
-                        <div class="expiry-toggle-title">Medicine Expiry Checker</div>
-                        <div class="expiry-toggle-sub">Check which medicines are expired or about to expire</div>
-                    </div>
-                </div>
-                <div class="expiry-chevron" id="expiryChevron">▼</div>
-            </button>
-
-            <div class="expiry-panel" id="expiryPanel">
-                <!-- Controls -->
-                <div class="expiry-controls">
-                    <div class="expiry-ctrl-group">
-                        <label>Check within</label>
-                        <div class="expiry-month-btns">
-                            <button class="month-pill active" data-months="0" onclick="selectMonthPill(this)">This Month</button>
-                            <button class="month-pill" data-months="1" onclick="selectMonthPill(this)">1 Month</button>
-                            <button class="month-pill" data-months="2" onclick="selectMonthPill(this)">2 Months</button>
-                            <button class="month-pill" data-months="3" onclick="selectMonthPill(this)">3 Months</button>
-                            <button class="month-pill" data-months="6" onclick="selectMonthPill(this)">6 Months</button>
-                        </div>
-                    </div>
-                    <div class="expiry-ctrl-group">
-                        <label>Custom (months)</label>
-                        <input type="number" class="expiry-custom-input" id="customMonths"
-                               placeholder="e.g. 4" min="0" max="60"
-                               oninput="clearMonthPillSelection()">
-                    </div>
-                    <button class="btn-check-expiry" onclick="checkExpiry()">
-                        🔍 Check Now
-                    </button>
-                </div>
-
-                <!-- Summary Pills -->
-                <div class="expiry-summary" id="expirySummary" style="display:none">
-                    <div class="expiry-pill pill-expired"   id="pillExpired">🔴 0 Already Expired</div>
-                    <div class="expiry-pill pill-thismonth" id="pillThisMonth">🟠 0 Expiring This Month</div>
-                    <div class="expiry-pill pill-soon"      id="pillSoon">🟡 0 Expiring Soon</div>
-                    <div class="expiry-pill pill-ok"        id="pillOk">✅ 0 All OK</div>
-                </div>
-
-                <!-- Results Table -->
-                <div style="overflow-x:auto;" id="expiryTableWrap" style="display:none">
-                    <table class="expiry-table" id="expiryTable">
-                        <thead>
-                            <tr>
-                                <th>Medicine Name</th>
-                                <th>Batch No</th>
-                                <th>Bill No</th>
-                                <th>Purchase Date</th>
-                                <th>Expire Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expiryBody">
-                        </tbody>
-                    </table>
-                    <div class="expiry-empty" id="expiryEmpty" style="display:none">
-                        <span>✅</span>
-                        No medicines found expiring within the selected period!
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- ══ Recycle Bin ══ -->
         <div class="bin-section" id="binSection">
             <button class="bin-toggle-btn" id="binToggleBtn" onclick="toggleBinPanel()">
@@ -1468,7 +1099,54 @@
         let _dbBills = [];
         let _stockAdjustments = [];
 
+        // Builds the report from the localStorage cache for an INSTANT first paint,
+        // before loadData() does its (slower) session-restore + Supabase fetch and
+        // re-paints. Uses the same local mapping as loadData()'s localStorage branch.
+        function _renderReportFromLocal() {
+            const rawPurchases = (typeof mmLsGet === 'function')
+                ? (mmLsGet('purchases') || [])
+                : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
+            const mappedPurchases = rawPurchases.map(p => {
+                const qty = parseFloat(p.quantity) || 0;
+                const rate = parseFloat(p.rate) || 0;
+                const gst = parseFloat(p.gst) || 0;
+                const total = (qty * rate) * (1 + (gst / 100));
+                return { billNo: p.billNo || '-', date: p.date || '', type: 'purchase', product: p.productName || '-', qty, rate, gst, total };
+            });
+            const rawSales = (typeof mmLsGet === 'function')
+                ? (mmLsGet('sales') || [])
+                : JSON.parse(localStorage.getItem('mm_sales') || '[]');
+            const mappedSales = [];
+            rawSales.forEach(bill => {
+                if (Array.isArray(bill.medicines)) {
+                    bill.medicines.forEach(m => {
+                        mappedSales.push({ billNo: bill.billNo || '-', date: bill.date || '', type: 'sales', customer: bill.customerName || bill.customer_name || 'Walk-in', product: m.product || '-', qty: parseFloat(m.qty) || 0, rate: parseFloat(m.rate) || 0, gst: parseFloat(m.gst) || 0, total: parseFloat(m.total) || 0 });
+                    });
+                }
+            });
+            if (_stockAdjustments.length === 0) {
+                _stockAdjustments = (typeof mmLsGet === 'function')
+                    ? (mmLsGet('stockAdjustments') || [])
+                    : JSON.parse(localStorage.getItem('mm_stockAdjustments') || '[]');
+            }
+            if (!mappedSales.length && !mappedPurchases.length) return; // nothing cached yet
+            allData = [...mappedSales, ...mappedPurchases].sort((a, b) => {
+                if (a.date > b.date) return -1;
+                if (a.date < b.date) return 1;
+                return 0;
+            });
+            const fd = document.getElementById('fromDate');
+            if (fd && !fd.value && allData.length > 0) {
+                const dates = allData.map(r => (r.date || '').slice(0, 10)).filter(Boolean).sort();
+                if (dates.length > 0) fd.value = dates[0];
+            }
+            generateReport();
+        }
+
         async function loadData() {
+            // Instant paint from the localStorage cache before the network work below.
+            try { _renderReportFromLocal(); } catch (e) { console.warn('report cache pre-render failed:', e); }
+
             let dbPurchases = [];
             let dbBills = [];
             let useSupabase = false;
@@ -1746,7 +1424,7 @@
         }
 
         async function deleteRecord(type, id, btn) {
-            if (!confirm(`Delete this ${type === 'sales' ? 'sale' : 'purchase'} record? It will go to the Bin for 30 days.`)) return;
+            if (!await mmConfirm(`Delete this ${type === 'sales' ? 'sale' : 'purchase'} record? It will go to the Bin for 30 days.`, { danger: true, okText: 'Delete' })) return;
 
             btn.disabled = true;
             btn.innerHTML = '⏳';
@@ -1932,7 +1610,7 @@
         async function restoreAllFromBin() {
             const bin = purgeBin();
             if (bin.length === 0) return;
-            if (!confirm(`Restore all ${bin.length} items? This might take a moment.`)) return;
+            if (!await mmConfirm(`Restore all ${bin.length} items? This might take a moment.`, { okText: 'Restore All' })) return;
 
             const restoreAllBtn = document.getElementById('restoreAllBtn');
             if(restoreAllBtn) { restoreAllBtn.disabled = true; restoreAllBtn.textContent = '⏳ Restoring...'; }
@@ -1996,7 +1674,7 @@
                                 exp:      m.exp      || '', pack: m.pack || 0, qty:      Number(m.qty) || 0,
                                 mrp:      Number(m.mrp) || 0, rate:     Number(m.rate) || 0,
                                 gst:      Number(m.gst) || 0, discount: Number(m.discount) || 0,
-                                total:    Number(m.total) || 0
+                                total:    Number(m.total) || 0, hsn: m.hsn || ''
                             }))
                         };
                         let res = await dbSaveBill(payload);
@@ -2088,7 +1766,7 @@
                             exp:      m.exp      || '', pack: m.pack || 0, qty:      Number(m.qty) || 0,
                             mrp:      Number(m.mrp) || 0, rate:     Number(m.rate) || 0,
                             gst:      Number(m.gst) || 0, discount: Number(m.discount) || 0,
-                            total:    Number(m.total) || 0
+                            total:    Number(m.total) || 0, hsn: m.hsn || ''
                         }))
                     };
                     let res = await dbSaveBill(payload);
@@ -2116,16 +1794,16 @@
             }
         }
 
-        function deletePermanently(binId, btn) {
-            if (!confirm('Permanently delete this record? It cannot be recovered.')) return;
+        async function deletePermanently(binId, btn) {
+            if (!await mmConfirm('Permanently delete this record? It cannot be recovered.', { danger: true, okText: 'Delete Forever' })) return;
             const bin = getBin().filter(x => x.binId !== binId);
             saveBin(bin);
             renderBin();
             showToast('🗑️ Permanently deleted.', 'success');
         }
 
-        function emptyBin() {
-            if (!confirm('Empty the entire Bin? All items will be permanently deleted.')) return;
+        async function emptyBin() {
+            if (!await mmConfirm('Empty the entire Bin? All items will be permanently deleted.', { danger: true, okText: 'Empty Bin' })) return;
             saveBin([]);
             renderBin();
             showToast('🗑️ Bin emptied.', 'success');
@@ -2555,7 +2233,7 @@
         }
 
         async function clearAllData() {
-            if (!confirm(
+            if (!await mmConfirm(
                 "⚠️ Clear ALL Sales & Purchases?\n\n" +
                 "This will delete:\n" +
                 "  ✗ All purchase records\n" +
@@ -2563,7 +2241,8 @@
                 "This will NOT delete:\n" +
                 "  ✓ Medicine list (preserved)\n" +
                 "  ✓ Customers & Doctors\n\n" +
-                "Tip: Take a Backup first!\n\nContinue?"
+                "Tip: Take a Backup first!\n\nContinue?",
+                { danger: true, okText: 'Clear All' }
             )) return;
 
             const btn = document.querySelector('.btn-clear-data');
@@ -2640,496 +2319,6 @@
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
             }
-        }
-
-        // ══════════════════════════════════════
-        // STOCK REPORT
-        // ══════════════════════════════════════
-        let _stockData = []; // cached stock rows
-
-        function toggleStockPanel() {
-            const panel  = document.getElementById('stockPanel');
-            const btn    = document.getElementById('stockToggleBtn');
-            const chev   = document.getElementById('stockChevron');
-            const isOpen = panel.classList.contains('open');
-            panel.classList.toggle('open');
-            btn.classList.toggle('panel-open');
-            chev.classList.toggle('open');
-            if (!isOpen) {
-                buildStockData();
-                renderStockTable('');
-            }
-        }
-
-        function buildStockData() {
-            const purchaseMap = {};  // normName -> { name, batchMap: {batchKey->{batch,exp,totalIn}}, totalIn }
-            const salesMap    = {};  // normName -> totalOut
-            const salesByBatchMap = {}; // normName -> { batchKeyLower: taggedQty } — sales tagged to a specific batch
-
-            if (_dbPurchases && _dbPurchases.length > 0) {
-                _dbPurchases.forEach(p => {
-                    const name  = String(p.product_name || '').trim();
-                    const batch = String(p.batch_no     || '').trim();
-                    const exp   = String(p.expire_date  || '');
-                    if (!name) return;
-                    const norm     = name.toLowerCase();
-                    const packSize = parseFloat(p.pack) > 0 ? parseFloat(p.pack) : 1;
-                    const qty      = (parseFloat(p.quantity) || 0) * packSize;
-
-                    if (!purchaseMap[norm]) purchaseMap[norm] = { name, batchMap: {}, totalIn: 0 };
-                    purchaseMap[norm].totalIn += qty;
-
-                    const bk = (batch || '_no_batch_').toLowerCase();
-                    if (!purchaseMap[norm].batchMap[bk]) {
-                        purchaseMap[norm].batchMap[bk] = { batch, exp, totalIn: 0, current: 0 };
-                    }
-                    purchaseMap[norm].batchMap[bk].totalIn += qty;
-                    if (exp && exp > (purchaseMap[norm].batchMap[bk].exp || '')) {
-                        purchaseMap[norm].batchMap[bk].exp = exp;
-                    }
-                });
-
-                (_dbBills || []).forEach(bill => {
-                    (bill.bill_items || []).forEach(m => {
-                        const name = String(m.product || m.product_name || '').trim();
-                        if (!name) return;
-                        const norm = name.toLowerCase();
-                        const qty  = parseFloat(m.qty) || 0;
-                        salesMap[norm] = (salesMap[norm] || 0) + qty;
-                        const batch = String(m.batch || m.batch_no || '').trim();
-                        if (batch) {
-                            salesByBatchMap[norm] = salesByBatchMap[norm] || {};
-                            const bk = batch.toLowerCase();
-                            salesByBatchMap[norm][bk] = (salesByBatchMap[norm][bk] || 0) + qty;
-                        }
-                    });
-                });
-
-            } else {
-                const lsPurchases = (typeof mmLsGet === 'function') ? (mmLsGet('purchases') || []) : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
-                const lsSales     = (typeof mmLsGet === 'function') ? (mmLsGet('sales')     || []) : JSON.parse(localStorage.getItem('mm_sales')     || '[]');
-
-                lsPurchases.forEach(p => {
-                    const name  = String(p.productName || '').trim();
-                    const batch = String(p.batchNo     || '').trim();
-                    const exp   = String(p.expireDate  || '');
-                    if (!name) return;
-                    const norm     = name.toLowerCase();
-                    const packSize = parseFloat(p.pack) > 0 ? parseFloat(p.pack) : 1;
-                    const qty      = (parseFloat(p.quantity) || 0) * packSize;
-
-                    if (!purchaseMap[norm]) purchaseMap[norm] = { name, batchMap: {}, totalIn: 0 };
-                    purchaseMap[norm].totalIn += qty;
-                    const bk = (batch || '_no_batch_').toLowerCase();
-                    if (!purchaseMap[norm].batchMap[bk]) purchaseMap[norm].batchMap[bk] = { batch, exp, totalIn: 0, current: 0 };
-                    purchaseMap[norm].batchMap[bk].totalIn += qty;
-                    if (exp && exp > (purchaseMap[norm].batchMap[bk].exp || '')) purchaseMap[norm].batchMap[bk].exp = exp;
-                });
-
-                lsSales.forEach(bill => {
-                    (bill.medicines || []).forEach(m => {
-                        const name = String(m.product || '').trim();
-                        if (!name) return;
-                        const norm = name.toLowerCase();
-                        const qty  = parseFloat(m.qty) || 0;
-                        salesMap[norm] = (salesMap[norm] || 0) + qty;
-                        const batch = String(m.batch || '').trim();
-                        if (batch) {
-                            salesByBatchMap[norm] = salesByBatchMap[norm] || {};
-                            const bk = batch.toLowerCase();
-                            salesByBatchMap[norm][bk] = (salesByBatchMap[norm][bk] || 0) + qty;
-                        }
-                    });
-                });
-            }
-
-            const allNames = new Set([...Object.keys(purchaseMap), ...Object.keys(salesMap)]);
-            const rows = [];
-            allNames.forEach(norm => {
-                const p       = purchaseMap[norm];
-                const out     = salesMap[norm] || 0;
-                const totalIn = p ? p.totalIn : 0;
-
-                // FIFO: sort by expiry (oldest first), deduct sold qty from oldest batch first
-                const batches = p
-                    ? Object.values(p.batchMap).sort((a, b) => (a.exp || '9999').localeCompare(b.exp || '9999'))
-                    : [];
-
-                // Deduct sales actually tagged to a specific batch first — matches
-                // what a cashier really picked, same as sales.html's own stock
-                // check. Only untagged sales (or a tag matching no known batch)
-                // fall back to FIFO (oldest-expiry batch depletes first). Must
-                // match inventory.html's identical logic or the two disagree.
-                const taggedForProduct = salesByBatchMap[norm] || {};
-                let taggedAccounted = 0;
-                batches.forEach(b => {
-                    const bk = (b.batch || '_no_batch_').toLowerCase();
-                    const tagged = Math.min(b.totalIn, taggedForProduct[bk] || 0);
-                    b.current = b.totalIn - tagged;
-                    taggedAccounted += tagged;
-                });
-                let remaining = Math.max(0, out - taggedAccounted);
-                batches.forEach(b => {
-                    if (remaining <= 0) return;
-                    const deducted = Math.min(b.current, remaining);
-                    b.current -= deducted;
-                    remaining -= deducted;
-                });
-
-                rows.push({
-                    name:      p ? p.name : norm,
-                    batches,
-                    totalIn,
-                    totalOut:  out,
-                    current:   totalIn - out,
-                    noPurchase: (totalIn - out) < 0   // negative stock = purchase entry needed
-                });
-            });
-
-            // ── Fold in manual stock adjustments (damage / loss / count corrections) ──
-            // Must match inventory.html's (and js/supabase.js's mmComputeStock)
-            // logic exactly, or the pages disagree again.
-            const adjByProduct = {};
-            const adjByBatch    = {};
-            const adjWholeProduct = {};
-            const adjOriginalName = {};
-            _stockAdjustments.forEach(a => {
-                const name = String(a.product_name || a.productName || '').trim();
-                if (!name) return;
-                const norm  = name.toLowerCase();
-                const delta = parseFloat(a.qty_delta ?? a.qtyDelta) || 0;
-                adjByProduct[norm] = (adjByProduct[norm] || 0) + delta;
-                adjOriginalName[norm] = adjOriginalName[norm] || name;
-                const batch = String(a.batch_no || a.batchNo || '').trim();
-                if (batch) {
-                    adjByBatch[norm] = adjByBatch[norm] || {};
-                    const bk = batch.toLowerCase();
-                    adjByBatch[norm][bk] = (adjByBatch[norm][bk] || 0) + delta;
-                } else {
-                    adjWholeProduct[norm] = (adjWholeProduct[norm] || 0) + delta;
-                }
-            });
-
-            rows.forEach(row => {
-                const norm = row.name.toLowerCase();
-                const totalAdj = adjByProduct[norm] || 0;
-                if (totalAdj) {
-                    row.current += totalAdj;
-                    row.adjusted = true;
-                }
-                if (adjByBatch[norm]) {
-                    row.batches.forEach(b => {
-                        const bk = (b.batch || '_no_batch_').toLowerCase();
-                        if (adjByBatch[norm][bk]) b.current += adjByBatch[norm][bk];
-                    });
-                }
-                const wholeDelta = adjWholeProduct[norm] || 0;
-                if (wholeDelta && row.batches.length) {
-                    const holders = row.batches.filter(b => b.current > 0);
-                    const dominant = holders.length === 1 ? holders[0] : (row.batches.length === 1 ? row.batches[0] : null);
-                    if (dominant) dominant.current += wholeDelta;
-                }
-            });
-
-            Object.keys(adjByProduct).forEach(norm => {
-                if (rows.some(r => r.name.toLowerCase() === norm)) return;
-                rows.push({
-                    name: adjOriginalName[norm] || norm,
-                    batches: [], totalIn: 0, totalOut: 0,
-                    current: adjByProduct[norm], noPurchase: false, adjusted: true
-                });
-            });
-
-            _stockData = rows.sort((a, b) => a.name.localeCompare(b.name));
-        }
-
-        function renderStockTable(query) {
-            const q = String(query || '').trim().toLowerCase();
-            const filtered = q
-                ? _stockData.filter(r =>
-                    r.name.toLowerCase().includes(q) ||
-                    r.batches.some(b => b.batch.toLowerCase().includes(q)))
-                : _stockData;
-
-            let inCnt = 0, lowCnt = 0, outCnt = 0, noPurchaseCnt = 0;
-            filtered.forEach(r => {
-                if (r.noPurchase)         noPurchaseCnt++;
-                else if (r.current <= 0)  outCnt++;
-                else if (r.current <= 10) lowCnt++;
-                else inCnt++;
-            });
-            document.getElementById('stockSummaryPills').innerHTML = `
-                <div class="stock-pill pill-in-stock">&#x2705; ${inCnt} In Stock</div>
-                <div class="stock-pill pill-low-stock">&#x26A0;&#xFE0F; ${lowCnt} Low Stock (&le;10)</div>
-                <div class="stock-pill pill-out-stock">&#x274C; ${outCnt} Out of Stock</div>
-                ${noPurchaseCnt > 0 ? `<div class="stock-pill" style="background:#fff7ed;color:#c2410c;border:1.5px solid #fb923c;font-weight:700;">&#x1F6D2; ${noPurchaseCnt} Purchase Entry Needed</div>` : ''}
-                <div class="stock-pill" style="background:#f1f5f9;color:#475569;border:1.5px solid #cbd5e1;">&#x1F4E6; ${filtered.length} Total Items</div>
-            `;
-
-            const tbody   = document.getElementById('stockTableBody');
-            const emptyEl = document.getElementById('stockEmptyState');
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = '';
-                emptyEl.style.display = 'block';
-                return;
-            }
-            emptyEl.style.display = 'none';
-
-            const fmtExp = exp => {
-                if (!exp) return '<span style="color:#94a3b8;">&#x2014;</span>';
-                try { return new Date(exp + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }); }
-                catch(e) { return exp; }
-            };
-
-            let html = '';
-            filtered.forEach((row, idx) => {
-                const cur        = row.current;
-                const noPurchase = row.noPurchase;
-                const multiBatch = row.batches.length > 1;
-
-                let statusClass, qtyClass, statusText, icon;
-                if (noPurchase) {
-                    statusClass = 'badge-no-purchase'; qtyClass = 'qty-out'; statusText = 'Add Purchase Entry'; icon = '&#x1F6D2;';
-                } else if (cur <= 0) {
-                    statusClass = 'badge-out'; qtyClass = 'qty-out'; statusText = 'Out of Stock'; icon = '&#x274C;';
-                } else if (cur <= 10) {
-                    statusClass = 'badge-low'; qtyClass = 'qty-low'; statusText = 'Low Stock'; icon = '&#x26A0;&#xFE0F;';
-                } else {
-                    statusClass = 'badge-in'; qtyClass = 'qty-good'; statusText = 'In Stock'; icon = '&#x2705;';
-                }
-
-                const rowBg = noPurchase
-                    ? 'background:linear-gradient(90deg,#fff7ed,#fff);border-left:3px solid #f97316;'
-                    : multiBatch ? 'background:#f5f3ff;border-left:3px solid #6366f1;' : '';
-
-                const singleBatch = row.batches.length === 1 ? row.batches[0] : null;
-                const batchDisplay = singleBatch
-                    ? `<code style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:6px;font-size:0.82rem;">${singleBatch.batch || '&#x2014;'}</code>`
-                    : multiBatch
-                        ? `<span style="font-size:0.78rem;color:#6366f1;font-weight:700;background:#ede9fe;padding:2px 8px;border-radius:6px;">&#x25A6; ${row.batches.length} Batches</span>`
-                        : '<span style="color:#94a3b8;">&#x2014;</span>';
-
-                const expDisplay = singleBatch ? fmtExp(singleBatch.exp) : (multiBatch ? '<span style="color:#94a3b8;font-size:0.78rem;">Mixed</span>' : '&#x2014;');
-
-                const purchaseNote = noPurchase
-                    ? `<div style="font-size:0.72rem;color:#c2410c;margin-top:2px;font-weight:600;">&#x26A0;&#xFE0F; Sold without purchase entry</div>`
-                    : '';
-
-                // Main product row
-                html += `<tr style="${rowBg}">
-                    <td style="color:#94a3b8;font-weight:700;">${idx + 1}</td>
-                    <td><strong style="color:#0f172a;">${row.name}</strong>${purchaseNote}</td>
-                    <td>${batchDisplay}</td>
-                    <td style="color:#64748b;">${expDisplay}</td>
-                    <td style="color:#059669;font-weight:700;">${row.totalIn}</td>
-                    <td style="color:#e11d48;font-weight:700;">${row.totalOut}</td>
-                    <td><span class="stock-qty-number ${qtyClass}">${cur}</span></td>
-                    <td>${noPurchase
-                        ? `<button class="stock-status-badge badge-no-purchase" onclick="window.location='purchase.html?prefill='+encodeURIComponent('${row.name}')" style="cursor:pointer;border:none;font:inherit;">${icon} ${statusText}</button>`
-                        : `<span class="stock-status-badge ${statusClass}">${icon} ${statusText}</span>`
-                    }</td>
-                </tr>`;
-
-                // Sub-rows per batch (only if multiple batches)
-                if (multiBatch) {
-                    row.batches.forEach((b, bi) => {
-                        const bCur    = b.current;
-                        let bQtyClass = 'qty-good';
-                        let bDot      = 'background:#22c55e;';  // green dot
-                        let bBadge    = '<span style="color:#16a34a;font-weight:600;font-size:0.78rem;">In Stock</span>';
-                        if (bCur <= 0) {
-                            bQtyClass = 'qty-out'; bDot = 'background:#ef4444;';
-                            bBadge = '<span style="color:#dc2626;font-weight:600;font-size:0.78rem;">Empty</span>';
-                        } else if (bCur <= 10) {
-                            bQtyClass = 'qty-low'; bDot = 'background:#f59e0b;';
-                            bBadge = '<span style="color:#d97706;font-weight:600;font-size:0.78rem;">Low</span>';
-                        }
-
-                        html += `<tr style="background:#fafafa;border-left:3px solid #c4b5fd;">
-                            <td style="text-align:center;">
-                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;${bDot}opacity:0.8;"></span>
-                            </td>
-                            <td style="padding-left:18px;">
-                                <code style="background:#ede9fe;color:#5b21b6;padding:3px 10px;border-radius:6px;font-size:0.82rem;font-weight:600;letter-spacing:0.3px;">${b.batch || '&mdash;'}</code>
-                            </td>
-                            <td colspan="2" style="color:#64748b;font-size:0.84rem;">${fmtExp(b.exp)}</td>
-                            <td style="color:#059669;font-size:0.86rem;font-weight:600;">${b.totalIn}</td>
-                            <td style="color:#94a3b8;font-size:0.8rem;">&mdash;</td>
-                            <td><span class="stock-qty-number ${bQtyClass}" style="font-size:0.88rem;">${bCur}</span></td>
-                            <td>${bBadge}</td>
-                        </tr>`;
-                    });
-                }
-            });
-
-            tbody.innerHTML = html;
-        }
-
-
-        // ══════════════════════════════════════
-        // EXPIRY CHECKER
-        // ══════════════════════════════════════
-        let _expiryMonths = 0; // 0 = this month only
-        // Stores last expiry check results for filter buttons
-        let _expiryGroups = { expired: [], thisMonth: [], soon: [], ok: [] };
-        let _expiryActiveFilter = 'all'; // current active filter
-
-        function toggleExpiryPanel() {
-            const panel  = document.getElementById('expiryPanel');
-            const btn    = document.getElementById('expiryToggleBtn');
-            const chev   = document.getElementById('expiryChevron');
-            const isOpen = panel.classList.contains('open');
-            panel.classList.toggle('open');
-            btn.classList.toggle('panel-open');
-            chev.classList.toggle('open');
-            if (!isOpen) checkExpiry(); // auto-run on open
-        }
-
-        function selectMonthPill(el) {
-            document.querySelectorAll('.month-pill').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            _expiryMonths = parseInt(el.dataset.months);
-            document.getElementById('customMonths').value = '';
-        }
-
-        function clearMonthPillSelection() {
-            document.querySelectorAll('.month-pill').forEach(b => b.classList.remove('active'));
-            _expiryMonths = -1; // will read from custom input
-        }
-
-        function checkExpiry() {
-            // Resolve how many months ahead to look
-            const customVal = document.getElementById('customMonths').value;
-            const months = customVal !== '' ? Math.max(0, parseInt(customVal) || 0) : _expiryMonths;
-
-            // ── Use Supabase data if available, else localStorage ──
-            let purchases = [];
-            if (_dbPurchases && _dbPurchases.length > 0) {
-                // Supabase field names: product_name, batch_no, expire_date
-                purchases = _dbPurchases.map(p => ({
-                    productName: (p.product_name || '').trim() || '-',
-                    batchNo:     (p.batch_no     || '').trim() || '-',
-                    billNo:      (p.invoice_no   || p.bill_no || '-'),
-                    date:        (p.date         || p.created_at || ''),
-                    expireDate:  (p.expire_date  || '')
-                }));
-            } else {
-                const ls = (typeof mmLsGet === 'function') ? (mmLsGet('purchases') || []) : JSON.parse(localStorage.getItem('mm_purchases') || '[]');
-                purchases = ls.map(p => ({
-                    productName: p.productName || '-',
-                    batchNo:     p.batchNo     || '-',
-                    billNo:      p.billNo      || '-',
-                    date:        p.date        || '',
-                    expireDate:  p.expireDate  || ''
-                }));
-            }
-
-            const today  = new Date();
-            const thisYM = today.getFullYear() * 12 + today.getMonth(); // 0-based month index
-
-            let expired = [], thisMonth = [], soon = [], ok = [];
-
-            purchases.forEach(p => {
-                if (!p.expireDate) return; // skip if no expiry recorded
-                // expireDate is 'YYYY-MM'
-                const parts = p.expireDate.split('-').map(Number);
-                const yr = parts[0], mo = parts[1];
-                if (!yr || !mo) return;
-                const expYM = yr * 12 + (mo - 1); // 0-based month
-                const diff  = expYM - thisYM;      // negative = already expired
-
-                const row = {
-                    name:       p.productName,
-                    batchNo:    p.batchNo,
-                    billNo:     p.billNo,
-                    purchDate:  p.date,
-                    expireDate: p.expireDate,
-                    diff
-                };
-
-                if (diff < 0)        expired.push(row);
-                else if (diff === 0) thisMonth.push(row);
-                else if (diff <= 3)  soon.push(row);   // fixed rule: <3 months = soon
-                else ok.push(row);                     // >3 months = OK
-            });
-
-            // Sort: most urgent first
-            expired.sort((a, b)   => a.diff - b.diff);
-            thisMonth.sort((a, b) => a.diff - b.diff);
-            soon.sort((a, b)      => a.diff - b.diff);
-
-            // ── Store results globally for filter buttons ──
-            _expiryGroups = { expired, thisMonth, soon, ok };
-
-            // Update summary pill counts
-            document.getElementById('expirySummary').style.display = 'flex';
-            document.getElementById('pillExpired').innerHTML   = `🔴 ${expired.length} Already Expired`;
-            document.getElementById('pillThisMonth').innerHTML = `🟠 ${thisMonth.length} Expiring This Month`;
-            document.getElementById('pillSoon').innerHTML      = `🟡 ${soon.length} Expiring Soon`;
-            document.getElementById('pillOk').innerHTML        = `✅ ${ok.length} OK`;
-
-            // Default view: show all urgent medicines
-            filterExpiryCategory('all');
-        }
-
-        function filterExpiryCategory(cat) {
-            _expiryActiveFilter = cat;
-
-            // Highlight active pill button
-            document.querySelectorAll('.expiry-pill').forEach(p => p.classList.remove('pill-active'));
-            const pillMap = { expired: 'pillExpired', thisMonth: 'pillThisMonth', soon: 'pillSoon', ok: 'pillOk' };
-            if (pillMap[cat]) document.getElementById(pillMap[cat])?.classList.add('pill-active');
-
-            // Decide which rows to show
-            let rows;
-            if      (cat === 'expired')    rows = _expiryGroups.expired;
-            else if (cat === 'thisMonth')  rows = _expiryGroups.thisMonth;
-            else if (cat === 'soon')       rows = _expiryGroups.soon;
-            else if (cat === 'ok')         rows = _expiryGroups.ok;
-            else                           rows = [..._expiryGroups.expired, ..._expiryGroups.thisMonth, ..._expiryGroups.soon]; // 'all'
-
-            const wrap  = document.getElementById('expiryTableWrap');
-            const empty = document.getElementById('expiryEmpty');
-            const tbody = document.getElementById('expiryBody');
-            wrap.style.display = 'block';
-
-            if (rows.length === 0) {
-                tbody.innerHTML = '';
-                empty.style.display = 'block';
-                return;
-            }
-            empty.style.display = 'none';
-
-            tbody.innerHTML = rows.map(r => {
-                let statusHtml;
-                if (cat === 'ok') {
-                    // OK medicines — show green safe badge
-                    statusHtml = `<span class="expiry-status" style="background:#dcfce7;color:#16a34a;border:1.5px solid #86efac;">✅ Safe &mdash; ${r.diff} month(s) left</span>`;
-                } else if (r.diff < 0) {
-                    statusHtml = `<span class="expiry-status status-expired">🔴 Expired ${Math.abs(r.diff)} month(s) ago</span>`;
-                } else if (r.diff === 0) {
-                    statusHtml = `<span class="expiry-status status-thismonth">🟠 Expiring This Month</span>`;
-                } else {
-                    statusHtml = `<span class="expiry-status status-soon">🟡 Expires in ${r.diff} month(s)</span>`;
-                }
-                return `
-                    <tr>
-                        <td><strong>${r.name}</strong></td>
-                        <td>${r.batchNo}</td>
-                        <td>${r.billNo}</td>
-                        <td>${formatDate(r.purchDate)}</td>
-                        <td><strong>${formatExpireDate(r.expireDate)}</strong></td>
-                        <td>${statusHtml}</td>
-                    </tr>`;
-            }).join('');
-        }
-
-        function formatExpireDate(ym) {
-            if (!ym) return '-';
-            const [yr, mo] = ym.split('-');
-            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            return `${months[parseInt(mo)-1] || mo} ${yr}`;
         }
 
         // ── Init — wait for DOM then load ──
@@ -3819,7 +3008,7 @@
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; color: #64748b;">${r.i}</td>
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0;">
                         <div style="font-weight: 600; color: #0f172a; font-size: 13px;">${r.m.product}</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Exp: <span style="color:#0f172a">${r.m.exp || '-'}</span> &nbsp;|&nbsp; Batch: <span style="color:#0f172a">${r.m.batch || '-'}</span></div>
+                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Exp: <span style="color:#0f172a">${r.m.exp || '-'}</span> &nbsp;|&nbsp; Batch: <span style="color:#0f172a">${r.m.batch || '-'}</span>${r.m.hsn ? ` &nbsp;|&nbsp; HSN: <span style="color:#0f172a">${r.m.hsn}</span>` : ''}</div>
                     </td>
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-weight: 600; color: #0f172a;">${r.qty}</td>
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #475569;">${r.mrpUnit.toFixed(2)}</td>
@@ -3828,6 +3017,47 @@
                     <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 700; color: #0f172a;">${r.payable.toFixed(2)}</td>
                 </tr>
             `).join('');
+
+            // ── HSN-wise tax summary (GST-mandated on a tax invoice) ──
+            const _hsnGroups = {};
+            rows.forEach(r => {
+                const key = (r.m.hsn || '—') + '|' + r.gstPct;
+                if (!_hsnGroups[key]) _hsnGroups[key] = { hsn: r.m.hsn || '—', gstPct: r.gstPct, taxable: 0, cgst: 0, sgst: 0 };
+                _hsnGroups[key].taxable += r.netBase;
+                _hsnGroups[key].cgst    += r.cgst;
+                _hsnGroups[key].sgst    += r.sgst;
+            });
+            const _hsnList = Object.values(_hsnGroups);
+            const hsnSummaryHtml = _hsnList.length ? `
+                <h4 style="margin: 0 0 8px; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">HSN / Tax Summary</h4>
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 30px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: left; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">HSN</th>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">Taxable Value</th>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">CGST</th>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">SGST</th>
+                            <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; background:#f8fafc;">Total Tax</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${_hsnList.map(g => `
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; color:#0f172a; font-weight:600;">${g.hsn}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; color:#475569;">₹${g.taxable.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; color:#475569;">${(g.gstPct/2)}% &nbsp; ₹${g.cgst.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: center; color:#475569;">${(g.gstPct/2)}% &nbsp; ₹${g.sgst.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; text-align: right; color:#0f172a; font-weight:600;">₹${(g.cgst+g.sgst).toFixed(2)}</td>
+                        </tr>`).join('')}
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; font-weight: 700; color:#0f172a; background:#f8fafc;">Total</td>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: 700; color:#0f172a; background:#f8fafc;">₹${totalValue.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: 700; color:#0f172a; background:#f8fafc;">₹${totalCGST.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: 700; color:#0f172a; background:#f8fafc;">₹${totalSGST.toFixed(2)}</td>
+                            <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-weight: 700; color:#0f172a; background:#f8fafc;">₹${(totalCGST+totalSGST).toFixed(2)}</td>
+                        </tr>
+                    </tbody>
+                </table>` : '';
 
             return `
             <div style="font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; color: #1e293b; background: #fff; padding: 30px; box-sizing: border-box; font-size: 13px; line-height: 1.5;">
@@ -3899,6 +3129,9 @@
                         ${tableRows}
                     </tbody>
                 </table>
+
+                <!-- HSN-wise Tax Summary -->
+                ${hsnSummaryHtml}
 
                 <!-- Footer Summary -->
                 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 40px;">
@@ -4010,19 +3243,44 @@
             btn.innerHTML = '⏳ Backing up...';
 
             try {
-                // Fetch ALL data (no date filter) for this user
-                const [bills, purchases] = await Promise.all([
-                    dbGetBills(),
-                    dbGetPurchases()
+                // Fetch the WHOLE shop from the cloud (no date filter) so the backup
+                // is a complete disaster-recovery snapshot, not just transactions.
+                // Feature-detect each helper so a missing one can't break the backup.
+                const _grab = fn => (typeof fn === 'function' ? fn() : Promise.resolve(null));
+                const [
+                    bills, purchases, customers, doctors, medicines,
+                    stockAdjustments, promiseOrders, scheduleHDrugs,
+                    scheduleHRegister, prescriptions, shopProfile
+                ] = await Promise.all([
+                    _grab(window.dbGetBills),
+                    _grab(window.dbGetPurchases),
+                    _grab(window.dbGetCustomers),
+                    _grab(window.dbGetDoctors),
+                    _grab(window.dbGetMedicines),
+                    _grab(window.dbGetStockAdjustments),
+                    _grab(window.dbGetPromiseOrders),
+                    _grab(window.dbGetScheduleHDrugs),
+                    _grab(window.dbGetScheduleHRegister),
+                    _grab(window.dbGetPrescriptions),
+                    _grab(window.dbGetShopProfile),
                 ]);
 
                 const session = mmCurrentUser();
                 const backup = {
-                    version:   '1.0',
-                    createdAt: new Date().toISOString(),
-                    user:      session ? session.username : 'unknown',
-                    bills:     bills     || [],
-                    purchases: purchases || []
+                    version:           '2.0',
+                    createdAt:         new Date().toISOString(),
+                    user:              session ? session.username : 'unknown',
+                    bills:             bills             || [],
+                    purchases:         purchases         || [],
+                    customers:         customers         || [],
+                    doctors:           doctors           || [],
+                    medicines:         medicines         || [],
+                    stockAdjustments:  stockAdjustments  || [],
+                    promiseOrders:     promiseOrders     || [],
+                    scheduleHDrugs:    scheduleHDrugs    || [],
+                    scheduleHRegister: scheduleHRegister || [],
+                    prescriptions:     prescriptions     || [],
+                    shopProfile:       shopProfile       || null,
                 };
 
                 const json = JSON.stringify(backup, null, 2);
@@ -4054,21 +3312,37 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (!data.bills || !data.purchases) throw new Error('Invalid backup file format.');
+                    // Accept any backup that carries at least one known data section
+                    // (v1.0 = bills+purchases only; v2.0 = the whole shop).
+                    const KNOWN = ['bills','purchases','customers','doctors','medicines',
+                        'stockAdjustments','promiseOrders','scheduleHDrugs','scheduleHRegister','prescriptions'];
+                    const hasData = data && typeof data === 'object' &&
+                        (KNOWN.some(k => Array.isArray(data[k])) || data.shopProfile);
+                    if (!hasData) throw new Error('Invalid backup file format.');
 
                     _restorePayload = data;
 
                     // Show modal with summary
                     const log = document.getElementById('restoreLog');
                     log.innerHTML = '';
-                    addRLog(`📅 Backup created: ${new Date(data.createdAt).toLocaleString('en-IN')}`, 'info');
+                    addRLog(`📅 Backup created: ${data.createdAt ? new Date(data.createdAt).toLocaleString('en-IN') : 'unknown'}`, 'info');
                     addRLog(`👤 User: ${data.user || 'unknown'}`, 'info');
                     addRLog(``, 'info');
-                    addRLog(`📦 Purchases: ${data.purchases.length} records`, 'ok');
-                    addRLog(`🧾 Sales Bills: ${data.bills.length} records`, 'ok');
+                    const _cnt = k => Array.isArray(data[k]) ? data[k].length : 0;
+                    if (_cnt('purchases'))         addRLog(`📦 Purchases: ${_cnt('purchases')} records`, 'ok');
+                    if (_cnt('bills'))             addRLog(`🧾 Sales Bills: ${_cnt('bills')} records`, 'ok');
+                    if (_cnt('customers'))         addRLog(`👥 Customers (incl. khata): ${_cnt('customers')} records`, 'ok');
+                    if (_cnt('doctors'))           addRLog(`🩺 Doctors: ${_cnt('doctors')} records`, 'ok');
+                    if (_cnt('medicines'))         addRLog(`💊 Medicines: ${_cnt('medicines')} records`, 'ok');
+                    if (_cnt('stockAdjustments'))  addRLog(`📊 Stock adjustments: ${_cnt('stockAdjustments')} records`, 'ok');
+                    if (_cnt('promiseOrders'))     addRLog(`📝 Promise orders: ${_cnt('promiseOrders')} records`, 'ok');
+                    if (_cnt('scheduleHDrugs'))    addRLog(`🅗 Schedule-H drugs: ${_cnt('scheduleHDrugs')} records`, 'ok');
+                    if (_cnt('scheduleHRegister')) addRLog(`🅗 Schedule-H register: ${_cnt('scheduleHRegister')} records`, 'ok');
+                    if (_cnt('prescriptions'))     addRLog(`📄 Prescriptions: ${_cnt('prescriptions')} records`, 'ok');
+                    if (data.shopProfile)          addRLog(`🏪 Shop profile: included`, 'ok');
                     addRLog(``, 'info');
                     addRLog(`⚠️  This will ADD these records back to the database.`, 'info');
-                    addRLog(`   Existing data will NOT be deleted.`, 'info');
+                    addRLog(`   Existing data will NOT be deleted or overwritten.`, 'info');
 
                     document.getElementById('restoreConfirmBtn').disabled = false;
                     document.getElementById('restoreOverlay').classList.add('open');
@@ -4098,7 +3372,7 @@
             btn.disabled = true;
             btn.textContent = 'Restoring...';
 
-            const { bills, purchases } = _restorePayload;
+            const { bills = [], purchases = [] } = _restorePayload;
             let okP = 0, failP = 0, okB = 0, failB = 0;
 
             // Restore purchases
@@ -4184,6 +3458,160 @@
                 }
             }
             addRLog(`  ✅ ${okB} bills restored${failB ? ', ❌ ' + failB + ' failed' : ''}`, okB > 0 ? 'ok' : 'err');
+
+            // ── Restore the rest of the shop (v2.0 backups). Each block is
+            // additive + dedup-guarded and never deletes/overwrites existing data,
+            // so a partial (v1.0) file simply skips these, and re-restoring a v2.0
+            // file onto a populated shop won't create duplicates. ──
+            const P = _restorePayload;
+            const _num = v => (v === undefined || v === null ? 0 : (Number(v) || 0));
+
+            // Customers (+ khata balances). Skip existing so a balance is never
+            // double-counted; new customers are recreated with their exact balance.
+            if (Array.isArray(P.customers) && P.customers.length && typeof dbAddCustomer === 'function') {
+                addRLog(`⏳ Restoring ${P.customers.length} customers...`, 'info');
+                let okC = 0;
+                let existingC = [];
+                try { existingC = (typeof dbGetCustomers === 'function') ? await dbGetCustomers() : []; } catch (e) {}
+                const cKey = (n, ph) => (String(n || '').trim().toLowerCase() + '|' + String(ph || '').trim());
+                const existingCSet = new Set(existingC.map(c => cKey(c.name, c.phone)));
+                for (const c of P.customers) {
+                    if (!String(c.name || '').trim()) continue;
+                    if (existingCSet.has(cKey(c.name, c.phone))) { okC++; continue; }
+                    const r = await dbAddCustomer(c.name || '', c.phone || '', c.address || '');
+                    if (r && r.success) {
+                        const bal = _num(c.balance);
+                        if (bal && typeof dbUpdateCustomerBalance === 'function') {
+                            await dbUpdateCustomerBalance(c.name || '', c.phone || '', c.address || '', bal);
+                        }
+                        okC++;
+                    }
+                }
+                addRLog(`  ✅ ${okC} customers restored`, 'ok');
+            }
+
+            // Doctors — dedupes internally on name+phone.
+            if (Array.isArray(P.doctors) && P.doctors.length && typeof dbAddDoctor === 'function') {
+                addRLog(`⏳ Restoring ${P.doctors.length} doctors...`, 'info');
+                let okD = 0;
+                for (const d of P.doctors) {
+                    if (!String(d.name || '').trim()) continue;
+                    const r = await dbAddDoctor(d.name || '', d.phone || '', d.clinic || '', d.address || '', d.reg_no || d.regNo || '');
+                    if (r && r.success) okD++;
+                }
+                addRLog(`  ✅ ${okD} doctors restored`, 'ok');
+            }
+
+            // Medicines — array of names; dbImportMedicines dedupes.
+            if (Array.isArray(P.medicines) && P.medicines.length && typeof dbImportMedicines === 'function') {
+                const names = P.medicines.map(m => (typeof m === 'string' ? m : (m && m.name) || '')).filter(Boolean);
+                addRLog(`⏳ Restoring ${names.length} medicines...`, 'info');
+                const ok = await dbImportMedicines(names);
+                addRLog(ok ? `  ✅ ${names.length} medicines restored` : `  ❌ medicines failed`, ok ? 'ok' : 'err');
+            }
+
+            // Stock adjustments — light dedup on product+batch+deltas.
+            if (Array.isArray(P.stockAdjustments) && P.stockAdjustments.length && typeof dbAddStockAdjustment === 'function') {
+                addRLog(`⏳ Restoring ${P.stockAdjustments.length} stock adjustments...`, 'info');
+                let okS = 0;
+                let existingS = [];
+                try { existingS = (typeof dbGetStockAdjustments === 'function') ? await dbGetStockAdjustments() : []; } catch (e) {}
+                const sKey = a => [a.product_name || a.productName || '', a.batch_no || a.batchNo || '',
+                    _num(a.qty_delta ?? a.qtyDelta), _num(a.qty_before ?? a.qtyBefore), _num(a.qty_after ?? a.qtyAfter)].join('|');
+                const existingSSet = new Set(existingS.map(sKey));
+                for (const a of P.stockAdjustments) {
+                    if (existingSSet.has(sKey(a))) { okS++; continue; }
+                    const r = await dbAddStockAdjustment({
+                        productName: a.product_name || a.productName || '',
+                        batchNo:     a.batch_no     || a.batchNo     || '',
+                        qtyBefore:   _num(a.qty_before ?? a.qtyBefore),
+                        qtyAfter:    _num(a.qty_after  ?? a.qtyAfter),
+                        qtyDelta:    _num(a.qty_delta  ?? a.qtyDelta),
+                        reason:      a.reason || 'other',
+                        note:        a.note   || '',
+                    });
+                    if (r && r.success) okS++;
+                }
+                addRLog(`  ✅ ${okS} stock adjustments restored`, 'ok');
+            }
+
+            // Promise orders — light dedup on customer+medicine+date+status.
+            if (Array.isArray(P.promiseOrders) && P.promiseOrders.length && typeof dbAddPromiseOrder === 'function') {
+                addRLog(`⏳ Restoring ${P.promiseOrders.length} promise orders...`, 'info');
+                let okPO = 0;
+                let existingPO = [];
+                try { existingPO = (typeof dbGetPromiseOrders === 'function') ? await dbGetPromiseOrders() : []; } catch (e) {}
+                const poKey = o => [o.customer_name || o.customerName || '', o.medicine_name || o.medicineName || '',
+                    o.promise_date || o.promiseDate || '', o.status || ''].join('|').toLowerCase();
+                const existingPOSet = new Set(existingPO.map(poKey));
+                for (const o of P.promiseOrders) {
+                    if (existingPOSet.has(poKey(o))) { okPO++; continue; }
+                    const r = await dbAddPromiseOrder({
+                        customerName:  o.customer_name  || o.customerName  || '',
+                        customerPhone: o.customer_phone || o.customerPhone || '',
+                        medicineName:  o.medicine_name  || o.medicineName  || '',
+                        quantity:      o.quantity,
+                        promiseDate:   o.promise_date   || o.promiseDate   || null,
+                        status:        o.status || 'pending',
+                    });
+                    if (r && r.success) okPO++;
+                }
+                addRLog(`  ✅ ${okPO} promise orders restored`, 'ok');
+            }
+
+            // Schedule-H drug list — array of names; upsert ignores duplicates.
+            if (Array.isArray(P.scheduleHDrugs) && P.scheduleHDrugs.length && typeof dbAddScheduleHDrugs === 'function') {
+                const names = P.scheduleHDrugs.map(m => (typeof m === 'string' ? m : (m && m.name) || '')).filter(Boolean);
+                addRLog(`⏳ Restoring ${names.length} Schedule-H drugs...`, 'info');
+                const r = await dbAddScheduleHDrugs(names);
+                const ok = r && r.success;
+                addRLog(ok ? `  ✅ ${names.length} Schedule-H drugs restored` : `  ❌ Schedule-H drugs failed`, ok ? 'ok' : 'err');
+            }
+
+            // Schedule-H register — idempotent on entry_id, so safe to replay.
+            if (Array.isArray(P.scheduleHRegister) && P.scheduleHRegister.length && typeof dbAddScheduleHEntry === 'function') {
+                addRLog(`⏳ Restoring ${P.scheduleHRegister.length} Schedule-H register entries...`, 'info');
+                let okR = 0;
+                for (const en of P.scheduleHRegister) {
+                    const r = await dbAddScheduleHEntry(en);
+                    if (r && r.success) okR++;
+                }
+                addRLog(`  ✅ ${okR} Schedule-H register entries restored`, 'ok');
+            }
+
+            // Prescriptions — idempotent on rx_id (includes the photo).
+            if (Array.isArray(P.prescriptions) && P.prescriptions.length && typeof dbAddPrescription === 'function') {
+                addRLog(`⏳ Restoring ${P.prescriptions.length} prescriptions...`, 'info');
+                let okRx = 0;
+                for (const rx of P.prescriptions) {
+                    const r = await dbAddPrescription(rx);
+                    if (r && r.success) okRx++;
+                }
+                addRLog(`  ✅ ${okRx} prescriptions restored`, 'ok');
+            }
+
+            // Shop profile — restore only when none exists, so current settings win.
+            if (P.shopProfile && typeof dbSaveShopProfile === 'function') {
+                let cur = null;
+                try { cur = (typeof dbGetShopProfile === 'function') ? await dbGetShopProfile() : null; } catch (e) {}
+                if (!cur) {
+                    const sp = P.shopProfile;
+                    const r = await dbSaveShopProfile({
+                        shopName:      sp.shop_name      || sp.shopName      || '',
+                        addressLine1:  sp.address_line1  || sp.addressLine1  || '',
+                        addressLine2:  sp.address_line2  || sp.addressLine2  || '',
+                        phone:         sp.phone          || '',
+                        dlNo:          sp.dl_no          || sp.dlNo          || '',
+                        gstin:         sp.gstin          || '',
+                        invoicePrefix: sp.invoice_prefix || sp.invoicePrefix || 'MM',
+                        terms:         sp.terms          || '',
+                        footerMsg:     sp.footer_msg     || sp.footerMsg     || '',
+                    });
+                    addRLog((r && r.success) ? `  ✅ Shop profile restored` : `  ❌ shop profile failed`, (r && r.success) ? 'ok' : 'err');
+                } else {
+                    addRLog(`  ⏩ Shop profile already set — kept existing`, 'info');
+                }
+            }
 
             addRLog(`\n🎉 Restore complete! Reloading report...`, 'ok');
             btn.textContent = '✅ Done!';
